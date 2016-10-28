@@ -15,6 +15,7 @@ import numpy as np
 import glob
 import copy
 import itertools
+import datetime
 #import pyart
 #import grid_io_withradx2gridread as gio
 
@@ -90,8 +91,11 @@ def filter_filepaths(filepaths_all):
 def work(filepaths_all):
     pass
 
+interval_s = 10.
+interval_dt = datetime.timedelta(seconds=interval_s)
+
 testpath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee/test'
-testfilepaths = glob.glob(os.path.join(testpath, '???', '*.nc'))
+testfilepaths = glob.glob(os.path.join(testpath, 'KER', '*.nc'))
 testfilepaths.sort()
 gridpath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee/grid'
 
@@ -104,7 +108,8 @@ for site in d_filepaths_all:
     pass
 
 testfilepaths_good = filter_filepaths(testfilepaths)
-dt = []
+l_dt = []
+interp_timestamps = []
 for f0, f1 in itertools.izip(testfilepaths_good, testfilepaths_good[1:]):
     nc0 = nc.Dataset(f0, 'r')
     nc1 = nc.Dataset(f1, 'r')
@@ -112,8 +117,10 @@ for f0, f1 in itertools.izip(testfilepaths_good, testfilepaths_good[1:]):
     I2 = nc_r(nc1)
     t0 = ncdatetime(nc0)[0]
     t1 = ncdatetime(nc1)[0]
-    dt.append(t1-t0)
-    #interpd = interp(I1, I2)
+    dt = t1-t0
+    n = int(round(dt.total_seconds()/interval_s))
+    l_dt.append(dt)
+    #interpd = interp(I1, I2, n)
 
 #filename0 = 'ncf_20160904_033827.nc' # KUM
 #filename1 = 'ncf_20160904_033958.nc' # KUM, dt=91s
