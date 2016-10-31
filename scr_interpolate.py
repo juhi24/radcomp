@@ -16,6 +16,7 @@ import glob
 import copy
 import itertools
 import datetime
+import scipy.io
 #import pyart
 #import grid_io_withradx2gridread as gio
 
@@ -76,8 +77,11 @@ def data_is_bad(ncdata):
     z = ncdata.variables['z0']
     not_ppi = False # TODO
     no_kdp = 'KDP' not in list(ncdata.variables)
-    high_elevation = z[0] > 1.5
-    return no_kdp or high_elevation or not_ppi
+    high_elev = z[0] > 1.5
+    low_elev = z[0] < 0.05
+    is_correct_van_elev = int(round(ncdata.variables['z0'][0]*10)) == 7
+    van_wrong_elev = ncdata.title == 'VANTAA' and not is_correct_van_elev
+    return no_kdp or high_elev or not_ppi or van_wrong_elev or low_elev
 
 def filter_filepaths(filepaths_all):
     filepaths_good = copy.deepcopy(filepaths_all)
@@ -108,26 +112,32 @@ for site in d_filepaths_all:
     pass
 
 testfilepaths_good = filter_filepaths(testfilepaths)
+elev = []
 l_dt = []
+l_t0_str = []
+l_t1_str = []
 interp_timestamps = []
 for f0, f1 in itertools.izip(testfilepaths_good, testfilepaths_good[1:]):
     nc0 = nc.Dataset(f0, 'r')
     nc1 = nc.Dataset(f1, 'r')
+    elev.append(nc0.variables['z0'][0])
     I1 = nc_r(nc0)
     I2 = nc_r(nc1)
     t0 = ncdatetime(nc0)[0]
     t1 = ncdatetime(nc1)[0]
     dt = t1-t0
+    l_t0_str.append(str(t0))
+    l_t1_str.append(str(t1))
     n = int(round(dt.total_seconds()/interval_s))
+    interp_timestamps.append([t0+i*interval_dt for i in range(1, n+1, 1)])
     l_dt.append(dt)
     #interpd = interp(I1, I2, n)
 
-#filename0 = 'ncf_20160904_033827.nc' # KUM
-#filename1 = 'ncf_20160904_033958.nc' # KUM, dt=91s
-#filename0 = 'ncf_20160904_033918.nc' # KER
-#filename1 = 'ncf_20160904_034208.nc' # KER, dt=170s
-
 def testcase():
+    #filename0 = 'ncf_20160904_033827.nc' # KUM
+    #filename1 = 'ncf_20160904_033958.nc' # KUM, dt=91s
+    #filename0 = 'ncf_20160904_033918.nc' # KER
+    #filename1 = 'ncf_20160904_034208.nc' # KER, dt=170s
     filename0 = 'ncf_20160904_034033.nc' # VAN
     filename1 = 'ncf_20160904_034056.nc' # VAN, dt=23s
     filepath0 = os.path.join(testpath, filename0)
