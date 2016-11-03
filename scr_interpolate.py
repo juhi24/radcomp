@@ -35,6 +35,30 @@ SITES = ['KUM', 'KER', 'VAN']
 #MATPATH = os.path.join(intrp_path, 'mat')
 #PNGPATH = os.path.join(intrp_path, 'png')
 
+class RADX_grid:
+    """RADX grid object"""
+    def __init__(self, filepath):
+        self.data = nc.Dataset(filepath, 'r')
+
+    def rainrate(self):
+        is_kerava_data = 'Kerava' in self.data.title
+        dbzdata = self.dbz()[0,0,:,:]
+        if is_kerava_data:
+            dbzdata_corrected = dbzdata+17
+        else:
+            dbzdata_corrected = dbzdata+2
+        z = db2lin(dbzdata_corrected)
+        return 0.0292*z**(0.6536)
+
+    def dbz(self):
+        is_kerava_data = 'Kerava' in self.data.title
+        if is_kerava_data:
+            return self.data.variables['DBZ_TOT']
+        return self.data.variables['DBZ']
+
+    def plot_rainmap(self):
+        return plot_rainmap(self.rainrate())
+
 def interp(I1, I2, n=1):
     """Interpolate n frames."""
     VF,VB = motion(I1, I2)
@@ -142,6 +166,7 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
         intrp_timestamps = [t0+i*interval_dt for i in range(1, n+1, 1)]
         selection = [t.second<10 for t in intrp_timestamps]
         #l_dt.append(dt)
+        print(dt.total_seconds())
         intrp = np.array(interp(I1, I2, n))
         for i in np.where(selection)[0]:
             t = intrp_timestamps[i]
@@ -163,22 +188,38 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
                 plt.close(fig)
 
 
+def dts(filepaths):
+    l_dt = []
+    for f0, f1 in itertools.izip(filepaths, filepaths[1:]):
+        nc0 = nc.Dataset(f0, 'r')
+        nc1 = nc.Dataset(f1, 'r')
+        t0 = ncdatetime(nc0)[0]
+        t1 = ncdatetime(nc1)[0]
+        dt = t1-t0
+        l_dt.append(dt)
+    return l_dt
+
+
 if debug:
     testpath = os.path.join(basepath, 'test')
+    testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
+    testfilepaths.sort()
+    testfilepaths_good = filter_filepaths(testfilepaths)
     test_interp = False
     if test_interp:
-        testfilepaths = glob.glob(os.path.join(testpath, 'KER', '*.nc'))
-        testfilepaths.sort()
-        testfilepaths_good = filter_filepaths(testfilepaths)
         test_intrp_path = os.path.join(testpath, 'interpolated')
         batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
     kumfilepath = os.path.join(testpath, 'ncf_20160904_033827.nc')
-    #kerfilepath = os.path.join(testpath, 'ncf_20160904_033918.nc')
-    kerfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
+    kerfilepath = os.path.join(testpath, 'ncf_20160904_033918.nc')
+    kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
+    kerFMIBfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130417.nc')
     vanfilepath = os.path.join(testpath, 'ncf_20160904_034033.nc')
     kumnc = nc.Dataset(kumfilepath, 'r')
     kernc = nc.Dataset(kerfilepath, 'r')
     vannc = nc.Dataset(vanfilepath, 'r')
+    a_nc = nc.Dataset(kerVOL_Afilepath, 'r')
+    fmib_nc = nc.Dataset(kerFMIBfilepath, 'r')
+    
 else:
     for site in SITES:
         filepaths_all = glob.glob(os.path.join(gridpath, site, '*', '*.nc'))
