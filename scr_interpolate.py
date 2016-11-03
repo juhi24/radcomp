@@ -21,14 +21,14 @@ import scipy.io
 #import grid_io_withradx2gridread as gio
 
 plt.ioff()
-debug = False
+debug = True
 
 interval_s = 10.
 interval_dt = datetime.timedelta(seconds=interval_s)
 
 basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
-gridpath = os.path.join(basepath, 'grid')
 resultspath = '/home/jussitii/results/radcomp'
+gridpath = os.path.join(basepath, 'grid')
 intrp_path = os.path.join(basepath, 'interpolated')
 
 SITES = ['KUM', 'KER', 'VAN']
@@ -165,13 +165,16 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
 
 if debug:
     testpath = os.path.join(basepath, 'test')
-    testfilepaths = glob.glob(os.path.join(testpath, 'KER', '*.nc'))
-    testfilepaths.sort()
-    testfilepaths_good = filter_filepaths(testfilepaths)
-    test_intrp_path = os.path.join(testpath, 'interpolated')
-    batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
+    test_interp = False
+    if test_interp:
+        testfilepaths = glob.glob(os.path.join(testpath, 'KER', '*.nc'))
+        testfilepaths.sort()
+        testfilepaths_good = filter_filepaths(testfilepaths)
+        test_intrp_path = os.path.join(testpath, 'interpolated')
+        batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
     kumfilepath = os.path.join(testpath, 'ncf_20160904_033827.nc')
-    kerfilepath = os.path.join(testpath, 'ncf_20160904_033918.nc')
+    #kerfilepath = os.path.join(testpath, 'ncf_20160904_033918.nc')
+    kerfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
     vanfilepath = os.path.join(testpath, 'ncf_20160904_034033.nc')
     kumnc = nc.Dataset(kumfilepath, 'r')
     kernc = nc.Dataset(kerfilepath, 'r')
