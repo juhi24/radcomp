@@ -17,6 +17,7 @@ import copy
 import itertools
 import datetime
 import scipy.io
+import radx
 #import pyart
 #import grid_io_withradx2gridread as gio
 
@@ -35,29 +36,6 @@ SITES = ['KUM', 'KER', 'VAN']
 #MATPATH = os.path.join(intrp_path, 'mat')
 #PNGPATH = os.path.join(intrp_path, 'png')
 
-class RADX_grid:
-    """RADX grid object"""
-    def __init__(self, filepath):
-        self.data = nc.Dataset(filepath, 'r')
-
-    def rainrate(self):
-        is_kerava_data = 'Kerava' in self.data.title
-        dbzdata = self.dbz()[0,0,:,:]
-        if is_kerava_data:
-            dbzdata_corrected = dbzdata+17
-        else:
-            dbzdata_corrected = dbzdata+2
-        z = db2lin(dbzdata_corrected)
-        return 0.0292*z**(0.6536)
-
-    def dbz(self):
-        is_kerava_data = 'Kerava' in self.data.title
-        if is_kerava_data:
-            return self.data.variables['DBZ_TOT']
-        return self.data.variables['DBZ']
-
-    def plot_rainmap(self):
-        return plot_rainmap(self.rainrate())
 
 def interp(I1, I2, n=1):
     """Interpolate n frames."""
@@ -75,44 +53,11 @@ def motion(I1, I2):
     # algorithm.
     return extract_motion_proesmans(Iu[0], Iu[1], lam=25.0, num_iter=250, num_levels=6)
 
-def plot_rainmap(r):
-    fig, ax = plt.subplots()
-    r_ = r.copy()
-    r_[r < 0.05] = np.nan
-    plt.figure()
-    cax = ax.imshow(r_, vmin=0.05, vmax=10)
-    cb = fig.colorbar(cax)
-    cb.set_label("rain rate (mm/h)")
-    ax.set_xticks([])
-    ax.set_yticks([])
-    return fig, ax
-
-def db2lin(db):
-    return 10.**(db/10.)
-
-def nc_r(ncdata):
-    is_kerava_data = 'Kerava' in ncdata.title
-    if is_kerava_data:
-        dbz = ncdata.variables['DBZ_TOT']
-    else:
-        dbz = ncdata.variables['DBZ']
-    dbzdata = dbz[0,0,:,:]
-    if is_kerava_data:
-        dbzdata_corrected = dbzdata+17
-    else:
-        dbzdata_corrected = dbzdata+2
-    z = db2lin(dbzdata_corrected)
-    return 0.0292*z**(0.6536)
-
 def ensure_path(directory):
     """Make sure the path exists. If not, create it."""
     if not os.path.exists(directory):
         os.makedirs(directory)
     return directory
-
-def ncdatetime(ncdata):
-    times = ncdata.variables['time']
-    return nc.num2date(times[:], times.units)
 
 def discard(filepath, ncdata):
     """Return True if the file was discarded."""
@@ -152,13 +97,13 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
             for site in SITES:
                 if site in f0:
                     data_site = site
-        nc0 = nc.Dataset(f0, 'r')
-        nc1 = nc.Dataset(f1, 'r')
+        nc0 = radx.RADXgrid(f0)
+        nc1 = radx.RADXgrid(f1)
         #elev.append(nc0.variables['z0'][0])
-        I1 = nc_r(nc0)
-        I2 = nc_r(nc1)
-        t0 = ncdatetime(nc0)[0]
-        t1 = ncdatetime(nc1)[0]
+        I1 = nc0.rainrate()
+        I2 = nc1.rainrate()
+        t0 = nc0.datetime()[0]
+        t1 = nc1.datetime()[0]
         dt = t1-t0
         #l_t0_str.append(str(t0))
         #l_t1_str.append(str(t1))
@@ -182,7 +127,7 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
                 pngfname = fbasename + '.png'
                 pngsitepath = ensure_path(os.path.join(outpath, data_site, 'R', 'png', datedir))
                 pngfilepath = os.path.join(pngsitepath, pngfname)
-                fig, ax = plot_rainmap(r)
+                fig, ax = radx.plot_rainmap(r)
                 ax.set_title(str(t))
                 fig.savefig(pngfilepath, bbox_inches="tight")
                 plt.close(fig)
@@ -191,10 +136,10 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
 def dts(filepaths):
     l_dt = []
     for f0, f1 in itertools.izip(filepaths, filepaths[1:]):
-        nc0 = nc.Dataset(f0, 'r')
-        nc1 = nc.Dataset(f1, 'r')
-        t0 = ncdatetime(nc0)[0]
-        t1 = ncdatetime(nc1)[0]
+        nc0 = radx.RADXgrid(f0)
+        nc1 = radx.RADXgrid(f1)
+        t0 = nc0.datetime()[0]
+        t1 = nc1.datetime()[0]
         dt = t1-t0
         l_dt.append(dt)
     return l_dt
@@ -205,7 +150,7 @@ if debug:
     testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
     testfilepaths.sort()
     testfilepaths_good = filter_filepaths(testfilepaths)
-    test_interp = False
+    test_interp = True
     if test_interp:
         test_intrp_path = os.path.join(testpath, 'interpolated')
         batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
@@ -236,22 +181,22 @@ def testcase():
     filename1 = 'ncf_20160904_034056.nc' # VAN, dt=23s
     filepath0 = os.path.join(testpath, filename0)
     filepath1 = os.path.join(testpath, filename1)
-    nc0 =  nc.Dataset(filepath0, 'r')
-    nc1 =  nc.Dataset(filepath1, 'r')
+    nc0 =  radx.RADXgrid(filepath0)
+    nc1 =  radx.RADXgrid(filepath1)
     
     #datafilepath = os.path.join(gridpath, 'KUM', '20160903', filename0)
     #ncdata = nc.Dataset(datafilepath, 'r')
-    I1 = nc_r(nc0)
-    I2 = nc_r(nc1)
+    I1 = nc0.rainrate()
+    I2 = nc1.rainrate()
     
     interpd = interp(I1, I2)
-    plot_rainmap(I1)
+    radx.plot_rainmap(I1)
     for rmap in interpd:
-        plot_rainmap(rmap)
-    plot_rainmap(I2)
+        radx.plot_rainmap(rmap)
+    radx.plot_rainmap(I2)
     
-    t0 = ncdatetime(nc0)[0]
-    t1 = ncdatetime(nc1)[0]
+    t0 = nc0.datetime()[0]
+    t1 = nc1.datetime()[0]
     dt = t1-t0 
     
     #gdata = gio.read_radx_grid(datafilepath)
