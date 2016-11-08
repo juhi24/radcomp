@@ -21,7 +21,7 @@ import radx
 #import pyart
 #import grid_io_withradx2gridread as gio
 
-plt.ioff()
+plt.ion()
 debug = True
 
 interval_s = 10.
@@ -150,7 +150,7 @@ if debug:
     testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
     testfilepaths.sort()
     testfilepaths_good = filter_filepaths(testfilepaths)
-    test_interp = True
+    test_interp = False
     if test_interp:
         test_intrp_path = os.path.join(testpath, 'interpolated')
         batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
@@ -159,12 +159,11 @@ if debug:
     kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
     kerFMIBfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130417.nc')
     vanfilepath = os.path.join(testpath, 'ncf_20160904_034033.nc')
-    kumnc = nc.Dataset(kumfilepath, 'r')
-    kernc = nc.Dataset(kerfilepath, 'r')
-    vannc = nc.Dataset(vanfilepath, 'r')
-    a_nc = nc.Dataset(kerVOL_Afilepath, 'r')
-    fmib_nc = nc.Dataset(kerFMIBfilepath, 'r')
-    
+    kumnc = radx.RADXgrid(kumfilepath)
+    kernc = radx.RADXgrid(kerfilepath)
+    vannc = radx.RADXgrid(vanfilepath)
+    vol_a = radx.RADXgrid(kerVOL_Afilepath)
+    fmib = radx.RADXgrid(kerFMIBfilepath)
 else:
     for site in SITES:
         filepaths_all = glob.glob(os.path.join(gridpath, site, '*', '*.nc'))

@@ -30,10 +30,35 @@ class RADXgrid:
     def __init__(self, filepath, rwmode='r'):
         self.data = nc.Dataset(filepath, rwmode)
 
+    def site(self):
+        if 'Kerava' in self.data.title:
+            return 'KER'
+        if 'kum' in self.data.title:
+            return 'KUM'
+        if 'VANTAA' in self.data.title:
+            return 'VAN'
+        return '???'
+
+    def radar_latlon(self):
+        """(deg_n, deg_e)"""
+        if self.site() == 'KER':
+            return (60+23.3/60, 25+6.8/60)
+        return (np.nan, np.nan)
+
+    def radar_pixel(self):
+        """(idy, idx)"""
+        ymid = self.data.dimensions['y0'].size/2
+        xmid = self.data.dimensions['x0'].size/2
+        lats = self.data.variables['lat0'][:,ymid]
+        lons = self.data.variables['lon0'][xmid,:]
+        lat, lon = self.radar_latlon()
+        y = np.abs(lats-lat).argmin()
+        x = np.abs(lons-lon).argmin()
+        return (x, y)
+
     def rainrate(self):
-        is_kerava_data = 'Kerava' in self.data.title
         dbzdata = self.dbz()[0,0,:,:]
-        if is_kerava_data:
+        if self.site() == 'KER':
             dbzdata_corrected = dbzdata+17
         else:
             dbzdata_corrected = dbzdata+2
@@ -41,8 +66,7 @@ class RADXgrid:
         return 0.0292*z**(0.6536)
 
     def dbz(self):
-        is_kerava_data = 'Kerava' in self.data.title
-        if is_kerava_data:
+        if self.site() == 'KER':
             return self.data.variables['DBZ_TOT']
         return self.data.variables['DBZ']
 
