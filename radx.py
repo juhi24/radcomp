@@ -73,6 +73,40 @@ class RADXgrid:
     def plot_rainmap(self):
         return plot_rainmap(self.rainrate())
 
-    def datetime(self):
-        times = self.data.variables['time']
+    def datetime(self, var='time'):
+        times = self.data.variables[var]
         return nc.num2date(times[:], times.units)
+
+    def distance(self, x0, y0, x1, y1):
+        x = self.data.variables['x0']
+        y = self.data.variables['y0']
+        dx = x[x1]-x[x0]
+        dy = y[y1]-y[y0]
+        return np.sqrt(dx**2 + dy**2)
+
+    def distance_from_radar(self, x, y):
+        (x0, y0) = self.radar_pixel()
+        return self.distance(x0, y0, x, y)
+
+    def scantime(self):
+        ts=self.datetime('time_bounds')[0]
+        return ts[1]-ts[0]
+
+    def task_name(self):
+        """Try to guess scan task name."""
+        dt = self.scantime().total_seconds()
+        if self.site()=='KER':
+            if dt > 120:
+                return 'VOL_A'
+            if dt < 50:
+                return 'KER_FMIB'
+        return ''
+
+    def z_min(self, x, y):
+        z_cal = -40.
+        log = 2.
+        dist_term = 20*np.log10(self.distance_from_radar(x, y))
+        if self.task_name() == 'VOL_A':
+            z_cal = -35.25
+            log = 2.5
+        return z_cal + log + dist_term
