@@ -6,6 +6,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import netCDF4 as nc
+import copy
 
 
 def db2lin(db):
@@ -29,6 +30,22 @@ class RADXgrid:
     """RADX grid object"""
     def __init__(self, filepath, rwmode='r'):
         self.data = nc.Dataset(filepath, rwmode)
+        self.x = self.data.variables['x0'][:]
+        self.y = self.data.variables['y0'][:]
+        self._task_name = None
+        self._radar_pixel = None
+
+    @property
+    def task_name(self):
+        """Try to guess scan task name."""
+        if self._task_name is None:
+            dt = self.scantime().total_seconds()
+            if self.site()=='KER':
+                if dt > 120:
+                    self._task_name = 'VOL_A'
+                if dt < 50:
+                    self._task_name = 'KER_FMIB'
+        return self._task_name
 
     def site(self):
         if 'Kerava' in self.data.title:
@@ -45,27 +62,32 @@ class RADXgrid:
             return (60+23.3/60, 25+6.8/60)
         return (np.nan, np.nan)
 
+    @property
     def radar_pixel(self):
         """(idy, idx)"""
-        ymid = self.data.dimensions['y0'].size/2
-        xmid = self.data.dimensions['x0'].size/2
-        lats = self.data.variables['lat0'][:,ymid]
-        lons = self.data.variables['lon0'][xmid,:]
-        lat, lon = self.radar_latlon()
-        y = np.abs(lats-lat).argmin()
-        x = np.abs(lons-lon).argmin()
-        return (x, y)
+        if self._radar_pixel is None:
+            ymid = self.data.dimensions['y0'].size/2
+            xmid = self.data.dimensions['x0'].size/2
+            lats = self.data.variables['lat0'][:,ymid]
+            lons = self.data.variables['lon0'][xmid,:]
+            lat, lon = self.radar_latlon()
+            y = np.abs(lats-lat).argmin()
+            x = np.abs(lons-lon).argmin()
+            self._radar_pixel = (x, y)
+        return self._radar_pixel
 
-    def rainrate(self):
-        dbzdata = self.dbz()[0,0,:,:]
+    def z(self):
+        dbzdata = self.dbz_raw()[0,0,:,:]
         if self.site() == 'KER':
             dbzdata_corrected = dbzdata+17
         else:
             dbzdata_corrected = dbzdata+2
-        z = db2lin(dbzdata_corrected)
-        return 0.0292*z**(0.6536)
+        return db2lin(dbzdata_corrected)
 
-    def dbz(self):
+    def rainrate(self):
+        return 0.0292*self.z()**(0.6536)
+
+    def dbz_raw(self):
         if self.site() == 'KER':
             return self.data.variables['DBZ_TOT']
         return self.data.variables['DBZ']
@@ -78,35 +100,36 @@ class RADXgrid:
         return nc.num2date(times[:], times.units)
 
     def distance(self, x0, y0, x1, y1):
-        x = self.data.variables['x0']
-        y = self.data.variables['y0']
-        dx = x[x1]-x[x0]
-        dy = y[y1]-y[y0]
+        dx = self.x[x1]-self.x[x0]
+        dy = self.y[y1]-self.y[y0]
         return np.sqrt(dx**2 + dy**2)
 
     def distance_from_radar(self, x, y):
-        (x0, y0) = self.radar_pixel()
+        (x0, y0) = self.radar_pixel
         return self.distance(x0, y0, x, y)
 
     def scantime(self):
         ts=self.datetime('time_bounds')[0]
         return ts[1]-ts[0]
 
-    def task_name(self):
-        """Try to guess scan task name."""
-        dt = self.scantime().total_seconds()
-        if self.site()=='KER':
-            if dt > 120:
-                return 'VOL_A'
-            if dt < 50:
-                return 'KER_FMIB'
-        return ''
-
-    def z_min(self, x, y):
-        z_cal = -40.
-        log = 2.
+    def z_min_xy(self, x, y):
         dist_term = 20*np.log10(self.distance_from_radar(x, y))
-        if self.task_name() == 'VOL_A':
+        if self.task_name == 'KER_FMIB':
             z_cal = -35.25
             log = 2.5
+        elif self.task_name == 'VOL_A':
+            z_cal = -46.62
+            log = 1.5
+        else:
+            return
         return z_cal + log + dist_term
+
+    def z_min(self):
+        z_min = copy.deepcopy(self.dbz_raw()[0,0,:,:])
+        for (x, y), val in np.ndenumerate(z_min):
+            z_min[x, y] = self.z_min_xy(x, y)
+        return z_min
+
+    def mask(self):
+        pass
+

@@ -156,14 +156,15 @@ if debug:
         batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
     kumfilepath = os.path.join(testpath, 'ncf_20160904_033827.nc')
     kerfilepath = os.path.join(testpath, 'ncf_20160904_033918.nc')
-    kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
+    kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208_test.nc')
     kerFMIBfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130417.nc')
     vanfilepath = os.path.join(testpath, 'ncf_20160904_034033.nc')
     kumnc = radx.RADXgrid(kumfilepath)
     kernc = radx.RADXgrid(kerfilepath)
     vannc = radx.RADXgrid(vanfilepath)
-    vol_a = radx.RADXgrid(kerVOL_Afilepath)
+    vol_a = radx.RADXgrid(kerVOL_Afilepath, 'r+')
     fmib = radx.RADXgrid(kerFMIBfilepath)
+    zmin = vol_a.z_min()
 else:
     for site in SITES:
         filepaths_all = glob.glob(os.path.join(gridpath, site, '*', '*.nc'))
