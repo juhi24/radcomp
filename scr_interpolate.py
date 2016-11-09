@@ -21,7 +21,7 @@ import radx
 #import pyart
 #import grid_io_withradx2gridread as gio
 
-plt.ion()
+plt.ioff()
 debug = True
 
 interval_s = 10.
@@ -150,19 +150,19 @@ if debug:
     testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
     testfilepaths.sort()
     testfilepaths_good = filter_filepaths(testfilepaths)
-    test_interp = False
+    test_interp = True
     if test_interp:
         test_intrp_path = os.path.join(testpath, 'interpolated')
         batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
     kumfilepath = os.path.join(testpath, 'ncf_20160904_033827.nc')
     kerfilepath = os.path.join(testpath, 'ncf_20160904_033918.nc')
-    kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208_test.nc')
+    kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
     kerFMIBfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130417.nc')
     vanfilepath = os.path.join(testpath, 'ncf_20160904_034033.nc')
     kumnc = radx.RADXgrid(kumfilepath)
     kernc = radx.RADXgrid(kerfilepath)
     vannc = radx.RADXgrid(vanfilepath)
-    vol_a = radx.RADXgrid(kerVOL_Afilepath, 'r+')
+    vol_a = radx.RADXgrid(kerVOL_Afilepath, 'r')
     fmib = radx.RADXgrid(kerFMIBfilepath)
     zmin = vol_a.z_min()
 else:

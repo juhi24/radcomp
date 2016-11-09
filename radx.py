@@ -77,12 +77,7 @@ class RADXgrid:
         return self._radar_pixel
 
     def z(self):
-        dbzdata = self.dbz_raw()[0,0,:,:]
-        if self.site() == 'KER':
-            dbzdata_corrected = dbzdata+17
-        else:
-            dbzdata_corrected = dbzdata+2
-        return db2lin(dbzdata_corrected)
+        return db2lin(self.dbz())
 
     def rainrate(self):
         return 0.0292*self.z()**(0.6536)
@@ -91,6 +86,16 @@ class RADXgrid:
         if self.site() == 'KER':
             return self.data.variables['DBZ_TOT']
         return self.data.variables['DBZ']
+
+    def dbz(self):
+        """filtered and corrected DBZ"""
+        dbz = self.dbz_raw()[0,0,:,:]
+        if self.site() == 'KER':
+            dbz_corrected = dbz+17
+        else:
+            dbz_corrected = dbz+2
+        dbz_corrected.mask = self.mask()
+        return dbz_corrected
 
     def plot_rainmap(self):
         return plot_rainmap(self.rainrate())
@@ -131,5 +136,5 @@ class RADXgrid:
         return z_min
 
     def mask(self):
-        pass
+        return self.dbz_raw()[0, 0, :, :].data < self.z_min().data
 
