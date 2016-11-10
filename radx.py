@@ -118,6 +118,15 @@ class RADXgrid:
         ts=self.datetime('time_bounds')[0]
         return ts[1]-ts[0]
 
+    def elevationtime(self):
+        """scan time per elevation"""
+        return self.scantime()/self.data.dimensions['z0'].size
+
+    def elevation_end_time(self, n=1):
+        if n>self.data.dimensions['z0'].size:
+            raise ValueError('There are not that many elevations.')
+        return self.datetime('start_time')[0] + n*self.elevationtime()
+
     def z_min_xy(self, x, y):
         dist_term = 20*np.log10(self.distance_from_radar(x, y))
         if self.task_name == 'KER_FMIB':

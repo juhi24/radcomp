@@ -112,8 +112,8 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
         #elev.append(nc0.variables['z0'][0])
         I1 = nc0.rainrate()
         I2 = nc1.rainrate()
-        t0 = nc0.datetime()[0]
-        t1 = nc1.datetime()[0]
+        t0 = nc0.elevation_end_time()
+        t1 = nc1.elevation_end_time()
         dt = t1-t0
         #l_t0_str.append(str(t0))
         #l_t1_str.append(str(t1))
@@ -162,7 +162,7 @@ if debug:
     testfilepaths.sort()
     testfilepaths_good = filter_filepaths(testfilepaths)
     testncs=[radx.RADXgrid(f) for f in testfilepaths_good]
-    test_interp = True
+    test_interp = False
     if test_interp:
         test_intrp_path = os.path.join(testpath, 'interpolated')
         batch_interpolate(testfilepaths_good, test_intrp_path, save_png=True)
