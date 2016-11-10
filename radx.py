@@ -34,6 +34,7 @@ class RADXgrid:
         self.y = self.data.variables['y0'][:]
         self._task_name = None
         self._radar_pixel = None
+        self._z_min = None
 
     @property
     def task_name(self):
@@ -129,12 +130,24 @@ class RADXgrid:
             return
         return z_cal + log + dist_term
 
+    @property
     def z_min(self):
-        z_min = copy.deepcopy(self.dbz_raw()[0,0,:,:])
-        for (x, y), val in np.ndenumerate(z_min):
-            z_min[x, y] = self.z_min_xy(x, y)
-        return z_min
+        if self._z_min is None:
+            z_min = copy.deepcopy(self.dbz_raw()[0,0,:,:])
+            for (x, y), val in np.ndenumerate(z_min):
+                z_min[x, y] = self.z_min_xy(x, y)
+            self._z_min = z_min
+        return self._z_min
+
+    @z_min.setter
+    def z_min(self, z_min):
+        self._z_min = z_min
 
     def mask(self):
-        return self.dbz_raw()[0, 0, :, :].data < self.z_min().data
+        if self.site() == 'KER':
+            bad_dbz = self.dbz_raw()[0, 0, :, :].data < self.z_min.data
+        else:
+            bad_dbz = self.dbz_raw()[0, 0, :, :].mask
+        low_rhohv = self.data.variables['RHOHV'][0, 0, :, :] < 0.85
+        return np.logical_or(bad_dbz, low_rhohv)
 

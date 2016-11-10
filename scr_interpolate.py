@@ -18,11 +18,12 @@ import itertools
 import datetime
 import scipy.io
 import radx
+import pandas as pd
 #import pyart
 #import grid_io_withradx2gridread as gio
 
 plt.ioff()
-debug = True
+debug = False
 
 interval_s = 10.
 interval_dt = datetime.timedelta(seconds=interval_s)
@@ -69,14 +70,16 @@ def discard(filepath, ncdata):
     os.rename(filepath, discardfilepath)
 
 def data_is_bad(ncdata):
+    lvar = list(ncdata.variables)
     z = ncdata.variables['z0']
     not_ppi = False # TODO
-    no_kdp = 'KDP' not in list(ncdata.variables)
+    no_kdp = 'KDP' not in lvar
     high_elev = z[0] > 1.5
     low_elev = z[0] < 0.05
     is_correct_van_elev = int(round(ncdata.variables['z0'][0]*10)) == 7
     van_wrong_elev = ncdata.title == 'VANTAA' and not is_correct_van_elev
-    return no_kdp or high_elev or not_ppi or van_wrong_elev or low_elev
+    weird_kum = 'kum' in ncdata.title and not ('UNKNOWN_ID_73' in lvar or 'UNKNOWN_ID_74' in lvar)
+    return no_kdp or high_elev or not_ppi or van_wrong_elev or low_elev or weird_kum
 
 def filter_filepaths(filepaths_all):
     filepaths_good = copy.deepcopy(filepaths_all)
@@ -99,6 +102,13 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
                     data_site = site
         nc0 = radx.RADXgrid(f0)
         nc1 = radx.RADXgrid(f1)
+        if data_site == 'KER':
+            lvar0 = list(nc0.data.variables)
+            lvar1 = list(nc1.data.variables)
+            if 'UNKNOWN_ID_72' in lvar0 and 'UNKNOWN_ID_74' in lvar0:
+                nc1.z_min = nc0.z_min
+            if 'UNKNOWN_ID_72' in lvar1 and 'UNKNOWN_ID_74' in lvar1:
+                nc0.z_min = nc1.z_min
         #elev.append(nc0.variables['z0'][0])
         I1 = nc0.rainrate()
         I2 = nc1.rainrate()
@@ -148,8 +158,10 @@ def dts(filepaths):
 if debug:
     testpath = os.path.join(basepath, 'test')
     testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
+    #testfilepaths = glob.glob(os.path.join(testpath, 'KUM', '*.nc'))
     testfilepaths.sort()
     testfilepaths_good = filter_filepaths(testfilepaths)
+    testncs=[radx.RADXgrid(f) for f in testfilepaths_good]
     test_interp = True
     if test_interp:
         test_intrp_path = os.path.join(testpath, 'interpolated')
@@ -159,15 +171,23 @@ if debug:
     kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
     kerFMIBfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130417.nc')
     vanfilepath = os.path.join(testpath, 'ncf_20160904_034033.nc')
+    irmafilepath = os.path.join(testpath, 'ncf_20160903_130933.nc')
+    irma = radx.RADXgrid(irmafilepath)
     kumnc = radx.RADXgrid(kumfilepath)
     kernc = radx.RADXgrid(kerfilepath)
     vannc = radx.RADXgrid(vanfilepath)
     vol_a = radx.RADXgrid(kerVOL_Afilepath, 'r')
     fmib = radx.RADXgrid(kerFMIBfilepath)
-    zmin = vol_a.z_min()
+    vol_a.z_min = fmib.z_min
+    for task in (vol_a, fmib):
+        plt.figure()
+        plt.imshow(task.dbz(), vmin=-20, vmax=60)
+        plt.title('corrected DBZ for ' + task.task_name)
+        plt.colorbar()
 else:
-    for site in SITES:
-        filepaths_all = glob.glob(os.path.join(gridpath, site, '*', '*.nc'))
+    for site in ['KER']:
+        filepaths_all = glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160903_[12]?????.nc'))
+        filepaths_all.extend(glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160904_0[0-6]????.nc')))
         filepaths_all.sort()
         filepaths_good = filter_filepaths(filepaths_all)
         batch_interpolate(filepaths_good, intrp_path, data_site=site, save_png=True)
