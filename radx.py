@@ -17,7 +17,6 @@ def plot_rainmap(r):
     fig, ax = plt.subplots()
     r_ = r.copy()
     r_[r < 0.05] = np.nan
-    plt.figure()
     cax = ax.imshow(r_, vmin=0.05, vmax=10)
     cb = fig.colorbar(cax)
     cb.set_label("rain rate (mm/h)")

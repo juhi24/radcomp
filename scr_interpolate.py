@@ -5,8 +5,6 @@
 """
 import netCDF4 as nc
 import os
-#import pandas as pd
-#import h5py
 from pyoptflow import utils
 from pyoptflow.core import extract_motion_proesmans
 from pyoptflow.interpolation import interpolate
@@ -18,12 +16,12 @@ import itertools
 import datetime
 import scipy.io
 import radx
-import pandas as pd
+#import pandas as pd
 #import pyart
 #import grid_io_withradx2gridread as gio
 
 plt.ioff()
-debug = False
+debug = True
 
 interval_s = 10.
 interval_dt = datetime.timedelta(seconds=interval_s)
@@ -34,8 +32,6 @@ gridpath = os.path.join(basepath, 'grid')
 intrp_path = os.path.join(basepath, 'interpolated')
 
 SITES = ['KUM', 'KER', 'VAN']
-#MATPATH = os.path.join(intrp_path, 'mat')
-#PNGPATH = os.path.join(intrp_path, 'png')
 
 
 def interp(I1, I2, n=1):
