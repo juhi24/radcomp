@@ -50,17 +50,11 @@ def motion(I1, I2):
     # algorithm.
     return extract_motion_proesmans(Iu[0], Iu[1], lam=25.0, num_iter=250, num_levels=6)
 
-def ensure_path(directory):
-    """Make sure the path exists. If not, create it."""
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    return directory
-
 def discard(filepath, ncdata):
     """Return True if the file was discarded."""
     datadir = os.path.dirname(filepath)
     discardir = os.path.join(datadir, 'discarded')
-    ensure_path(discardir)
+    radx.ensure_path(discardir)
     ncdata.close()
     discardfilepath = os.path.join(discardir, os.path.basename(filepath))
     os.rename(filepath, discardfilepath)

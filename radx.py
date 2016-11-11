@@ -7,6 +7,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import netCDF4 as nc
 import copy
+import os
+
+
+def ensure_path(directory):
+    """Make sure the path exists. If not, create it."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return directory
 
 
 def db2lin(db):
