@@ -3,7 +3,7 @@
 """
 @author: Jussi Tiira
 """
-import netCDF4 as nc
+#import netCDF4 as nc
 import os
 from pyoptflow import utils
 from pyoptflow.core import extract_motion_proesmans
@@ -11,14 +11,10 @@ from pyoptflow.interpolation import interpolate
 import matplotlib.pyplot as plt
 import numpy as np
 import glob
-import copy
 import itertools
 import datetime
 import scipy.io
 import radx
-#import pandas as pd
-#import pyart
-#import grid_io_withradx2gridread as gio
 
 plt.ioff()
 debug = True
@@ -30,8 +26,6 @@ basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
 resultspath = '/home/jussitii/results/radcomp'
 gridpath = os.path.join(basepath, 'grid')
 intrp_path = os.path.join(basepath, 'interpolated')
-
-SITES = ['KUM', 'KER', 'VAN']
 
 
 def interp(I1, I2, n=1):
@@ -59,27 +53,6 @@ def discard(filepath, ncdata):
     discardfilepath = os.path.join(discardir, os.path.basename(filepath))
     os.rename(filepath, discardfilepath)
 
-def data_is_bad(ncdata):
-    lvar = list(ncdata.variables)
-    z = ncdata.variables['z0']
-    not_ppi = False # TODO
-    no_kdp = 'KDP' not in lvar
-    high_elev = z[0] > 1.5
-    low_elev = z[0] < 0.05
-    is_correct_van_elev = int(round(ncdata.variables['z0'][0]*10)) == 7
-    van_wrong_elev = ncdata.title == 'VANTAA' and not is_correct_van_elev
-    weird_kum = 'kum' in ncdata.title and not ('UNKNOWN_ID_73' in lvar or 'UNKNOWN_ID_74' in lvar)
-    return no_kdp or high_elev or not_ppi or van_wrong_elev or low_elev or weird_kum
-
-def filter_filepaths(filepaths_all):
-    filepaths_good = copy.deepcopy(filepaths_all)
-    for filepath in filepaths_all:
-        with nc.Dataset(filepath, 'r') as ncdata:
-            if data_is_bad(ncdata):
-                #print('bad: ' + filepath)
-                filepaths_good.remove(filepath)
-    return filepaths_good
-
 def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False):
     #elev = []
     #l_dt = []
@@ -87,7 +60,7 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
     #l_t1_str = []
     for f0, f1 in itertools.izip(filepaths_good, filepaths_good[1:]):
         if data_site is None:
-            for site in SITES:
+            for site in radx.SITES:
                 if site in f0:
                     data_site = site
         nc0 = radx.RADXgrid(f0)
@@ -119,13 +92,13 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
             datedir = t.strftime('%Y%m%d')
             fbasename = t.strftime('intrp_%Y%m%d_%H%M%S')
             matfname = fbasename + '.mat'
-            matsitepath = ensure_path(os.path.join(outpath, data_site, 'R', 'mat', datedir))
+            matsitepath = radx.ensure_path(os.path.join(outpath, data_site, 'R', 'mat', datedir))
             matfilepath = os.path.join(matsitepath, matfname)
             mdict = {'time': np.array(str(t)), 'R': r}
             scipy.io.savemat(matfilepath, mdict, do_compression=True)
             if save_png:
                 pngfname = fbasename + '.png'
-                pngsitepath = ensure_path(os.path.join(outpath, data_site, 'R', 'png', datedir))
+                pngsitepath = radx.ensure_path(os.path.join(outpath, data_site, 'R', 'png', datedir))
                 pngfilepath = os.path.join(pngsitepath, pngfname)
                 fig, ax = radx.plot_rainmap(r)
                 ax.set_title(str(t))
@@ -150,7 +123,7 @@ if debug:
     testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
     #testfilepaths = glob.glob(os.path.join(testpath, 'KUM', '*.nc'))
     testfilepaths.sort()
-    testfilepaths_good = filter_filepaths(testfilepaths)
+    testfilepaths_good = radx.filter_filepaths(testfilepaths)
     testncs=[radx.RADXgrid(f) for f in testfilepaths_good]
     test_interp = False
     if test_interp:
@@ -175,11 +148,11 @@ if debug:
         plt.title('corrected DBZ for ' + task.task_name)
         plt.colorbar()
 else:
-    for site in ['KER']:
+    for site in radx.SITES:
         filepaths_all = glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160903_[12]?????.nc'))
         filepaths_all.extend(glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160904_0[0-6]????.nc')))
         filepaths_all.sort()
-        filepaths_good = filter_filepaths(filepaths_all)
+        filepaths_good = radx.filter_filepaths(filepaths_all)
         batch_interpolate(filepaths_good, intrp_path, data_site=site, save_png=True)
 
 def testcase():

@@ -9,6 +9,31 @@ import netCDF4 as nc
 import copy
 import os
 
+SITES = ['KUM', 'KER', 'VAN']
+
+
+def data_is_bad(ncdata):
+    lvar = list(ncdata.variables)
+    z = ncdata.variables['z0']
+    not_ppi = False # TODO
+    no_kdp = 'KDP' not in lvar
+    high_elev = z[0] > 1.5
+    low_elev = z[0] < 0.05
+    is_correct_van_elev = int(round(ncdata.variables['z0'][0]*10)) == 7
+    van_wrong_elev = ncdata.title == 'VANTAA' and not is_correct_van_elev
+    weird_kum = 'kum' in ncdata.title and not ('UNKNOWN_ID_73' in lvar or 'UNKNOWN_ID_74' in lvar)
+    return no_kdp or high_elev or not_ppi or van_wrong_elev or low_elev or weird_kum
+
+
+def filter_filepaths(filepaths_all):
+    filepaths_good = copy.deepcopy(filepaths_all)
+    for filepath in filepaths_all:
+        with nc.Dataset(filepath, 'r') as ncdata:
+            if data_is_bad(ncdata):
+                #print('bad: ' + filepath)
+                filepaths_good.remove(filepath)
+    return filepaths_good
+
 
 def ensure_path(directory):
     """Make sure the path exists. If not, create it."""
@@ -36,12 +61,17 @@ def plot_rainmap(r):
 class RADXgrid:
     """RADX grid object"""
     def __init__(self, filepath, rwmode='r'):
-        self.data = nc.Dataset(filepath, rwmode)
+        self.filepath = filepath
+        self.rwmode = rwmode
         self.x = self.data.variables['x0'][:]
         self.y = self.data.variables['y0'][:]
         self._task_name = None
         self._radar_pixel = None
         self._z_min = None
+
+    @property
+    def data(self):
+        return nc.Dataset(self.filepath, self.rwmode)
 
     @property
     def task_name(self):
