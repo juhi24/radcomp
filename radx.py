@@ -46,13 +46,14 @@ def db2lin(db):
     return 10.**(db/10.)
 
 
-def plot_rainmap(r):
-    fig, ax = plt.subplots()
+def plot_rainmap(r, fig=None, ax=None, **cbkws):
+    if fig is None or ax is None:
+        fig, ax = plt.subplots()
     r_ = r.copy()
     r_[r < 0.05] = np.nan
-    cax = ax.imshow(r_, vmin=0.05, vmax=10)
-    cb = fig.colorbar(cax)
-    cb.set_label("rain rate (mm/h)")
+    im = ax.imshow(r_, vmin=0.05, vmax=10)
+    cb = fig.colorbar(im, **cbkws)
+    cb.set_label('rain rate (mm/h)')
     ax.set_xticks([])
     ax.set_yticks([])
     return fig, ax
