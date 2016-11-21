@@ -17,14 +17,15 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 debug = False
 save_png = False
-plt.ion()
-plt.close('all')
+plt.ioff()
+#plt.close('all')
 
 basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
 resultspath = '/home/jussitii/results/radcomp'
 gridpath = os.path.join(basepath, 'grid')
 intrp_path = os.path.join(basepath, 'interpolated')
 composite_r_path = os.path.join(intrp_path, 'composite', 'R')
+composite_frames_path = os.path.join(intrp_path, 'composite', 'video_frames')
 #matpath_pattern = os.path.join(intrp_path, '???', 'R', 'mat')
 matpath_pattern = os.path.join(intrp_path, '???', 'R', 'mat_comb')
 
@@ -40,6 +41,7 @@ rs = pd.Series(name='rainrate', index=times)
 sitencs_old = {'KER': None, 'KUM': None, 'VAN': None}
 dbz_d = copy.deepcopy(sitencs_old)
 initialize = 10
+space = 0.05
 if not debug:
     for dt in times:
         dt_nice = dt.strftime('%Y-%m-%d %H:%M')
@@ -61,23 +63,30 @@ if not debug:
         if initialize > 0:
             initialize -= 1
             continue
-        fig = plt.figure()
-        gs = gridspec.GridSpec(1, 2, width_ratios=(1.75, 1), left=0, wspace=0, hspace=0, right=.92, top=0.9, bottom=0.08)
-        gs_r = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0], height_ratios=[25,1], hspace=0.01, wspace=0.01)
-        gs_dbz = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs[1], width_ratios=[15,1], hspace=0.01, wspace=0.01)
-        axr = plt.subplot(gs_r[:-1, :])
+        fig = plt.figure(figsize=(9,8))
+        gs = gridspec.GridSpec(1, 2, width_ratios=(2.44, 1))
+        gs.update(left=0, wspace=0.04, hspace=space, right=.92, top=0.9, bottom=0.08)
+        gs_r = gridspec.GridSpecFromSubplotSpec(3, 1, subplot_spec=gs[0], height_ratios=[35,1,2.5], hspace=space, wspace=space)
+        gs_dbz = gridspec.GridSpecFromSubplotSpec(3, 2, subplot_spec=gs[1], width_ratios=[13,1], hspace=space, wspace=0.1)
+        axr = plt.subplot(gs_r[0, :])
         axsite = {}
         for i, site in enumerate(radx.SITES):
             axsite[site] = plt.subplot(gs_dbz[i, 0])
-        ax_cb_r = plt.subplot(gs_r[-1, :])
+        ax_cb_r = plt.subplot(gs_r[1, :])
         ax_cb_dbz = plt.subplot(gs_dbz[:, -1])
         radx.plot_rainmap(r, fig=fig, ax=axr, cax=ax_cb_r, orientation='horizontal')
         for site in radx.SITES:
             ax = axsite[site]
-            im = ax.imshow(dbz_d[site], vmin=-30, vmax=60)
+            im = ax.imshow(dbz_d[site], vmin=-30, vmax=60, cmap='gist_ncar')
             ax.set_title(site, y=0.82, x=0.82)
             ax.set_xticks([])
             ax.set_yticks([])
-        axr.set_title(dt_nice, y=0.93, x=0.8)
-        cb_dbz = fig.colorbar(im, cax=ax_cb_dbz, use_gridspec=False)
+            #ax.autoscale(False)
+            #ax.set_adjustable('box-forced')
+        axr.set_title(dt_nice, y=0.93, x=0.82)
+        cb_dbz = fig.colorbar(im, cax=ax_cb_dbz)
         cb_dbz.set_label('reflectivity (dBZ)')
+        outdir = radx.ensure_path(os.path.join(composite_frames_path, dtdir))
+        outpath = os.path.join(outdir, 'vid_' + dtstr + '.png')
+        fig.savefig(dt.strftime(outpath), bbox_inches='tight')
+        plt.close(fig)
