@@ -55,7 +55,9 @@ if not debug:
             for fp in filepaths_good:
                 if glob.fnmatch.fnmatch(fp, gridfpath_pattern):
                     sitencs[site] = radx.RADXgrid(fp)
-                    dbz_d[site] = sitencs[site].dbz_raw()[0,0,:,:]
+                    sitencs[site].equalize_dbz = True
+                    #dbz_d[site] = sitencs[site].dbz_raw()[0,0,:,:]
+                    dbz_d[site] = sitencs[site].dbz()
                     break
         sitencs_old = sitencs
         matfpath = os.path.join(composite_r_path, 'mat', dtdir, matfname)
@@ -81,9 +83,7 @@ if not debug:
             ax.set_title(site, y=0.82, x=0.82)
             ax.set_xticks([])
             ax.set_yticks([])
-            #ax.autoscale(False)
-            #ax.set_adjustable('box-forced')
-        axr.set_title(dt_nice, y=0.93, x=0.82)
+        axr.set_title(dt_nice, y=0.9768, x=0.99, va='top', ha='right', bbox={'facecolor':'white'})
         cb_dbz = fig.colorbar(im, cax=ax_cb_dbz)
         cb_dbz.set_label('reflectivity (dBZ)')
         outdir = radx.ensure_path(os.path.join(composite_frames_path, dtdir))

@@ -5,16 +5,25 @@
 """
 import pyart
 import os
-import matplotlib.pyplot as plt
+import scipy.io
 
-plt.ion()
-
-basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
-resultspath = '/home/jussitii/results/radcomp'
+basepath = '/home/jussitii/DATA/radar'
+resultspath = basepath
 testpath = os.path.join(basepath, 'test')
 
-def rawpath(sitename):
-    return os.path.join(basepath, sitename + 'data/MonthlyArchivedData/2016-09/')
+fn1 = '20080627121802_KUM_ppi_LEP_B.raw'
+fn2 = '20080902093219_KUM_ppi_POL_B.raw'
 
-def rawfilepath(sitename, filename):
-    return os.path.join(rawpath(sitename), filename)
+for i, fn in enumerate((fn1, fn2)):
+    fnbase = os.path.basename(fn)
+    fp = os.path.join(basepath, fn)
+    radar = pyart.io.read(fp)
+    relf_fp = os.path.join(resultspath, fnbase + '_refl.mat')
+    range_fp = os.path.join(resultspath, fnbase + '_range.mat')
+    azim_fp = os.path.join(resultspath, fnbase + '_azim.mat')
+    elev_fp = os.path.join(resultspath, fnbase + '_elev.mat')
+    scipy.io.savemat(relf_fp, radar.fields['reflectivity'])
+    scipy.io.savemat(azim_fp, radar.azimuth)
+    scipy.io.savemat(elev_fp, radar.elevation)
+    scipy.io.savemat(range_fp, radar.range)
+    

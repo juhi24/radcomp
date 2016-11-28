@@ -66,12 +66,7 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
         nc0 = radx.RADXgrid(f0)
         nc1 = radx.RADXgrid(f1)
         if data_site == 'KER':
-            lvar0 = list(nc0.data.variables)
-            lvar1 = list(nc1.data.variables)
-            if 'UNKNOWN_ID_72' in lvar0 and 'UNKNOWN_ID_74' in lvar0:
-                nc1.z_min = nc0.z_min
-            if 'UNKNOWN_ID_72' in lvar1 and 'UNKNOWN_ID_74' in lvar1:
-                nc0.z_min = nc1.z_min
+            nc0, nc1 = radx.equalize_ker_zmin(nc0, nc1)
         #elev.append(nc0.variables['z0'][0])
         I1 = nc0.rainrate()
         I2 = nc1.rainrate()

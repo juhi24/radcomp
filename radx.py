@@ -35,6 +35,16 @@ def filter_filepaths(filepaths_all):
     return filepaths_good
 
 
+def equalize_ker_zmin(nc0, nc1):
+    lvar0 = list(nc0.data.variables)
+    lvar1 = list(nc1.data.variables)
+    if 'UNKNOWN_ID_72' in lvar0 and 'UNKNOWN_ID_74' in lvar0:
+        nc1.z_min = nc0.z_min
+    if 'UNKNOWN_ID_72' in lvar1 and 'UNKNOWN_ID_74' in lvar1:
+        nc0.z_min = nc1.z_min
+    return nc0, nc1
+
+
 def ensure_path(directory):
     """Make sure the path exists. If not, create it."""
     if not os.path.exists(directory):
@@ -69,6 +79,7 @@ class RADXgrid:
         self._task_name = None
         self._radar_pixel = None
         self._z_min = None
+        self.equalize_dbz = False
 
     @property
     def data(self):
@@ -167,7 +178,7 @@ class RADXgrid:
 
     def z_min_xy(self, x, y):
         dist_term = 20*np.log10(self.distance_from_radar(x, y))
-        if self.task_name == 'KER_FMIB':
+        if self.task_name == 'KER_FMIB' or (self.site()=='KER' and self.equalize_dbz):
             z_cal = -35.25
             log = 2.5
         elif self.task_name == 'VOL_A':
