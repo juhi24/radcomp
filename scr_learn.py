@@ -7,11 +7,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import decomposition
+from sklearn.cluster import KMeans
+import radx
+from os import path
 
-plt.ion()
+plt.ioff()
 plt.close('all')
+np.random.seed(0)
 
 storefp = '/home/jussitii/DATA/soundings.hdf'
+resultspath = '/home/jussitii/results/radcomp/soundings'
 
 def sounding_url(datetime):
     year = datetime.year
@@ -69,14 +74,36 @@ pn = store['s2016'].sort_index(1, ascending=False)
 rh = pn.iloc[-1].RELH
 rhi = interp_akima(rh)
 
-n_eigenrhs = 8
-pca = decomposition.PCA(n_components=n_eigenrhs, whiten=True)
-dat=interp_akima(pn.loc[:,:,'RELH']).loc[900:100]
-pca.fit(dat.T)
+n_eigens = 8
+var = 'RELH'
+pca = decomposition.PCA(n_components=n_eigens, whiten=True)
+dat = interp_akima(pn.loc[:,:,var]).loc[900:100].T
+n_samples, n_features = dat.shape
+pca.fit(dat)
 for i in range(pca.components_.shape[0]):
     plt.figure()
     plt.plot(pca.components_[i])
 with plt.style.context('fivethirtyeight'):
-    plt.figure(figsize=(16, 12));
-    plt.title('Explained Variance Ratio over Component');
+    plt.figure();
+    plt.title('Explained variance ratio over component');
     plt.plot(pca.explained_variance_ratio_);
+with plt.style.context('fivethirtyeight'):
+    plt.figure();
+    plt.title('Cumulative explained variance over eigen' + var);
+    plt.plot(pca.explained_variance_ratio_.cumsum());
+print('PCA captures {:.2f} percent of the variance in the dataset.'.format(pca.explained_variance_ratio_.sum() * 100))
+
+km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
+km.fit(dat)
+classes = km.labels_
+
+for i in range(n_samples):
+    data = dat.iloc[i]
+    savepath = radx.ensure_path(path.join(resultspath, var, str(classes[i])))
+    fname = data.name.strftime('%Y%m%d-%HZ.eps')
+    fig = plt.figure()
+    ax = data.plot()
+    ax.set_xlabel('Pressure (hPa)')
+    ax.set_ylabel('RH')
+    fig.savefig(path.join(savepath, fname))
+    plt.close(fig)
