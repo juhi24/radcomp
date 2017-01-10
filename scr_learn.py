@@ -10,10 +10,13 @@ from sklearn import decomposition
 from sklearn.cluster import KMeans
 import radx
 from os import path
+from matplotlib import gridspec
 
-plt.ioff()
+plt.ion()
 plt.close('all')
 np.random.seed(0)
+plot_components = True
+plot_individual = False
 
 storefp = '/home/jussitii/DATA/soundings.hdf'
 resultspath = '/home/jussitii/results/radcomp/soundings'
@@ -69,20 +72,43 @@ def interp_akima(data):
     intrp = data.interpolate(method='akima')
     return intrp.sort_index(ascending=False)
 
+def sq_subplots(n_axes, use_gs=True, **kws):
+    n_rows_cols = int(np.ceil(np.sqrt(n_axes)))
+    if use_gs:
+        return ncols_subplots(n_axes, n_cols=n_rows_cols, **kws)
+    return plt.subplot(n_rows_cols, n_rows_cols, **kws)
+
+def ncols_subplots(n_axes, n_cols=3, sharex=False, sharey=False):
+    n_rows = int(np.ceil(float(n_axes)/n_cols))
+    gs = gridspec.GridSpec(n_rows, n_cols)
+    fig = plt.figure()
+    axarr = []
+    for i in range(n_axes):
+        subplot_kws = {}
+        if sharex and i>0:
+            subplot_kws['sharex'] = True
+        if sharey and i>0:
+            subplot_kws['sharey'] = True
+        axarr.append(fig.add_subplot(gs[i], **subplot_kws))
+    return fig, np.array(axarr)
+
 store = pd.HDFStore(storefp)
-pn = store['s2016'].sort_index(1, ascending=False)
+pn = store['s2016'].sort_index(1, ascending=False) # s2016
 rh = pn.iloc[-1].RELH
 rhi = interp_akima(rh)
 
 n_eigens = 8
 var = 'RELH'
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
+#pca = decomposition.PCA(n_components=0.95, svd_solver='full', whiten=True)
 dat = interp_akima(pn.loc[:,:,var]).loc[900:100].T
 n_samples, n_features = dat.shape
 pca.fit(dat)
-for i in range(pca.components_.shape[0]):
-    plt.figure()
-    plt.plot(pca.components_[i])
+if plot_components:
+    fig_comps, axarr_comps = sq_subplots(n_eigens, sharex=True)
+    for i in range(n_eigens):
+        ax = axarr_comps.flatten()[i]
+        ax.plot(pca.components_[i])
 with plt.style.context('fivethirtyeight'):
     plt.figure();
     plt.title('Explained variance ratio over component');
@@ -97,13 +123,28 @@ km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
 km.fit(dat)
 classes = km.labels_
 
-for i in range(n_samples):
-    data = dat.iloc[i]
-    savepath = radx.ensure_path(path.join(resultspath, var, str(classes[i])))
-    fname = data.name.strftime('%Y%m%d-%HZ.eps')
-    fig = plt.figure()
-    ax = data.plot()
-    ax.set_xlabel('Pressure (hPa)')
-    ax.set_ylabel('RH')
-    fig.savefig(path.join(savepath, fname))
-    plt.close(fig)
+for eigen in range(n_eigens):
+    i_classes = np.where(classes==eigen)[0]
+    fig_class, axarr_class = ncols_subplots(i_classes.size, n_cols=5)
+    for i, i_class in enumerate(i_classes):
+        ax = axarr_class.flatten()[i]
+        data = dat.iloc[i_class]
+        data.plot(ax=ax)
+        ax.set_xlabel('')
+    #ax.set_xlabel('Pressure (hPa)')
+    #ax.set_ylabel('RH')
+    fname = str(i) + '.eps'
+    savepath = radx.ensure_path(path.join(resultspath, var))
+    fig_class.savefig(path.join(savepath, fname))
+
+if plot_individual:
+    for i in range(n_samples):
+        data = dat.iloc[i]
+        savepath = radx.ensure_path(path.join(resultspath, var, str(classes[i])))
+        fname = data.name.strftime('%Y%m%d-%HZ.eps')
+        fig = plt.figure()
+        ax = data.plot()
+        ax.set_xlabel('Pressure (hPa)')
+        ax.set_ylabel('RH')
+        fig.savefig(path.join(savepath, fname))
+        plt.close(fig)
