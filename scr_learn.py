@@ -7,10 +7,18 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import decomposition
+from sklearn import preprocessing
 from sklearn.cluster import KMeans
 import radx
 from os import path
 from matplotlib import gridspec
+
+import rpy2.robjects as ro
+from rpy2.robjects import r
+from rpy2.robjects.packages import importr
+from rpy2.robjects import pandas2ri
+pandas2ri.activate()
+fmr = importr('FactoMineR')
 
 plt.ion()
 plt.close('all')
@@ -81,16 +89,23 @@ def sq_subplots(n_axes, use_gs=True, **kws):
 def ncols_subplots(n_axes, n_cols=3, sharex=False, sharey=False):
     n_rows = int(np.ceil(float(n_axes)/n_cols))
     gs = gridspec.GridSpec(n_rows, n_cols)
-    fig = plt.figure()
+    fig = plt.figure(figsize=(n_cols*2.5+0.5, n_rows*2.5+0.5))
     axarr = []
     for i in range(n_axes):
         subplot_kws = {}
         if sharex and i>0:
-            subplot_kws['sharex'] = True
+            subplot_kws['sharex'] = axarr[0]
         if sharey and i>0:
-            subplot_kws['sharey'] = True
+            subplot_kws['sharey'] = axarr[0]
         axarr.append(fig.add_subplot(gs[i], **subplot_kws))
     return fig, np.array(axarr)
+
+def scale_t(df):
+    arr = preprocessing.scale(df.T).T
+    return pd.DataFrame(arr, index=df.index, columns=df.columns)
+
+def pn2df(pn):
+    pass
 
 store = pd.HDFStore(storefp)
 pn = store['s2016'].sort_index(1, ascending=False) # s2016
@@ -98,11 +113,17 @@ rh = pn.iloc[-1].RELH
 rhi = interp_akima(rh)
 
 n_eigens = 8
+fields = ('RELH', 'TEMP', 'DWPT')
 var = 'RELH'
+rawdat = pn.loc[:, :, fields]
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 #pca = decomposition.PCA(n_components=0.95, svd_solver='full', whiten=True)
-dat = interp_akima(pn.loc[:,:,var]).loc[900:100].T
-n_samples, n_features = dat.shape
+dat_dict = {}
+for field in fields:
+     dat_dict[field] = scale_t(interp_akima(rawdat.loc[:, :, field]).loc[900:100].T)
+dat_pn = pd.Panel(dat_dict)
+n_fields, n_samples, n_features = dat_pn.shape
+dat = dat_pn[var]
 pca.fit(dat)
 if plot_components:
     fig_comps, axarr_comps = sq_subplots(n_eigens, sharex=True)
