@@ -45,14 +45,17 @@ def read_sounding(datetime):
     data.index = data.index.astype(np.float)
     return data
 
-def create_pn():
+def create_pn(freq='12H'):
     dt_start = pd.datetime(2016, 1, 1, 00)
     dt_end = pd.datetime(2016, 5, 1, 00)
-    dt_range = pd.date_range(dt_start, dt_end)
+    dt_range = pd.date_range(dt_start, dt_end, freq=freq)
     d = {}
     for dt in dt_range:
         print(str(dt))
-        d[dt] = read_sounding(dt)
+        try:
+            d[dt] = read_sounding(dt)
+        except Exception as e:
+            print(str(dt) + ': ' + str(e))
     pn = pd.Panel(d)
     return pn
 
@@ -108,7 +111,7 @@ def pn2df(pn, axis=1, **kws):
     return pd.concat([pn[item] for item in pn.items], axis=axis, **kws)
 
 store = pd.HDFStore(storefp)
-pn = store['s2016'].sort_index(1, ascending=False) # s2016
+pn = store['s2016_12h'].sort_index(1, ascending=False) # s2016
 rh = pn.iloc[-1].RELH
 rhi = interp_akima(rh)
 
@@ -121,10 +124,10 @@ dat_dict = {}
 for field in fields:
     dd = rawdat.loc[:, :, field]
     dd = interp_akima(dd)
-    dd = dd.loc[900:100].T
+    dd = dd.loc[950:100].T
     dat_dict[field] = dd
 dat_pn = pd.Panel(dat_dict)
-dat_df = pn2df(dat_pn)
+dat_df = pn2df(dat_pn).dropna()
 n_samples, n_features = dat_df.shape
 x_len = dat_pn.minor_axis.size
 pca.fit(dat_df)
@@ -163,6 +166,9 @@ for eigen in range(n_eigens):
                   ylim=(-90, 10))
         ax.set_xlabel('')
         ax.legend().set_visible(False)
+#        x0,x1 = ax.get_xlim()
+#        y0,y1 = ax.get_ylim()
+#        ax.set_aspect((x1-x0)/(y1-y0))
     #ax.set_xlabel('Pressure (hPa)')
     #ax.set_ylabel('RH')
     fname = str(i) + '.eps'
