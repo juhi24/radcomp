@@ -13,12 +13,12 @@ import radx
 from os import path
 from matplotlib import gridspec
 
-import rpy2.robjects as ro
-from rpy2.robjects import r
-from rpy2.robjects.packages import importr
-from rpy2.robjects import pandas2ri
-pandas2ri.activate()
-fmr = importr('FactoMineR')
+#import rpy2.robjects as ro
+#from rpy2.robjects import r
+#from rpy2.robjects.packages import importr
+#from rpy2.robjects import pandas2ri
+#pandas2ri.activate()
+#fmr = importr('FactoMineR')
 
 plt.ion()
 plt.close('all')
@@ -112,36 +112,45 @@ pn = store['s2016'].sort_index(1, ascending=False) # s2016
 rh = pn.iloc[-1].RELH
 rhi = interp_akima(rh)
 
-n_eigens = 8
-fields = ('RELH', 'TEMP', 'DWPT')
-var = 'RELH'
+n_eigens = 10
+fields = ('TEMP', 'DWPT')
 rawdat = pn.loc[:, :, fields]
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 #pca = decomposition.PCA(n_components=0.95, svd_solver='full', whiten=True)
 dat_dict = {}
 for field in fields:
-     dat_dict[field] = scale_t(interp_akima(rawdat.loc[:, :, field]).loc[900:100].T)
+    dd = rawdat.loc[:, :, field]
+    dd = interp_akima(dd)
+    dd = dd.loc[900:100].T
+    dat_dict[field] = dd
 dat_pn = pd.Panel(dat_dict)
-n_fields, n_samples, n_features = dat_pn.shape
-dat = dat_pn[var]
-pca.fit(dat)
+dat_df = pn2df(dat_pn)
+n_samples, n_features = dat_df.shape
+x_len = dat_pn.minor_axis.size
+pca.fit(dat_df)
 if plot_components:
     fig_comps, axarr_comps = sq_subplots(n_eigens, sharex=True)
+    axarr_comps_flat = axarr_comps.flatten()
     for i in range(n_eigens):
-        ax = axarr_comps.flatten()[i]
-        ax.plot(pca.components_[i])
+        ax = axarr_comps_flat[i]
+        comps = pca.components_[i].reshape((len(fields), x_len))
+        for comp in comps:
+            x = list(dat_pn.minor_axis)
+            ax.plot(x, comp)
+        ax.set_xticks((100,500,900))
+    ax.invert_xaxis() # invert shared xaxis only once
 with plt.style.context('fivethirtyeight'):
     plt.figure();
     plt.title('Explained variance ratio over component');
     plt.plot(pca.explained_variance_ratio_);
 with plt.style.context('fivethirtyeight'):
     plt.figure();
-    plt.title('Cumulative explained variance over eigen' + var);
+    plt.title('Cumulative explained variance over eigensounding');
     plt.plot(pca.explained_variance_ratio_.cumsum());
 print('PCA captures {:.2f} percent of the variance in the dataset.'.format(pca.explained_variance_ratio_.sum() * 100))
 
 km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
-km.fit(dat)
+km.fit(dat_df)
 classes = km.labels_
 
 for eigen in range(n_eigens):
@@ -149,19 +158,21 @@ for eigen in range(n_eigens):
     fig_class, axarr_class = ncols_subplots(i_classes.size, n_cols=5)
     for i, i_class in enumerate(i_classes):
         ax = axarr_class.flatten()[i]
-        data = dat.iloc[i_class]
-        data.plot(ax=ax)
+        data = dat_pn.iloc[:,i_class,:]
+        data.plot(ax=ax, xticks=(100,500,900), yticks=range(-80, 40, 20),
+                  ylim=(-90, 10))
         ax.set_xlabel('')
+        ax.legend().set_visible(False)
     #ax.set_xlabel('Pressure (hPa)')
     #ax.set_ylabel('RH')
     fname = str(i) + '.eps'
-    savepath = radx.ensure_path(path.join(resultspath, var))
+    savepath = radx.ensure_path(path.join(resultspath, 'sounding'))
     fig_class.savefig(path.join(savepath, fname))
 
 if plot_individual:
     for i in range(n_samples):
-        data = dat.iloc[i]
-        savepath = radx.ensure_path(path.join(resultspath, var, str(classes[i])))
+        data = dat_pn.iloc[:,i,:]
+        savepath = radx.ensure_path(path.join(resultspath, 'sounding', str(classes[i])))
         fname = data.name.strftime('%Y%m%d-%HZ.eps')
         fig = plt.figure()
         ax = data.plot()
