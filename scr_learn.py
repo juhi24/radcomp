@@ -104,8 +104,8 @@ def scale_t(df):
     arr = preprocessing.scale(df.T).T
     return pd.DataFrame(arr, index=df.index, columns=df.columns)
 
-def pn2df(pn):
-    pass
+def pn2df(pn, axis=1, **kws):
+    return pd.concat([pn[item] for item in pn.items], axis=axis, **kws)
 
 store = pd.HDFStore(storefp)
 pn = store['s2016'].sort_index(1, ascending=False) # s2016
