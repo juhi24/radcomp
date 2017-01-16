@@ -25,6 +25,7 @@ plt.close('all')
 np.random.seed(0)
 plot_components = True
 plot_individual = False
+scaling = False
 
 storefp = '/home/jussitii/DATA/soundings.hdf'
 resultspath = '/home/jussitii/results/radcomp/soundings'
@@ -56,7 +57,7 @@ def create_pn(freq='12H'):
             d[dt] = read_sounding(dt)
         except Exception as e:
             print(str(dt) + ': ' + str(e))
-    pn = pd.Panel(d)
+    pn = pd.Panel(d).transpose(2,1,0)
     return pn
 
 def create_hdf(filepath='/home/jussitii/DATA/soundings.hdf', key='s2016'):
@@ -112,22 +113,22 @@ def pn2df(pn, axis=1, **kws):
 
 store = pd.HDFStore(storefp)
 pn = store['s2016_12h'].sort_index(1, ascending=False) # s2016
-rh = pn.iloc[-1].RELH
-rhi = interp_akima(rh)
 
 n_eigens = 10
-fields = ('TEMP', 'DWPT')
-rawdat = pn.loc[:, :, fields]
+fields = ['TEMP', 'DWPT']
+rawdat = pn[fields]
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 #pca = decomposition.PCA(n_components=0.95, svd_solver='full', whiten=True)
 dat_dict = {}
 for field in fields:
-    dd = rawdat.loc[:, :, field]
+    dd = rawdat[field]
     dd = interp_akima(dd)
     dd = dd.loc[950:100].T
     dat_dict[field] = dd
 dat_pn = pd.Panel(dat_dict)
 dat_df = pn2df(dat_pn).dropna()
+if scaling:
+    dat_df = preprocessing.scale(dat_df)
 n_samples, n_features = dat_df.shape
 x_len = dat_pn.minor_axis.size
 pca.fit(dat_df)
