@@ -12,6 +12,9 @@ from sklearn.cluster import KMeans
 import radx
 from os import path
 from matplotlib import gridspec
+import copy
+import scipy.io
+import sounding
 
 #import rpy2.robjects as ro
 #from rpy2.robjects import r
@@ -26,63 +29,10 @@ np.random.seed(0)
 plot_components = True
 plot_individual = False
 scaling = False
+n_eigens = 10
 
 storefp = '/home/jussitii/DATA/soundings.hdf'
 resultspath = '/home/jussitii/results/radcomp/soundings'
-
-def sounding_url(datetime):
-    year = datetime.year
-    mon = str(datetime.month).zfill(2)
-    day = str(datetime.day).zfill(2)
-    hour = str(datetime.hour).zfill(2)
-    urlformat = 'http://weather.uwyo.edu/cgi-bin/sounding?region=europe&TYPE=TEXT%3ALIST&YEAR={year}&MONTH={month}&FROM={day}{hour}&TO={day}{hour}&STNM=02963'
-    return urlformat.format(year=year, month=mon, day=day, hour=hour)
-
-def read_sounding(datetime):
-    skiprows = (0,1,2,3,4,5,6,8,9)
-    url = sounding_url(datetime)
-    data = pd.read_table(url, delim_whitespace=True, index_col=0, skiprows=skiprows).dropna()
-    data = data.drop(data.tail(1).index).astype(np.float)
-    data.index = data.index.astype(np.float)
-    return data
-
-def create_pn(freq='12H'):
-    dt_start = pd.datetime(2016, 1, 1, 00)
-    dt_end = pd.datetime(2016, 5, 1, 00)
-    dt_range = pd.date_range(dt_start, dt_end, freq=freq)
-    d = {}
-    for dt in dt_range:
-        print(str(dt))
-        try:
-            d[dt] = read_sounding(dt)
-        except Exception as e:
-            print(str(dt) + ': ' + str(e))
-    pn = pd.Panel(d).transpose(2,1,0)
-    return pn
-
-def create_hdf(filepath='/home/jussitii/DATA/soundings.hdf', key='s2016'):
-    with pd.HDFStore(filepath) as store:
-        store[key] = create_pn()
-
-def comp_interp_methods(rh):
-    methods = ('linear', 'index', 'values', 'nearest', 'zero','slinear', 'quadratic', 'cubic', 'barycentric', 'piecewise_polynomial', 'from_derivatives', 'pchip', 'akima')
-    for method in methods:
-        interp = rh.interpolate(method=method)
-        plt.figure()
-        interp.plot(label=method)
-        plt.legend()
-
-def reindex(data, force_asc=False):
-    i=np.array(range(int(data.index.min()*10),int(data.index.max()*10+1)))/10.
-    ii = i[::-1]
-    if force_asc:
-        return data.reindex(i)
-    return data.reindex(ii)
-
-def interp_akima(data):
-    data = reindex(data, force_asc=True)
-    intrp = data.interpolate(method='akima')
-    return intrp.sort_index(ascending=False)
 
 def sq_subplots(n_axes, use_gs=True, **kws):
     n_rows_cols = int(np.ceil(np.sqrt(n_axes)))
@@ -104,25 +54,21 @@ def ncols_subplots(n_axes, n_cols=3, sharex=False, sharey=False):
         axarr.append(fig.add_subplot(gs[i], **subplot_kws))
     return fig, np.array(axarr)
 
-def scale_t(df):
-    arr = preprocessing.scale(df.T).T
-    return pd.DataFrame(arr, index=df.index, columns=df.columns)
-
 def pn2df(pn, axis=1, **kws):
     return pd.concat([pn[item] for item in pn.items], axis=axis, **kws)
 
 store = pd.HDFStore(storefp)
-pn = store['s2016_12h'].sort_index(1, ascending=False) # s2016
+pn = store['w1516'].sort_index(1, ascending=False) # s2016, s2016_12h
 
-n_eigens = 10
+#tmax = pd.concat({'PRES': pn.TEMP.idxmax(), 'TEMP': pn.TEMP.max()}, axis=1)
+pn0 = pn[:,:,pn.TEMP.max()<0]
 fields = ['TEMP', 'DWPT']
-rawdat = pn[fields]
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 #pca = decomposition.PCA(n_components=0.95, svd_solver='full', whiten=True)
 dat_dict = {}
 for field in fields:
-    dd = rawdat[field]
-    dd = interp_akima(dd)
+    dd = pn0[field]
+    dd = sounding.interp_akima(dd)
     dd = dd.loc[950:100].T
     dat_dict[field] = dd
 dat_pn = pd.Panel(dat_dict)
