@@ -7,12 +7,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.io
-import seaborn as sns
+import matplotlib.dates as mdates
 from os import path
 
 plt.ion()
 plt.close('all')
-sns.reset_orig()
 
 datadir = '/home/jussitii/DATA/ToJussi'
 datapath = path.join(datadir, '20140131_IKA_VP_from_RHI.mat')
@@ -30,10 +29,24 @@ def vprhimat2pn(datapath):
         data_dict[field] = data[field][0][0].T
     return pd.Panel(data_dict, major_axis=h, minor_axis=t)
 
-pn = vprhimat2pn(datapath)
+def plotpn(pn, fields=['ZH', 'ZDR', 'RHO']):
+    vmin = {'ZH': -15, 'ZDR': -1, 'RHO': 0}
+    vmax = {'ZH': 30, 'ZDR': 4, 'RHO': 0.26}
+    fig, axarr = plt.subplots(len(fields), sharex=True, sharey=True)
+    for i, field in enumerate(fields):
+        ax = axarr[i]
+        ax.pcolormesh(pn[field].columns, pn[field].index, 
+                      np.ma.masked_invalid(pn[field].values), cmap='gist_ncar',
+                      vmin=vmin[field], vmax=vmax[field], label=field)
+        #fig.autofmt_xdate()
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))
+        ax.set_ylim(0,10000)
+        ax.set_ylabel('Height, m')
+    ax.set_xlabel('Time, UTC')
+    axarr[0].set_title(str(pn[field].columns[0].date()))
+    return fig, axarr
 
-plt.pcolormesh(np.ma.masked_invalid(pn.ZH.values), cmap='gist_ncar', vmin=-2, vmax=30)
-#plt.yticks(np.arange(0.5, len(pn.ZH.index), 1), pn.ZH.index)
-#plt.xticks(np.arange(0.5, len(pn.ZH.columns), 1), pn.ZH.columns)
+pn = vprhimat2pn(datapath)
+fig, axarr = plotpn(pn)
 
 
