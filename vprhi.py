@@ -17,6 +17,18 @@ datadir = '/home/jussitii/DATA/ToJussi'
 datapath0 = path.join(datadir, '20140131_IKA_VP_from_RHI.mat')
 datapath1 = path.join(datadir, '20140201_IKA_VP_from_RHI.mat')
 
+def data_range(dt_start, dt_end):
+    fnames = fname_range(dt_start, dt_end)
+    pns = map(vprhimat2pn, fnames)
+    return pd.concat(pns, axis=2).loc[:, :, dt_start:dt_end]
+
+def fname_range(dt_start, dt_end):
+    dt_range = pd.date_range(dt_start.date(), dt_end.date())
+    return map(dt2path, dt_range)
+
+def dt2path(dt, datadir='/home/jussitii/DATA/ToJussi'):
+    return path.join(datadir, dt.strftime('%Y%m%d_IKA_VP_from_RHI.mat'))
+
 def vprhimat2pn(datapath):
     data = scipy.io.loadmat(datapath)['VP_RHI']
     fields = list(data.dtype.fields)
@@ -53,9 +65,9 @@ def plotpn(pn, fields=['ZH', 'ZDR', 'KDP']):
     fig.tight_layout()
     return fig, axarr
 
-pn0 = vprhimat2pn(datapath0)
-pn1 = vprhimat2pn(datapath1)
-pn = pd.concat([pn0, pn1],axis=2)
+dt0 = pd.datetime(2014, 1, 31, 20, 30)
+dt1 = pd.datetime(2014, 2, 1, 16, 30)
+pn = data_range(dt0, dt1)
 fig, axarr = plotpn(pn)
 
 
