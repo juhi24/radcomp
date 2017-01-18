@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.io
-import matplotlib.dates as mdates
+import matplotlib as mpl
 from os import path
 
 plt.ion()
@@ -33,19 +33,24 @@ def vprhimat2pn(datapath):
 def plotpn(pn, fields=['ZH', 'ZDR', 'KDP']):
     vmin = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0}
     vmax = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26}
+    label = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km'}
     fig, axarr = plt.subplots(len(fields), sharex=True, sharey=True)
+    def m2km(m, pos):
+        return '{:.0f}'.format(m*1e-3)
     for i, field in enumerate(fields):
         ax = axarr[i]
-        duf=ax.pcolormesh(pn[field].columns, pn[field].index, 
+        im = ax.pcolormesh(pn[field].columns, pn[field].index, 
                       np.ma.masked_invalid(pn[field].values), cmap='gist_ncar',
                       vmin=vmin[field], vmax=vmax[field], label=field)
         #fig.autofmt_xdate()
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
+        ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(m2km))
         ax.set_ylim(0,10000)
-        ax.set_ylabel('Height, m')
-        #plt.colorbar(duf)
+        ax.set_ylabel('Height, km')
+        fig.colorbar(im, ax=ax, label=label[field])
     ax.set_xlabel('Time, UTC')
     axarr[0].set_title(str(pn[field].columns[0].date()))
+    fig.tight_layout()
     return fig, axarr
 
 pn0 = vprhimat2pn(datapath0)
