@@ -27,12 +27,12 @@ def sq_subplots(n_axes, use_gs=True, **kws):
         return ncols_subplots(n_axes, n_cols=n_rows_cols, **kws)
     return plt.subplot(n_rows_cols, n_rows_cols, **kws)
 
-def plot_classes(data, i_classes, **kws):
-    fig, axarr = ncols_subplots(i_classes.size, n_cols=5)
-    for i, i_class in enumerate(i_classes):
+def plot_class(pn_class, n_cols=5, **kws):
+    fig, axarr = ncols_subplots(pn_class.shape[1], n_cols=n_cols)
+    for i, key in enumerate(pn_class.major_axis):
+        rows = pn_class.major_xs(key)
         ax = axarr.flatten()[i]
-        dat = data.iloc[i_class]
-        dat.plot(ax=ax, **kws)
+        rows.plot(ax=ax, **kws)
         ax.set_xlabel('')
         ax.legend().set_visible(False)
     return fig, axarr
@@ -47,3 +47,14 @@ def pca_stats(pca):
         plt.title('Cumulative explained variance over eigensounding');
         plt.plot(pca.explained_variance_ratio_.cumsum());
     print('PCA captures {:.2f}% of the variance in the dataset.'.format(pca.explained_variance_ratio_.sum() * 100))
+
+def plot_pca_components(pca, pn):
+    fig, axarr = sq_subplots(pca.n_components, sharex=True)
+    axarr_flat = axarr.flatten()
+    for i in range(pca.n_components):
+        ax = axarr_flat[i]
+        comps = pca.components_[i].reshape((pn.items.size, pn.minor_axis.size))
+        for comp in comps:
+            x = list(pn.minor_axis)
+            ax.plot(x, comp)
+    return fig, axarr

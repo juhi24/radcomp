@@ -79,25 +79,17 @@ hmax = 10000
 n_eigens = 3
 nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
-z = pn['ZH', 0:hmax, :].fillna(nan_replacement['ZH']).T
-n_samples, n_features = z.shape
-x_len = n_features
-pca.fit(z)
+z = pn[['ZH'], 0:hmax, :].fillna(nan_replacement['ZH']).transpose(0,2,1)
+pca.fit(z['ZH'])
 if plot_components:
-    fig_comps, axarr_comps = learn.sq_subplots(n_eigens, sharex=True)
-    axarr_comps_flat = axarr_comps.flatten()
-    for i in range(n_eigens):
-        ax = axarr_comps_flat[i]
-        comps = pca.components_[i].reshape((len(fields), x_len))
-        for comp in comps:
-            x = list(z.columns)
-            ax.plot(x, comp)
+    learn.plot_pca_components(pca, z)
 
 learn.pca_stats(pca)
 km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
-km.fit(z)
+km.fit(z['ZH'])
 classes = km.labels_
 
 for eigen in range(n_eigens):   
     i_classes = np.where(classes==eigen)[0]
-    learn.plot_classes(z, i_classes, ylim=(-10, 40))
+    pn_class = z.iloc[:, i_classes, :]
+    learn.plot_class(pn_class, ylim=(-10, 40))
