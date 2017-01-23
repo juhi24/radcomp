@@ -8,6 +8,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.io
 import matplotlib as mpl
+import copy
+import collections
 from os import path
 from sklearn import decomposition
 from sklearn import preprocessing
@@ -45,11 +47,15 @@ def vprhimat2pn(datapath):
         data_dict[field] = data[field][0][0].T
     return pd.Panel(data_dict, major_axis=h, minor_axis=t)
 
-def plotpn(pn, fields=['ZH', 'ZDR', 'KDP'], **kws):
+def plotpn(pn, fields=None, **kws):
+    if fields is None:
+        fields = pn.items
     vmin = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0}
     vmax = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26}
     label = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km'}
     fig, axarr = plt.subplots(len(fields), sharex=True, sharey=True)
+    if not isinstance(axarr, collections.Iterable):
+        axarr = [axarr]
     def m2km(m, pos):
         return '{:.0f}'.format(m*1e-3)
     for i, field in enumerate(fields):
@@ -71,7 +77,7 @@ def plotpn(pn, fields=['ZH', 'ZDR', 'KDP'], **kws):
 dt0 = pd.datetime(2014, 2, 21, 15, 30)
 dt1 = pd.datetime(2014, 2, 22, 5, 30)
 pn = data_range(dt0, dt1)
-fig, axarr = plotpn(pn, antialiased=True)
+fig, axarr = plotpn(pn, fields=['ZH', 'ZDR', 'KDP'])
 
 fields = ['ZH']
 plot_components = True
@@ -80,6 +86,13 @@ n_eigens = 3
 nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 z = pn[['ZH'], 0:hmax, :].fillna(nan_replacement['ZH']).transpose(0,2,1)
+z_scaled = copy.deepcopy(z)
+z_scaled['ZH'] = preprocessing.scale(z['ZH'], axis=1)
+z_uniscaled = z+abs(z.min().min().iloc[0])
+z_uniscaled *= 1.0/z_uniscaled.max().max().iloc[0]
+plotpn(z.transpose(0,2,1))
+plotpn(z_scaled.transpose(0,2,1)*5)
+plotpn(z_uniscaled.transpose(0,2,1)*5)
 pca.fit(z['ZH'])
 if plot_components:
     learn.plot_pca_components(pca, z)
