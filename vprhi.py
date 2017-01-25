@@ -40,7 +40,7 @@ def vprhimat2pn(datapath):
     fields.remove('ObsTime')
     fields.remove('height')
     str2dt = lambda tstr: pd.datetime.strptime(tstr,'%Y-%m-%dT%H:%M:%S')
-    t = map(str2dt, data['ObsTime'][0][0])
+    t = list(map(str2dt, data['ObsTime'][0][0]))
     h = data['height'][0][0][0]
     data_dict = {}
     for field in fields:
@@ -74,35 +74,49 @@ def plotpn(pn, fields=None, **kws):
     fig.tight_layout()
     return fig, axarr
 
+def scale_data(pn):
+    scaling_limits = {'ZH': (-10, 30), 'ZDR': (-1, 4), 'KDP': (0, 0.25)}
+    scaled = copy.deepcopy(pn)
+    for field, data in scaled.iteritems():
+        data -= scaling_limits[field][0]
+        data *= 1.0/scaling_limits[field][1]
+        scaled[field] = data
+    return scaled
+
+def fillna(pn):
+    nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
+    for field in list(pn.items):
+        pn[field].fillna(nan_replacement[field], inplace=True)
+    return pn
+
 dt0 = pd.datetime(2014, 2, 21, 15, 30)
 dt1 = pd.datetime(2014, 2, 22, 5, 30)
 pn = data_range(dt0, dt1)
 fig, axarr = plotpn(pn, fields=['ZH', 'ZDR', 'KDP'])
 
-fields = ['ZH']
+fields = ['ZH', 'ZDR', 'KDP']
 plot_components = True
 hmax = 10000
-n_eigens = 3
-nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
+n_eigens = 4
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
-z = pn[['ZH'], 0:hmax, :].fillna(nan_replacement['ZH']).transpose(0,2,1)
-z_scaled = copy.deepcopy(z)
-z_scaled['ZH'] = preprocessing.scale(z['ZH'], axis=1)
-z_uniscaled = z+abs(z.min().min().iloc[0])
-z_uniscaled *= 1.0/z_uniscaled.max().max().iloc[0]
-plotpn(z.transpose(0,2,1))
-plotpn(z_scaled.transpose(0,2,1)*5)
-plotpn(z_uniscaled.transpose(0,2,1)*5)
-pca.fit(z['ZH'])
+data = fillna(pn[fields, 0:hmax, :]).transpose(0,2,1)
+#data_scaled = copy.deepcopy(data)
+#data_scaled['ZH'] = preprocessing.scale(data['ZH'], axis=1)
+data_uniscaled = scale_data(data)
+plotpn(data.transpose(0,2,1))
+#plotpn(data_scaled.transpose(0,2,1)*5)
+plotpn(data_uniscaled.transpose(0,2,1)*5)
+data_df = learn.pn2df(data)
+pca.fit(data_df)
 if plot_components:
-    learn.plot_pca_components(pca, z)
+    learn.plot_pca_components(pca, data)
 
 learn.pca_stats(pca)
 km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
-km.fit(z['ZH'])
+km.fit(data_df)
 classes = km.labels_
 
 for eigen in range(n_eigens):   
     i_classes = np.where(classes==eigen)[0]
-    pn_class = z.iloc[:, i_classes, :]
+    pn_class = data.iloc[:, i_classes, :]
     learn.plot_class(pn_class, ylim=(-10, 40))

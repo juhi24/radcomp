@@ -4,6 +4,7 @@
 @author: Jussi Tiira
 """
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
@@ -58,3 +59,6 @@ def plot_pca_components(pca, pn):
             x = list(pn.minor_axis)
             ax.plot(x, comp)
     return fig, axarr
+
+def pn2df(pn, axis=1, **kws):
+    return pd.concat([pn[item] for item in pn.items], axis=axis, **kws)

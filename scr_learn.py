@@ -42,11 +42,8 @@ def prepare_pn(pn, fields=['TEMP', 'DWPT']):
         dat_dict[field] = dd
     return pd.Panel(dat_dict)
 
-def pn2df(pn, axis=1, **kws):
-    return pd.concat([pn[item] for item in pn.items], axis=axis, **kws)
-
 store = pd.HDFStore(storefp)
-pn = store['s2016_12h'].sort_index(1, ascending=False) # s2016, s2016_12h
+pn = store['w1516'].sort_index(1, ascending=False) # s2016, s2016_12h
 
 #tmax = pd.concat({'PRES': pn.TEMP.idxmax(), 'TEMP': pn.TEMP.max()}, axis=1)
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
@@ -54,7 +51,7 @@ pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 
 fields = ['TEMP', 'DWPT']
 dat_pn = prepare_pn(pn, fields=fields)
-dat_df = pn2df(dat_pn).dropna()
+dat_df = learn.pn2df(dat_pn).dropna()
 if scaling:
     dat_df = preprocessing.scale(dat_df)
 pca.fit(dat_df)
