@@ -66,7 +66,7 @@ def plotpn(pn, fields=None, **kws):
         #fig.autofmt_xdate()
         ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(m2km))
-        ax.set_ylim(0,10000)
+        ax.set_ylim(0,11000)
         ax.set_ylabel('Height, km')
         fig.colorbar(im, ax=ax, label=label[field])
     ax.set_xlabel('Time, UTC')
@@ -88,6 +88,18 @@ def fillna(pn):
     for field in list(pn.items):
         pn[field].fillna(nan_replacement[field], inplace=True)
     return pn
+
+def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **kws):
+    if ax is None:
+        ax = plt.gca()
+    cm = plt.get_cmap(cmap)
+    t0 = classes.index[0]
+    for t1, icolor in classes.iteritems():
+        if t1==t0:
+            continue
+        ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=cm.colors[icolor], 
+                   alpha=alpha, clip_on=False, **kws)
+        t0 = t1
 
 dt0 = pd.datetime(2014, 2, 21, 15, 30)
 dt1 = pd.datetime(2014, 2, 22, 5, 30)
@@ -114,7 +126,9 @@ if plot_components:
 learn.pca_stats(pca)
 km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
 km.fit(data_df)
-classes = km.labels_
+classes = pd.Series(data=km.labels_, index=pn.minor_axis)
+for iax in [0,1]:
+    class_colors(classes, ax=axarr[iax])
 
 for eigen in range(n_eigens):   
     i_classes = np.where(classes==eigen)[0]
