@@ -10,6 +10,7 @@ import scipy.io
 import matplotlib as mpl
 import copy
 import collections
+import wradlib
 from os import path
 from sklearn import decomposition
 from sklearn import preprocessing
@@ -47,12 +48,12 @@ def vprhimat2pn(datapath):
         data_dict[field] = data[field][0][0].T
     return pd.Panel(data_dict, major_axis=h, minor_axis=t)
 
-def plotpn(pn, fields=None, **kws):
+def plotpn(pn, fields=None, scaled=False, **kws):
     if fields is None:
         fields = pn.items
-    vmin = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0}
-    vmax = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26}
-    label = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km'}
+    vmins = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'kdp': 0, 'DP': 0, 'phidp': 0}
+    vmaxs = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'kdp': 0.26, 'DP': 360, 'phidp': 360}
+    labels = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'kdp': 'deg/km', 'DP': 'deg'}
     fig, axarr = plt.subplots(len(fields), sharex=True, sharey=True)
     if not isinstance(axarr, collections.Iterable):
         axarr = [axarr]
@@ -60,22 +61,31 @@ def plotpn(pn, fields=None, **kws):
         return '{:.0f}'.format(m*1e-3)
     for i, field in enumerate(fields):
         ax = axarr[i]
+        if scaled:
+            scalekws = {'vmin': 0, 'vmax': 1}
+            label = 'scaled'
+        elif field in labels:
+            scalekws = {'vmin': vmins[field], 'vmax': vmaxs[field]}
+            label = labels[field]
+        else:
+            scalekws = {}
+            label = field
         im = ax.pcolormesh(pn[field].columns, pn[field].index, 
                       np.ma.masked_invalid(pn[field].values), cmap='gist_ncar',
-                      vmin=vmin[field], vmax=vmax[field], label=field, **kws)
+                      **scalekws, label=field, **kws)
         #fig.autofmt_xdate()
         ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(m2km))
         ax.set_ylim(0,11000)
         ax.set_ylabel('Height, km')
-        fig.colorbar(im, ax=ax, label=label[field])
+        fig.colorbar(im, ax=ax, label=label)
     ax.set_xlabel('Time, UTC')
     axarr[0].set_title(str(pn[field].columns[0].date()))
     fig.tight_layout()
     return fig, axarr
 
 def scale_data(pn):
-    scaling_limits = {'ZH': (-10, 30), 'ZDR': (-1, 4), 'KDP': (0, 0.25)}
+    scaling_limits = {'ZH': (-10, 30), 'ZDR': (0, 3), 'KDP': (0, 0.5)}
     scaled = copy.deepcopy(pn)
     for field, data in scaled.iteritems():
         data -= scaling_limits[field][0]
@@ -89,6 +99,28 @@ def fillna(pn):
         pn[field].fillna(nan_replacement[field], inplace=True)
     return pn
 
+def kdp2phidp(kdp, dr_km):
+    kdp_filled = kdp.fillna(0)
+    return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
+
+def prepare_pn(pn):
+    dr = pd.Series(pn.major_axis.values, index=pn.major_axis).diff().bfill()
+    dr_km = dr/1000
+    pn_new = copy.deepcopy(pn)
+    pn_new['KDPorig'] = pn_new['KDP'].copy()
+    pn_new['KDP'][pn_new['KDP']<0] = np.nan
+    pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
+    phidp, kdp = wradlib.dp.process_raw_phidp_vulpiani(pn_new['phidp'].T.values,
+                                                       dr_km.values[0], copy=True)
+    pn_new['kdp'] = kdp.T
+    return pn_new
+
+def prepare_data(pn, fields=['ZH', 'ZDR', 'KDP'], hmax=10e3, kdpmax=None):
+    data = pn[fields, 0:hmax, :].transpose(0,2,1)
+    if kdpmax is not None:
+        data['KDP'][data['KDP']>kdpmax[1]] = np.nan
+    return fillna(data)
+
 def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **kws):
     if ax is None:
         ax = plt.gca()
@@ -101,36 +133,48 @@ def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **
                    alpha=alpha, clip_on=False, **kws)
         t0 = t1
 
-dt0 = pd.datetime(2014, 2, 21, 15, 30)
-dt1 = pd.datetime(2014, 2, 22, 5, 30)
-pn = data_range(dt0, dt1)
-fig, axarr = plotpn(pn, fields=['ZH', 'ZDR', 'KDP'])
+def plot_classes(data, classes, n_eigens):
+    for eigen in range(n_eigens):
+        i_classes = np.where(classes==eigen)[0]
+        pn_class = data.iloc[:, i_classes, :]
+        learn.plot_class(pn_class, ylim=(-1, 2))
 
+dt0 = pd.datetime(2014, 2, 21, 15, 30)
+dt1 = pd.datetime(2014, 2, 22, 15, 30)
+pn_raw = data_range(dt0, dt1)
+pn = prepare_pn(pn_raw)
 fields = ['ZH', 'ZDR', 'KDP']
+fig, axarr = plotpn(pn, fields=fields)
+
 plot_components = True
 hmax = 10000
-n_eigens = 4
+n_eigens = 10
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
-data = fillna(pn[fields, 0:hmax, :]).transpose(0,2,1)
-#data_scaled = copy.deepcopy(data)
-#data_scaled['ZH'] = preprocessing.scale(data['ZH'], axis=1)
-data_uniscaled = scale_data(data)
+data = prepare_data(pn, fields, hmax)
+data_scaled = scale_data(data)
 plotpn(data.transpose(0,2,1))
-#plotpn(data_scaled.transpose(0,2,1)*5)
-plotpn(data_uniscaled.transpose(0,2,1)*5)
-data_df = learn.pn2df(data)
+plotpn(data_scaled.transpose(0,2,1), scaled=True)
+data_df = learn.pn2df(data_scaled)
 pca.fit(data_df)
 if plot_components:
-    learn.plot_pca_components(pca, data)
+    learn.plot_pca_components(pca, data_scaled)
 
 learn.pca_stats(pca)
 km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
 km.fit(data_df)
 classes = pd.Series(data=km.labels_, index=pn.minor_axis)
+
 for iax in [0,1]:
     class_colors(classes, ax=axarr[iax])
 
-for eigen in range(n_eigens):   
-    i_classes = np.where(classes==eigen)[0]
-    pn_class = data.iloc[:, i_classes, :]
-    learn.plot_class(pn_class, ylim=(-10, 40))
+#plot_classes(data_scaled, classes, n_eigens)
+
+kdp1=pn['KDP'].fillna(0).iloc[:,56].copy()
+kdp1sort = kdp1.sort_values(ascending=False)
+plt.figure()
+plt.plot(kdp1sort.values)
+#pn['kdpc']=wradlib.dp.kdp_from_phidp_convolution(pn['DP'].values.T).T
+#phidp, kdp = wradlib.dp.process_raw_phidp_vulpiani(pn['DP'].T.values, 0.05, copy=True)
+#pn['phidp'] = phidp.T
+#plotpn(pn[['DP', 'phidp']])
+#plotpn(pn[['KDP', 'kdpc']])
