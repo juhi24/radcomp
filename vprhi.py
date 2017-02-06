@@ -10,11 +10,11 @@ import scipy.io
 import matplotlib as mpl
 import copy
 import collections
-import wradlib
 from os import path
 from sklearn import decomposition
-from sklearn import preprocessing
 from sklearn.cluster import KMeans
+from scipy import signal
+from scipy.ndimage.filters import median_filter
 import learn
 
 plt.ion()
@@ -48,7 +48,7 @@ def vprhimat2pn(datapath):
         data_dict[field] = data[field][0][0].T
     return pd.Panel(data_dict, major_axis=h, minor_axis=t)
 
-def plotpn(pn, fields=None, scaled=False, **kws):
+def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', **kws):
     if fields is None:
         fields = pn.items
     vmins = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'kdp': 0, 'DP': 0, 'phidp': 0}
@@ -71,7 +71,7 @@ def plotpn(pn, fields=None, scaled=False, **kws):
             scalekws = {}
             label = field
         im = ax.pcolormesh(pn[field].columns, pn[field].index, 
-                      np.ma.masked_invalid(pn[field].values), cmap='gist_ncar',
+                      np.ma.masked_invalid(pn[field].values), cmap=cmap,
                       **scalekws, label=field, **kws)
         #fig.autofmt_xdate()
         ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
@@ -85,7 +85,8 @@ def plotpn(pn, fields=None, scaled=False, **kws):
     return fig, axarr
 
 def scale_data(pn):
-    scaling_limits = {'ZH': (-10, 30), 'ZDR': (0, 3), 'KDP': (0, 0.5)}
+    scaling_limits = {'ZH': (-10, 30), 'ZDR': (0, 3), 'KDP': (0, 0.5), 
+                      'kdp': (0, 0.15)}
     scaled = copy.deepcopy(pn)
     for field, data in scaled.iteritems():
         data -= scaling_limits[field][0]
@@ -94,7 +95,7 @@ def scale_data(pn):
     return scaled
 
 def fillna(pn):
-    nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
+    nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0, 'kdp': 0}
     for field in list(pn.items):
         pn[field].fillna(nan_replacement[field], inplace=True)
     return pn
@@ -103,22 +104,26 @@ def kdp2phidp(kdp, dr_km):
     kdp_filled = kdp.fillna(0)
     return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
 
-def prepare_pn(pn):
+def prepare_pn(pn, kdpmax=2, fltr_size=(20,2)):
     dr = pd.Series(pn.major_axis.values, index=pn.major_axis).diff().bfill()
     dr_km = dr/1000
     pn_new = copy.deepcopy(pn)
-    pn_new['KDPorig'] = pn_new['KDP'].copy()
+    pn_new['KDP_orig'] = pn_new['KDP'].copy()
     pn_new['KDP'][pn_new['KDP']<0] = np.nan
     pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
-    phidp, kdp = wradlib.dp.process_raw_phidp_vulpiani(pn_new['phidp'].T.values,
-                                                       dr_km.values[0], copy=True)
-    pn_new['kdp'] = kdp.T
+    nullmask = pn_new['KDP_orig'].isnull()
+    kdp = pn_new['KDP'].fillna(0)
+    kdp[kdp>kdpmax] = 0
+    kdp[kdp<0] = 0
+    kdp_filtered = median_filter(kdp, size=fltr_size)
+    kdp_filtered[nullmask] = np.nan
+    pn_new['kdp'] = kdp_filtered
     return pn_new
 
-def prepare_data(pn, fields=['ZH', 'ZDR', 'KDP'], hmax=10e3, kdpmax=None):
+def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
     data = pn[fields, 0:hmax, :].transpose(0,2,1)
     if kdpmax is not None:
-        data['KDP'][data['KDP']>kdpmax[1]] = np.nan
+        data['KDP'][data['KDP']>kdpmax] = np.nan
     return fillna(data)
 
 def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **kws):
@@ -139,11 +144,31 @@ def plot_classes(data, classes, n_eigens):
         pn_class = data.iloc[:, i_classes, :]
         learn.plot_class(pn_class, ylim=(-1, 2))
 
+def reject_outliers(df, m=2):
+    d = df.subtract(df.median(axis=1), axis=0).abs()
+    mdev = d.median(axis=1)
+    s = d.divide(mdev, axis=0).replace(np.inf, np.nan).fillna(0)
+    return df[s<m].copy()
+
+def filter_test(sig, n, wn, **kws):
+    #fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True, sharey=True)
+    fig, ax1 = plt.subplots()
+    ax2 = ax1
+    b, a = signal.butter(n, wn, **kws)
+    x = sig.index.values
+    y = signal.filtfilt(b, a, sig)
+    sig.plot(ax=ax1)
+    ax2.plot(x,y)
+
+def rolling_filter(df, window=5, stdlim=0.1, fill_value=0, **kws):
+    r = df.rolling(window=window, center=True)
+
 dt0 = pd.datetime(2014, 2, 21, 15, 30)
 dt1 = pd.datetime(2014, 2, 22, 15, 30)
 pn_raw = data_range(dt0, dt1)
+
 pn = prepare_pn(pn_raw)
-fields = ['ZH', 'ZDR', 'KDP']
+fields = ['ZH', 'ZDR', 'kdp']
 fig, axarr = plotpn(pn, fields=fields)
 
 plot_components = True
@@ -168,11 +193,18 @@ for iax in [0,1]:
     class_colors(classes, ax=axarr[iax])
 
 #plot_classes(data_scaled, classes, n_eigens)
+def hohoo():
+    kdp1=pn['KDP'].fillna(0).iloc[:,56].copy()
+    kdp1sort = kdp1.sort_values(ascending=False)
+    plt.figure()
+    plt.plot(kdp1sort.values)
 
-kdp1=pn['KDP'].fillna(0).iloc[:,56].copy()
-kdp1sort = kdp1.sort_values(ascending=False)
-plt.figure()
-plt.plot(kdp1sort.values)
+def medfiltest(size=(20,2), kdpmax=2):
+    kdp = pn[['KDP']].fillna(0)
+    kdp['KDP'][kdp['KDP']>kdpmax] = 0
+    kdp['kdp'] = median_filter(kdp['KDP'], size=size)
+    plotpn(kdp, cmap='viridis')
+
 #pn['kdpc']=wradlib.dp.kdp_from_phidp_convolution(pn['DP'].values.T).T
 #phidp, kdp = wradlib.dp.process_raw_phidp_vulpiani(pn['DP'].T.values, 0.05, copy=True)
 #pn['phidp'] = phidp.T

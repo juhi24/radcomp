@@ -45,7 +45,7 @@ def pca_stats(pca):
         plt.plot(pca.explained_variance_ratio_);
     with plt.style.context('fivethirtyeight'):
         plt.figure();
-        plt.title('Cumulative explained variance over eigensounding');
+        plt.title('Cumulative explained variance over component');
         plt.plot(pca.explained_variance_ratio_.cumsum());
     print('PCA captures {:.2f}% of the variance in the dataset.'.format(pca.explained_variance_ratio_.sum() * 100))
 
@@ -55,9 +55,10 @@ def plot_pca_components(pca, pn):
     for i in range(pca.n_components):
         ax = axarr_flat[i]
         comps = pca.components_[i].reshape((pn.items.size, pn.minor_axis.size))
-        for comp in comps:
+        for i, comp in enumerate(comps):
             x = list(pn.minor_axis)
-            ax.plot(x, comp)
+            ax.plot(x, comp, label=pn.items[i])
+    plt.legend()
     return fig, axarr
 
 def pn2df(pn, axis=1, **kws):
