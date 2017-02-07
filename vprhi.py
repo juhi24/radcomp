@@ -51,9 +51,9 @@ def vprhimat2pn(datapath):
 def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', **kws):
     if fields is None:
         fields = pn.items
-    vmins = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'kdp': 0, 'DP': 0, 'phidp': 0}
-    vmaxs = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'kdp': 0.26, 'DP': 360, 'phidp': 360}
-    labels = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'kdp': 'deg/km', 'DP': 'deg'}
+    vmins = {'ZH': -15, 'ZDR': -1, 'zdr': -1, 'RHO': 0, 'KDP': 0, 'kdp': 0, 'DP': 0, 'phidp': 0}
+    vmaxs = {'ZH': 30, 'ZDR': 4, 'zdr': 4, 'RHO': 1, 'KDP': 0.26, 'kdp': 0.26, 'DP': 360, 'phidp': 360}
+    labels = {'ZH': 'dBZ', 'ZDR': 'dB', 'zdr': 'dB', 'KDP': 'deg/km', 'kdp': 'deg/km', 'DP': 'deg'}
     fig, axarr = plt.subplots(len(fields), sharex=True, sharey=True)
     if not isinstance(axarr, collections.Iterable):
         axarr = [axarr]
@@ -95,7 +95,7 @@ def scale_data(pn):
     return scaled
 
 def fillna(pn):
-    nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0, 'kdp': 0}
+    nan_replacement = {'ZH': -10, 'ZDR': 0, 'zdr': 0, 'KDP': 0, 'kdp': 0}
     for field in list(pn.items):
         pn[field].fillna(nan_replacement[field], inplace=True)
     return pn
@@ -191,6 +191,10 @@ classes = pd.Series(data=km.labels_, index=pn.minor_axis)
 
 for iax in [0,1]:
     class_colors(classes, ax=axarr[iax])
+
+data['zdr']=median_filter(data['ZDR'], size=(1,6))
+plotpn(data[['ZDR', 'zdr']].transpose(0,2,1), cmap='viridis')
+
 
 #plot_classes(data_scaled, classes, n_eigens)
 def hohoo():
