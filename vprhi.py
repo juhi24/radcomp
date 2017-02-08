@@ -137,12 +137,13 @@ def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
     return fillna(data)
 
 def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **kws):
+    clss = classes.shift().dropna().astype(int)
     if ax is None:
         ax = plt.gca()
     cm = plt.get_cmap(cmap)
-    t0 = classes.index[0]
-    for t1, icolor in classes.iteritems():
-        if t1==t0:
+    t0 = clss.index[0]
+    for t1, icolor in clss.iteritems():
+        if t1<=t0:
             continue
         ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=cm.colors[icolor], 
                    alpha=alpha, clip_on=False, **kws)
