@@ -13,6 +13,7 @@ from os import path
 from functools import partial
 from sklearn import decomposition
 from sklearn.cluster import KMeans
+from sklearn.externals import joblib
 from scipy import signal
 from scipy.ndimage.filters import median_filter
 import learn
@@ -22,7 +23,8 @@ plt.close('all')
 np.random.seed(0)
 
 HOME = path.expanduser('~')
-DATADIR = path.join(HOME, 'DATA', 'ToJussi')
+DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
+RESULTS_DIR = path.join(HOME, 'results', 'radcomp', 'vertical')
 
 def data_range(dt_start, dt_end):
     fnames = fname_range(dt_start, dt_end)
@@ -31,7 +33,7 @@ def data_range(dt_start, dt_end):
 
 def fname_range(dt_start, dt_end):
     dt_range = pd.date_range(dt_start.date(), dt_end.date())
-    dt2path_map = partial(dt2path, datadir=DATADIR)
+    dt2path_map = partial(dt2path, datadir=DATA_DIR)
     return map(dt2path_map, dt_range)
 
 def dt2path(dt, datadir):
@@ -178,6 +180,18 @@ def reject_outliers(df, m=2):
 def rolling_filter(df, window=5, stdlim=0.1, fill_value=0, **kws):
     r = df.rolling(window=window, center=True)
 
+def model_path(name):
+    return path.join(RESULTS_DIR, 'models', name + '.pkl')
+
+def save_model(model, name):
+    savepath = model_path(name)
+    joblib.dump(model, savepath)
+    return savepath
+
+def load_model(name):
+    loadpath = model_path(name)
+    return joblib.load(loadpath)
+
 dt0 = pd.datetime(2014, 2, 21, 19, 30)
 dt1 = pd.datetime(2014, 2, 22, 15, 30)
 pn_raw = data_range(dt0, dt1)
@@ -196,6 +210,8 @@ data_scaled = scale_data(data)
 #plotpn(data_scaled.transpose(0,2,1), scaled=True)
 data_df = learn.pn2df(data_scaled)
 pca.fit(data_df)
+save_model(pca, 'pca_test')
+
 if plot_components:
     learn.plot_pca_components(pca, data_scaled)
 
