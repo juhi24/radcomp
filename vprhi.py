@@ -50,6 +50,10 @@ def vprhimat2pn(datapath):
         data_dict[field] = data[field][0][0].T
     return pd.Panel(data_dict, major_axis=h, minor_axis=t)
 
+def m2km(m, pos):
+    '''formatting m in km'''
+    return '{:.0f}'.format(m*1e-3)
+
 def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', **kws):
     if fields is None:
         fields = pn.items
@@ -59,8 +63,6 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', **kws):
     fig, axarr = plt.subplots(len(fields), sharex=True, sharey=True)
     if not isinstance(axarr, collections.Iterable):
         axarr = [axarr]
-    def m2km(m, pos):
-        return '{:.0f}'.format(m*1e-3)
     for i, field in enumerate(fields):
         fieldup = field.upper()
         ax = axarr[i]
@@ -153,10 +155,19 @@ def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **
         t0 = t1
 
 def plot_classes(data, classes, n_eigens):
+    figs = []
+    axarrs = []
     for eigen in range(n_eigens):
         i_classes = np.where(classes==eigen)[0]
         pn_class = data.iloc[:, i_classes, :]
-        learn.plot_class(pn_class, ylim=(-1, 2))
+        fig, axarr = learn.plot_class(pn_class, ylim=(-1, 2))
+        axarr[0].legend().set_visible(True)
+        figs.append(fig)
+        axarrs.append(axarr)
+        for ax in axarr:
+            if ax.xaxis.get_ticklabels()[0].get_visible():
+                ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(m2km))
+    return figs, axarrs
 
 def reject_outliers(df, m=2):
     d = df.subtract(df.median(axis=1), axis=0).abs()
@@ -196,4 +207,4 @@ classes = pd.Series(data=km.labels_, index=pn.minor_axis)
 for iax in [0,1]:
     class_colors(classes, ax=axarr[iax])
 
-plot_classes(data_scaled, classes, n_eigens)
+figs, axarrs = plot_classes(data_scaled, classes, n_eigens)

@@ -20,7 +20,7 @@ def ncols_subplots(n_axes, n_cols=3, sharex=False, sharey=False):
         if sharey and i>0:
             subplot_kws['sharey'] = axarr[0]
         axarr.append(fig.add_subplot(gs[i], **subplot_kws))
-    return fig, np.array(axarr)
+    return fig, np.array(axarr), gs
 
 def sq_subplots(n_axes, use_gs=True, **kws):
     n_rows_cols = int(np.ceil(np.sqrt(n_axes)))
@@ -29,13 +29,19 @@ def sq_subplots(n_axes, use_gs=True, **kws):
     return plt.subplot(n_rows_cols, n_rows_cols, **kws)
 
 def plot_class(pn_class, n_cols=5, **kws):
-    fig, axarr = ncols_subplots(pn_class.shape[1], n_cols=n_cols)
+    fig, axarr, gs = ncols_subplots(pn_class.shape[1], n_cols=n_cols)
     for i, key in enumerate(pn_class.major_axis):
         rows = pn_class.major_xs(key)
         ax = axarr.flatten()[i]
         rows.plot(ax=ax, **kws)
         ax.set_xlabel('')
         ax.legend().set_visible(False)
+        ax.set_title(key, y=0.02, fontsize=11)
+        if ax.colNum>0:
+            plt.setp(ax.get_yticklabels(), visible=False)
+        if ax.rowNum<(gs.get_geometry()[0]-1):
+            plt.setp(ax.get_xticklabels(), visible=False)
+    gs.update(hspace=0.1, wspace=0.08)
     return fig, axarr
 
 def pca_stats(pca):
@@ -50,7 +56,7 @@ def pca_stats(pca):
     print('PCA captures {:.2f}% of the variance in the dataset.'.format(pca.explained_variance_ratio_.sum() * 100))
 
 def plot_pca_components(pca, pn):
-    fig, axarr = sq_subplots(pca.n_components, sharex=True)
+    fig, axarr, gs = sq_subplots(pca.n_components, sharex=True)
     axarr_flat = axarr.flatten()
     for i in range(pca.n_components):
         ax = axarr_flat[i]
