@@ -192,25 +192,4 @@ classes = pd.Series(data=km.labels_, index=pn.minor_axis)
 for iax in [0,1]:
     class_colors(classes, ax=axarr[iax])
 
-#data['zdr']=median_filter(data['ZDR'], size=(1,6))
-#plotpn(data[['ZDR', 'zdr']].transpose(0,2,1), cmap='viridis')
-
-
 #plot_classes(data_scaled, classes, n_eigens)
-def hohoo():
-    kdp1=pn['KDP'].fillna(0).iloc[:,56].copy()
-    kdp1sort = kdp1.sort_values(ascending=False)
-    plt.figure()
-    plt.plot(kdp1sort.values)
-
-def medfiltest(size=(20,2), kdpmax=2):
-    kdp = pn[['KDP']].fillna(0)
-    kdp['KDP'][kdp['KDP']>kdpmax] = 0
-    kdp['kdp'] = median_filter(kdp['KDP'], size=size)
-    plotpn(kdp, cmap='viridis')
-
-#pn['kdpc']=wradlib.dp.kdp_from_phidp_convolution(pn['DP'].values.T).T
-#phidp, kdp = wradlib.dp.process_raw_phidp_vulpiani(pn['DP'].T.values, 0.05, copy=True)
-#pn['phidp'] = phidp.T
-#plotpn(pn[['DP', 'phidp']])
-#plotpn(pn[['KDP', 'kdpc']])
