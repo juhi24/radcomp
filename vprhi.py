@@ -10,6 +10,7 @@ import scipy.io
 import matplotlib as mpl
 import collections
 from os import path
+from functools import partial
 from sklearn import decomposition
 from sklearn.cluster import KMeans
 from scipy import signal
@@ -20,7 +21,8 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
-datadir = '/home/jussitii/DATA/ToJussi'
+HOME = path.expanduser('~')
+DATADIR = path.join(HOME, 'DATA', 'ToJussi')
 
 def data_range(dt_start, dt_end):
     fnames = fname_range(dt_start, dt_end)
@@ -29,9 +31,10 @@ def data_range(dt_start, dt_end):
 
 def fname_range(dt_start, dt_end):
     dt_range = pd.date_range(dt_start.date(), dt_end.date())
-    return map(dt2path, dt_range)
+    dt2path_map = partial(dt2path, datadir=DATADIR)
+    return map(dt2path_map, dt_range)
 
-def dt2path(dt, datadir='/home/jussitii/DATA/ToJussi'):
+def dt2path(dt, datadir):
     return path.join(datadir, dt.strftime('%Y%m%d_IKA_VP_from_RHI.mat'))
 
 def vprhimat2pn(datapath):
@@ -178,8 +181,8 @@ n_eigens = 10
 pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 data = prepare_data(pn, fields, hmax)
 data_scaled = scale_data(data)
-plotpn(data.transpose(0,2,1))
-plotpn(data_scaled.transpose(0,2,1), scaled=True)
+#plotpn(data.transpose(0,2,1))
+#plotpn(data_scaled.transpose(0,2,1), scaled=True)
 data_df = learn.pn2df(data_scaled)
 pca.fit(data_df)
 if plot_components:
@@ -193,4 +196,4 @@ classes = pd.Series(data=km.labels_, index=pn.minor_axis)
 for iax in [0,1]:
     class_colors(classes, ax=axarr[iax])
 
-#plot_classes(data_scaled, classes, n_eigens)
+plot_classes(data_scaled, classes, n_eigens)
