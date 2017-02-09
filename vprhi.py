@@ -179,23 +179,40 @@ def reject_outliers(df, m=2):
 
 def rolling_filter(df, window=5, stdlim=0.1, fill_value=0, **kws):
     r = df.rolling(window=window, center=True)
+    # not ready, maybe not needed
 
 def model_path(name):
     return path.join(RESULTS_DIR, 'models', name + '.pkl')
 
-def save_model(model, name):
+def save_model(model, name, data=None):
     savepath = model_path(name)
     joblib.dump(model, savepath)
+    if data is not None:
+        joblib.dump(data. model_path(name + '_data'))
     return savepath
 
 def load_model(name):
     loadpath = model_path(name)
     return joblib.load(loadpath)
 
+def train(data_scaled, n_eigens, quiet=False, **kws):
+    data_df = learn.pn2df(data_scaled)
+    pca = decomposition.PCA(n_components=n_eigens, whiten=True)
+    pca.fit(data_df)
+    if not quiet:
+        learn.pca_stats(pca)
+    return pca
+
+def classify(data_scaled, pca):
+    data_df = learn.pn2df(data_scaled)
+    km = KMeans(init=pca.components_, n_clusters=pca.n_components, n_init=1)
+    km.fit(data_df)
+    return pd.Series(data=km.labels_, index=data_scaled.major_axis)
+
+
 dt0 = pd.datetime(2014, 2, 21, 19, 30)
 dt1 = pd.datetime(2014, 2, 22, 15, 30)
 pn_raw = data_range(dt0, dt1)
-
 pn = prepare_pn(pn_raw)
 fields = ['ZH', 'zdr', 'kdp']
 fig, axarr = plotpn(pn, fields=fields, cmap='viridis')
@@ -203,22 +220,17 @@ fig, axarr = plotpn(pn, fields=fields, cmap='viridis')
 plot_components = True
 hmax = 10000
 n_eigens = 10
-pca = decomposition.PCA(n_components=n_eigens, whiten=True)
 data = prepare_data(pn, fields, hmax)
 data_scaled = scale_data(data)
 #plotpn(data.transpose(0,2,1))
 #plotpn(data_scaled.transpose(0,2,1), scaled=True)
-data_df = learn.pn2df(data_scaled)
-pca.fit(data_df)
+pca = train(data_scaled, n_eigens=n_eigens)
 save_model(pca, 'pca_test')
 
 if plot_components:
     learn.plot_pca_components(pca, data_scaled)
 
-learn.pca_stats(pca)
-km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
-km.fit(data_df)
-classes = pd.Series(data=km.labels_, index=pn.minor_axis)
+classes = classify(data_scaled, pca)
 
 for iax in [0,1]:
     class_colors(classes, ax=axarr[iax])
