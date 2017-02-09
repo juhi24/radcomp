@@ -16,6 +16,7 @@ from sklearn import decomposition
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
 from scipy import signal
+from matplotlib import gridspec
 from scipy.ndimage.filters import median_filter
 import learn
 
@@ -54,18 +55,24 @@ def m2km(m, pos):
     '''formatting m in km'''
     return '{:.0f}'.format(m*1e-3)
 
-def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', **kws):
+def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws):
     if fields is None:
         fields = pn.items
     vmins = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0}
     vmaxs = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
     labels = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
-    fig, axarr = plt.subplots(len(fields), sharex=True, sharey=True)
-    if not isinstance(axarr, collections.Iterable):
-        axarr = [axarr]
+    n_rows = len(fields) + n_extra_ax
+    fig = plt.figure()
+    gs = gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02)
+    axarr = []
     for i, field in enumerate(fields):
+        subplot_kws = {}
+        if i>0:
+            subplot_kws['sharex'] = axarr[0]
+        ax = fig.add_subplot(gs[i, 0], **subplot_kws)
+        ax_cb = fig.add_subplot(gs[i, 1])
+        axarr.append(ax)
         fieldup = field.upper()
-        ax = axarr[i]
         if scaled:
             scalekws = {'vmin': 0, 'vmax': 1}
             label = 'scaled'
@@ -83,10 +90,15 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', **kws):
         ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(m2km))
         ax.set_ylim(0,11000)
         ax.set_ylabel('Height, km')
-        fig.colorbar(im, ax=ax, label=label)
-    ax.set_xlabel('Time, UTC')
+        #fig.colorbar(im, ax=ax, label=label)
+        fig.colorbar(im, cax=ax_cb, label=label)
+    for j in range(n_extra_ax):
+        ax = fig.add_subplot(gs[i+1+j, 0], sharex=axarr[0])
+        axarr.append(ax)
+    axarr[-1].set_xlabel('Time, UTC')
     axarr[0].set_title(str(pn[field].columns[0].date()))
-    fig.tight_layout()
+    for ax in axarr[:-1]:
+        plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
 
 def scale_data(pn):
