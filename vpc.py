@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
+Vertical profile classification
 @author: Jussi Tiira
 """
 import numpy as np
@@ -18,13 +19,10 @@ from scipy import signal
 from scipy.ndimage.filters import median_filter
 import learn
 
-plt.ion()
-plt.close('all')
-np.random.seed(0)
-
 HOME = path.expanduser('~')
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
 RESULTS_DIR = path.join(HOME, 'results', 'radcomp', 'vertical')
+META_SUFFIX = '_metadata'
 
 def data_range(dt_start, dt_end):
     fnames = fname_range(dt_start, dt_end)
@@ -184,55 +182,58 @@ def rolling_filter(df, window=5, stdlim=0.1, fill_value=0, **kws):
 def model_path(name):
     return path.join(RESULTS_DIR, 'models', name + '.pkl')
 
-def save_model(model, name, data=None):
+def save_model(model, name):
     savepath = model_path(name)
     joblib.dump(model, savepath)
-    if data is not None:
-        joblib.dump(data. model_path(name + '_data'))
     return savepath
 
+def save_data(data, name):
+    joblib.dump(data, model_path(name + '_data'))
+    hmax = np.ceil(data.minor_axis.max())
+    fields = list(data.items)
+    metadata = dict(hmax=hmax, fields=fields)
+    joblib.dump(metadata, model_path(name + META_SUFFIX))
+
 def load_model(name):
+    '''Return model and metadata if it exists'''
     loadpath = model_path(name)
-    return joblib.load(loadpath)
+    model = joblib.load(loadpath)
+    return model
+
+def save_pca_kmeans(pca, kmeans, data, name):
+    save_model(pca, name + '_pca')
+    save_model(kmeans, name + '_kmeans')
+    save_data(data, name)
+
+def load_pca_kmeans(name):
+    '''return pca, km, metadata'''
+    pca = load_model(name + '_pca')
+    km = load_model(name + '_kmeans')
+    metadata = joblib.load(model_path(name + META_SUFFIX))
+    return pca, km, metadata
 
 def train(data_scaled, n_eigens, quiet=False, **kws):
     data_df = learn.pn2df(data_scaled)
-    pca = decomposition.PCA(n_components=n_eigens, whiten=True)
-    pca.fit(data_df)
+    pca = pca_fit(data_df, n_components=n_eigens)
     if not quiet:
         learn.pca_stats(pca)
+    km = kmeans(data_df, pca)
+    return pca, km
+
+def pca_fit(data_df, whiten=True, **kws):
+    pca = decomposition.PCA(whiten=whiten, **kws)
+    pca.fit(data_df)
     return pca
 
-def classify(data_scaled, pca):
-    data_df = learn.pn2df(data_scaled)
+def kmeans(data_df, pca):
     km = KMeans(init=pca.components_, n_clusters=pca.n_components, n_init=1)
     km.fit(data_df)
-    return pd.Series(data=km.labels_, index=data_scaled.major_axis)
+    return km
 
+def classify(data_scaled, km):
+    data_df = learn.pn2df(data_scaled)
+    return pd.Series(data=km.predict(data_df), index=data_scaled.major_axis)
 
-dt0 = pd.datetime(2014, 2, 21, 19, 30)
-dt1 = pd.datetime(2014, 2, 22, 15, 30)
-pn_raw = data_range(dt0, dt1)
-pn = prepare_pn(pn_raw)
-fields = ['ZH', 'zdr', 'kdp']
-fig, axarr = plotpn(pn, fields=fields, cmap='viridis')
-
-plot_components = True
-hmax = 10000
-n_eigens = 10
-data = prepare_data(pn, fields, hmax)
-data_scaled = scale_data(data)
-#plotpn(data.transpose(0,2,1))
-#plotpn(data_scaled.transpose(0,2,1), scaled=True)
-pca = train(data_scaled, n_eigens=n_eigens)
-save_model(pca, 'pca_test')
-
-if plot_components:
-    learn.plot_pca_components(pca, data_scaled)
-
-classes = classify(data_scaled, pca)
-
-for iax in [0,1]:
-    class_colors(classes, ax=axarr[iax])
-
-figs, axarrs = plot_classes(data_scaled, classes, n_eigens)
+def dt2pn(dt0, dt1):
+    pn_raw = data_range(dt0, dt1)
+    return prepare_pn(pn_raw)
