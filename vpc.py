@@ -131,7 +131,7 @@ def kdp2phidp(kdp, dr_km):
     kdp_filled = kdp.fillna(0)
     return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
 
-def prepare_pn(pn, kdpmax=2, fltr_size=(20,2)):
+def prepare_pn(pn, kdpmax=0.5):
     dr = pd.Series(pn.major_axis.values, index=pn.major_axis).diff().bfill()
     dr_km = dr/1000
     pn_new = pn.copy()
@@ -144,7 +144,7 @@ def prepare_pn(pn, kdpmax=2, fltr_size=(20,2)):
     return med_fltr(pn_new)
 
 def med_fltr(pn):
-    sizes = {'ZDR': (5, 1), 'KDP': (20, 2)}
+    sizes = {'ZDR': (5, 1), 'KDP': (20, 1)}
     nullmask = pn['ZH'].isnull()
     new = fillna(pn[sizes.keys()])
     for field, data in new.iteritems():
