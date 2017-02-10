@@ -25,6 +25,10 @@ DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
 RESULTS_DIR = path.join(HOME, 'results', 'radcomp', 'vertical')
 META_SUFFIX = '_metadata'
 
+def mean_delta(t):
+    dt = t[-1]-t[0]
+    return dt/(len(t)-1)
+
 def data_range(dt_start, dt_end):
     fnames = fname_range(dt_start, dt_end)
     pns = map(vprhimat2pn, fnames)
@@ -82,7 +86,9 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
         else:
             scalekws = {}
             label = field
-        im = ax.pcolormesh(pn[field].columns, pn[field].index, 
+        t = pn[field].columns
+        t_shifted = t + mean_delta(t)/2
+        im = ax.pcolormesh(t_shifted, pn[field].index, 
                       np.ma.masked_invalid(pn[field].values), cmap=cmap,
                       **scalekws, label=field, **kws)
         #fig.autofmt_xdate()
@@ -154,7 +160,9 @@ def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
     return fillna(data)
 
 def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **kws):
-    clss = classes.shift().dropna().astype(int)
+    t = classes.index
+    dt = mean_delta(t)*1.5
+    clss = classes.shift(freq=dt).dropna().astype(int)
     if ax is None:
         ax = plt.gca()
     cm = plt.get_cmap(cmap)

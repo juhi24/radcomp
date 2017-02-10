@@ -8,10 +8,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import vpc
 import learn
+import locale
+from os import path
 
 plt.ion()
 plt.close('all')
 np.random.seed(0)
+
+locale.setlocale(locale.LC_ALL, 'C')
+
+case_id_fmt = lambda t: t.strftime('%b%-d').lower()
+
+casespath = path.join('cases', 'training.csv')
+dts = pd.read_csv(casespath, parse_dates=['t_start', 't_end'])
+dts.index = dts['t_start'].apply(case_id_fmt)
+dts.index.name = 'id'
 
 dt0 = pd.datetime(2014, 2, 21, 19, 30)
 dt1 = pd.datetime(2014, 2, 22, 15, 30)
