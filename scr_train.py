@@ -15,6 +15,8 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
+plot = False
+
 locale.setlocale(locale.LC_ALL, 'C')
 
 case_id_fmt = lambda t: t.strftime('%b%-d').lower()
@@ -29,16 +31,17 @@ hmax = 10000
 n_eigens = 10
 plot_components = True
 
-pns = []
+pnd = {}
 for row in dts.itertuples():
     pane = vpc.dt2pn(row.t_start, row.t_end)
-    pns.append(pane)
+    pnd[row.Index] = pane
     print(row.t_start)
-    fig, axarr = vpc.plotpn(pane, fields=fields+['KDP'], cmap='viridis')
-    savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'.png')
-    fig.savefig(savepath)
+    if plot:
+        fig, axarr = vpc.plotpn(pane, fields=fields+['KDP'], cmap='viridis')
+        savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'.png')
+        fig.savefig(savepath)
 
-pn = pd.concat(pns, axis=2)
+pn = pd.concat(pnd.values(), axis=2)
 
 #fig, axarr = vpc.plotpn(pn, fields=fields, cmap='viridis')
 data = vpc.prepare_data(pn, fields, hmax)

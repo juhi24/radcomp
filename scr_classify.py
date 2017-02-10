@@ -15,7 +15,7 @@ np.random.seed(0)
 dt0 = pd.datetime(2014, 2, 21, 12, 30)
 dt1 = pd.datetime(2014, 2, 22, 15, 30)
 
-pca, km, metadata = vpc.load_pca_kmeans('test')
+pca, km, metadata = vpc.load_pca_kmeans('2014rhi')
 fields = metadata['fields']
 pn = vpc.dt2pn(dt0, dt1)
 data = vpc.prepare_data(pn, fields, metadata['hmax'])
