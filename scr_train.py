@@ -12,7 +12,7 @@ import locale
 from os import path
 
 plt.ion()
-#plt.close('all')
+plt.close('all')
 np.random.seed(0)
 
 locale.setlocale(locale.LC_ALL, 'C')
@@ -34,7 +34,9 @@ for row in dts.itertuples():
     pane = vpc.dt2pn(row.t_start, row.t_end)
     pns.append(pane)
     print(row.t_start)
-    #vpc.plotpn(pane, fields=fields+['KDP'], cmap='viridis')
+    fig, axarr = vpc.plotpn(pane, fields=fields+['KDP'], cmap='viridis')
+    savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'.png')
+    fig.savefig(savepath)
 
 pn = pd.concat(pns, axis=2)
 
@@ -42,7 +44,7 @@ pn = pd.concat(pns, axis=2)
 data = vpc.prepare_data(pn, fields, hmax)
 data_scaled = vpc.scale_data(data)
 pca, km = vpc.train(data_scaled, n_eigens=n_eigens)
-vpc.save_pca_kmeans(pca, km, data_scaled, 'test')
+vpc.save_pca_kmeans(pca, km, data_scaled, '2014rhi')
 if plot_components:
     learn.plot_pca_components(pca, data_scaled)
 

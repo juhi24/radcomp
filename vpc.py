@@ -66,8 +66,9 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
     vmaxs = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
     labels = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
     n_rows = len(fields) + n_extra_ax
-    fig = plt.figure()
-    gs = gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02)
+    fig = plt.figure(figsize=(8,3+1.1*n_rows))
+    gs = gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
+                           top=1-0.22/n_rows, bottom=0.35/n_rows, left=0.1, right=0.905)
     axarr = []
     for i, field in enumerate(fields):
         subplot_kws = {}
