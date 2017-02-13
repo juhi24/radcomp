@@ -15,7 +15,7 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
-plot = True
+plot = False
 
 locale.setlocale(locale.LC_ALL, 'C')
 

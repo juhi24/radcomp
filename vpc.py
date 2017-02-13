@@ -222,13 +222,13 @@ def fltr_ground_clutter(pn_orig, window=15):
                 median_limit_exceeded = med > 8*dat.abs().min()
                 view = pn[field, :, dt].iloc[:window]
                 if median_limit_exceeded:
-                    print(field + ', ' + str(dt) + ': median ' + str(med))
-                    print(view)
+                    #print(field + ', ' + str(dt) + ': median ' + str(med))
+                    #print(view)
                     view[view>0.95*med] = NAN_REPLACEMENT[field.upper()]
-                    print(view)
+                    #print(view)
                     break
                 if threshold_exceeded:
-                    print(field + ', ' + str(dt) + ': thresh')
+                    #print(field + ', ' + str(dt) + ': thresh')
                     #print(view)
                     view[view>threshold[field.upper()]] = NAN_REPLACEMENT[field.upper()]
                     #print(view)
