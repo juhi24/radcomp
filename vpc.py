@@ -9,14 +9,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import scipy.io
 import matplotlib as mpl
-import collections
 from os import path
 from functools import partial
 from sklearn import decomposition
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
-from scipy import signal
-from matplotlib import gridspec
 from scipy.ndimage.filters import median_filter
 import learn
 
@@ -24,6 +21,7 @@ HOME = path.expanduser('~')
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
 RESULTS_DIR = path.join(HOME, 'results', 'radcomp', 'vertical')
 META_SUFFIX = '_metadata'
+NAN_REPLACEMENT = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
 
 def mean_delta(t):
     dt = t[-1]-t[0]
@@ -67,7 +65,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
     labels = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
     n_rows = len(fields) + n_extra_ax
     fig = plt.figure(figsize=(8,3+1.1*n_rows))
-    gs = gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
+    gs = mpl.gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
                            top=1-0.22/n_rows, bottom=0.35/n_rows, left=0.1, right=0.905)
     axarr = []
     for i, field in enumerate(fields):
@@ -120,12 +118,11 @@ def scale_data(pn):
 
 def fillna(dat, field=''):
     data = dat.copy()
-    nan_replacement = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
     if isinstance(data, pd.Panel):
         for field in list(data.items):
-            data[field].fillna(nan_replacement[field.upper()], inplace=True)
+            data[field].fillna(NAN_REPLACEMENT[field.upper()], inplace=True)
     elif isinstance(data, pd.DataFrame):
-        data.fillna(nan_replacement[field.upper()], inplace=True)
+        data.fillna(NAN_REPLACEMENT[field.upper()], inplace=True)
     return data
 
 def kdp2phidp(kdp, dr_km):
@@ -142,17 +139,9 @@ def prepare_pn(pn, kdpmax=0.5):
     kdp = pn_new['KDP'] # a view
     kdp[kdp>kdpmax] = 0
     kdp[kdp<0] = 0
-    return med_fltr(pn_new)
-
-def med_fltr(pn):
-    sizes = {'ZDR': (5, 1), 'KDP': (20, 1)}
-    nullmask = pn['ZH'].isnull()
-    new = fillna(pn[sizes.keys()])
-    for field, data in new.iteritems():
-        new[field] = median_filter(data, size=sizes[field])
-        new[field][nullmask] = np.nan
-    new.items=map(str.lower, new.items)
-    return pd.concat([new, pn])
+    pn_new = fltr_ground_clutter(pn_new)
+    pn_new = fltr_median(pn_new)
+    return pn_new
 
 def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
     data = pn[fields, 0:hmax, :].transpose(0,2,1)
@@ -196,9 +185,66 @@ def reject_outliers(df, m=2):
     s = d.divide(mdev, axis=0).replace(np.inf, np.nan).fillna(0)
     return df[s<m].copy()
 
-def rolling_filter(df, window=5, stdlim=0.1, fill_value=0, **kws):
+def fltr_median(pn):
+    pn_out = pn.copy()
+    sizes = {'ZDR': (5, 1), 'KDP': (20, 1)}
+    keys = list(map(str.lower, sizes.keys()))
+    nullmask = pn['ZH'].isnull()
+    new = fillna(create_filtered_fields_if_missing(pn, sizes.keys())[keys])
+    for field, data in new.iteritems():
+        df = median_filter(data, size=sizes[field.upper()])
+        df[nullmask] = np.nan
+        pn_out[field] = df
+    return pn_out
+
+def fltr_rolling(df, window=5, stdlim=0.1, fill_value=0, **kws):
     r = df.rolling(window=window, center=True)
     # not ready, maybe not needed
+
+def fltr_ground_clutter(pn_orig, window=15):
+    #return pn_orig
+    pn = pn_orig.copy()
+    threshold = dict(ZDR=4.5, KDP=0.3)
+    keys = list(map(str.lower, threshold.keys()))
+    pn = create_filtered_fields_if_missing(pn, threshold.keys())
+    for field, data in pn.iteritems():
+        if field not in keys:
+            continue
+        for dt, col in data.iteritems():
+            winsize=1
+            while winsize<window:
+                winsize += 1
+                dat = col.iloc[:winsize].copy()
+                med = dat.median()
+                if med < 0.7*threshold[field.upper()]:
+                    break
+                threshold_exceeded = dat.isnull().any() and med>threshold[field.upper()]
+                median_limit_exceeded = med > 8*dat.abs().min()
+                view = pn[field, :, dt].iloc[:window]
+                if median_limit_exceeded:
+                    print(field + ', ' + str(dt) + ': median ' + str(med))
+                    print(view)
+                    view[view>0.95*med] = NAN_REPLACEMENT[field.upper()]
+                    print(view)
+                    break
+                if threshold_exceeded:
+                    print(field + ', ' + str(dt) + ': thresh')
+                    #print(view)
+                    view[view>threshold[field.upper()]] = NAN_REPLACEMENT[field.upper()]
+                    #print(view)
+                    break
+    return pn
+
+def create_filtered_fields_if_missing(pn, keys):
+    pn_new = pn.copy()
+    filtered_fields_exist = True
+    for key in keys:
+        if key.lower() not in pn_new.items:
+            filtered_fields_exist = False
+    if not filtered_fields_exist:
+        for key in keys:
+            pn_new[key.lower()] = pn_new[key]
+    return pn_new
 
 def model_path(name):
     return path.join(RESULTS_DIR, 'models', name + '.pkl')
