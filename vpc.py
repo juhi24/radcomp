@@ -201,7 +201,7 @@ def fltr_rolling(df, window=5, stdlim=0.1, fill_value=0, **kws):
     r = df.rolling(window=window, center=True)
     # not ready, maybe not needed
 
-def fltr_ground_clutter(pn_orig, window=15):
+def fltr_ground_clutter(pn_orig, window=15, ratio_limit=7):
     #return pn_orig
     pn = pn_orig.copy()
     threshold = dict(ZDR=4.5, KDP=0.3)
@@ -216,10 +216,11 @@ def fltr_ground_clutter(pn_orig, window=15):
                 winsize += 1
                 dat = col.iloc[:winsize].copy()
                 med = dat.median()
-                if med < 0.7*threshold[field.upper()]:
-                    break
-                threshold_exceeded = dat.isnull().any() and med>threshold[field.upper()]
-                median_limit_exceeded = med > 8*dat.abs().min()
+                easy_thresh = 0.7*threshold[field.upper()]
+                if med < easy_thresh or np.isnan(col.iloc[0]):
+                    break # Do not filter.
+                threshold_exceeded = dat.isnull().any() and med > threshold[field.upper()]
+                median_limit_exceeded = med > ratio_limit*dat.abs().min()
                 view = pn[field, :, dt].iloc[:window]
                 if median_limit_exceeded:
                     #print(field + ', ' + str(dt) + ': median ' + str(med))
