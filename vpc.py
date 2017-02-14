@@ -201,12 +201,12 @@ def fltr_rolling(df, window=5, stdlim=0.1, fill_value=0, **kws):
     r = df.rolling(window=window, center=True)
     # not ready, maybe not needed
 
-def fltr_ground_clutter(pn_orig, window=15, ratio_limit=7):
+def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
     #return pn_orig
     pn = pn_orig.copy()
-    threshold = dict(ZDR=4.5, KDP=0.3)
+    threshold = dict(ZDR=4, KDP=0.28)
     keys = list(map(str.lower, threshold.keys()))
-    pn = create_filtered_fields_if_missing(pn, threshold.keys())
+    pn = create_filtered_fields_if_missing(pn, keys)
     for field, data in pn.iteritems():
         if field not in keys:
             continue
@@ -216,7 +216,7 @@ def fltr_ground_clutter(pn_orig, window=15, ratio_limit=7):
                 winsize += 1
                 dat = col.iloc[:winsize].copy()
                 med = dat.median()
-                easy_thresh = 0.7*threshold[field.upper()]
+                easy_thresh = 0.75*threshold[field.upper()]
                 if med < easy_thresh or np.isnan(col.iloc[0]):
                     break # Do not filter.
                 threshold_exceeded = dat.isnull().any() and med > threshold[field.upper()]
@@ -236,9 +236,21 @@ def fltr_ground_clutter(pn_orig, window=15, ratio_limit=7):
                     break
     return pn
 
+def fltr_ground_clutter_median(pn, heigth_px=25, size=(18, 3)):
+    pn_new = pn.copy()
+    ground_threshold = dict(ZDR=3, KDP=0.2)
+    keys = list(map(str.lower, ground_threshold.keys()))
+    pn_new = create_filtered_fields_if_missing(pn_new, keys)
+    for field, data in pn.iteritems():
+        if field not in keys:
+            continue
+        view = pn_new[field]
+    return pn_new
+
 def create_filtered_fields_if_missing(pn, keys):
     pn_new = pn.copy()
     filtered_fields_exist = True
+    keys = map(str.upper, keys)
     for key in keys:
         if key.lower() not in pn_new.items:
             filtered_fields_exist = False

@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import netCDF4 as nc
 import copy
-import os
 
 SITES = ['KUM', 'KER', 'VAN']
 
@@ -43,13 +42,6 @@ def equalize_ker_zmin(nc0, nc1):
     if 'UNKNOWN_ID_72' in lvar1 and 'UNKNOWN_ID_74' in lvar1:
         nc0.z_min = nc1.z_min
     return nc0, nc1
-
-
-def ensure_path(directory):
-    """Make sure the path exists. If not, create it."""
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    return directory
 
 
 def db2lin(db):

@@ -15,7 +15,7 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
-plot = False
+plot = True
 
 locale.setlocale(locale.LC_ALL, 'C')
 
@@ -38,7 +38,7 @@ for row in dts.itertuples():
     print(row.t_start)
     if plot:
         fig, axarr = vpc.plotpn(pane, fields=fields+['KDP'], cmap='viridis')
-        savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'_gc.png')
+        savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'_gc2.png')
         fig.savefig(savepath)
 
 pn = pd.concat(pnd.values(), axis=2)
