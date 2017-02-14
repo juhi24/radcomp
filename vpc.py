@@ -140,7 +140,9 @@ def prepare_pn(pn, kdpmax=0.5):
     kdp[kdp>kdpmax] = 0
     kdp[kdp<0] = 0
     pn_new = fltr_ground_clutter(pn_new)
+    print(pn_new.zdr.iloc[0].tail())
     pn_new = fltr_median(pn_new)
+    print(pn_new.zdr.iloc[0].tail())
     return pn_new
 
 def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):

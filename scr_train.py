@@ -51,37 +51,14 @@ vpc.save_pca_kmeans(pca, km, data_scaled, '2014rhi')
 if plot_components:
     learn.plot_pca_components(pca, data_scaled)
 
-window = 15
-pn = pnd['mar21']
+keys=['ZH']
 
-threshold = dict(zdr=4.5, kdp=0.3)
-for field, data in pn.iteritems():
-    if field not in threshold.keys():
-        continue
-    for dt, col in data.iteritems():
-        winsize=1
-        median_trigger = False
-        threshold_trigger = False
-        dat_new = col.iloc[:window].copy()
-        while winsize<window:
-            winsize += 1
-            dat = col.iloc[:winsize].copy()
-            med = dat.median()
-            if med < 0.7*threshold[field]:
-                break
-            threshold_exceeded = dat.isnull().any() and med>threshold[field]
-            median_limit_exceeded = med > 8*dat.abs().min()
-            view = pn[field, :, dt].iloc[:window]
-            if median_limit_exceeded:
-                print(field + ', ' + str(dt) + ': median ' + str(med))
-                #print(view)
-                view[view>0.95*med] = np.nan
-                #print(view)
-                break
-            if threshold_exceeded:
-                print(field + ', ' + str(dt) + ': thresh')
-                #print(view)
-                view[view>threshold[field]] = np.nan
-                #print(view)
-                break
-            
+pn_new = pane.copy()
+filtered_fields_exist = True
+keys = map(str.upper, keys)
+for key in keys:
+    if key.lower() not in pn_new.items:
+        filtered_fields_exist = False
+if not filtered_fields_exist:
+    for key in keys:
+        pn_new[key.lower()] = pn_new[key].copy()
