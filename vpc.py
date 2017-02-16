@@ -189,11 +189,10 @@ def fltr_median(pn):
     pn_out = pn.copy()
     sizes = {'ZDR': (5, 1), 'KDP': (20, 1)}
     keys = list(map(str.lower, sizes.keys()))
+    new = create_filtered_fields_if_missing(pn, sizes.keys())[keys]
     nullmask = pn['ZH'].isnull()
-    new = fillna(create_filtered_fields_if_missing(pn, sizes.keys())[keys])
     for field, data in new.iteritems():
-        df = median_filter(data, size=sizes[field.upper()])
-        df[nullmask] = np.nan
+        df = median_filter_df(data, param=field, nullmask=nullmask, size=sizes[field.upper()])
         pn_out[field] = df
     return pn_out
 
@@ -242,9 +241,10 @@ def fltr_ground_clutter_median(pn, heigth_px=25, size=(18, 3)):
         
     return pn_new
 
-def median_filter_df(df, param=None, fill=True, **kws):
+def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
     '''median_filter wrapper for DataFrames'''
-    nullmask = df.isnull()
+    if nullmask is None:
+        nullmask = df.isnull()
     if fill and param is not None:
         df_new = df.fillna(NAN_REPLACEMENT[param.upper()])
     else:
