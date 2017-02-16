@@ -15,7 +15,7 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
-plot = True
+plot = False
 
 locale.setlocale(locale.LC_ALL, 'C')
 
@@ -51,14 +51,3 @@ vpc.save_pca_kmeans(pca, km, data_scaled, '2014rhi')
 if plot_components:
     learn.plot_pca_components(pca, data_scaled)
 
-keys=['ZH']
-
-pn_new = pane.copy()
-filtered_fields_exist = True
-keys = map(str.upper, keys)
-for key in keys:
-    if key.lower() not in pn_new.items:
-        filtered_fields_exist = False
-if not filtered_fields_exist:
-    for key in keys:
-        pn_new[key.lower()] = pn_new[key].copy()

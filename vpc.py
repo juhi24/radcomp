@@ -140,9 +140,7 @@ def prepare_pn(pn, kdpmax=0.5):
     kdp[kdp>kdpmax] = 0
     kdp[kdp<0] = 0
     pn_new = fltr_ground_clutter(pn_new)
-    print(pn_new.zdr.iloc[0].tail())
     pn_new = fltr_median(pn_new)
-    print(pn_new.zdr.iloc[0].tail())
     return pn_new
 
 def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
@@ -225,16 +223,10 @@ def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
                 median_limit_exceeded = med > ratio_limit*dat.abs().min()
                 view = pn[field, :, dt].iloc[:window]
                 if median_limit_exceeded:
-                    #print(field + ', ' + str(dt) + ': median ' + str(med))
-                    #print(view)
                     view[view>0.95*med] = NAN_REPLACEMENT[field.upper()]
-                    #print(view)
                     break
                 if threshold_exceeded:
-                    #print(field + ', ' + str(dt) + ': thresh')
-                    #print(view)
                     view[view>threshold[field.upper()]] = NAN_REPLACEMENT[field.upper()]
-                    #print(view)
                     break
     return pn
 
@@ -252,7 +244,7 @@ def fltr_ground_clutter_median(pn, heigth_px=25, size=(18, 3)):
 def create_filtered_fields_if_missing(pn, keys):
     pn_new = pn.copy()
     filtered_fields_exist = True
-    keys = map(str.upper, keys)
+    keys = list(map(str.upper, keys))
     for key in keys:
         if key.lower() not in pn_new.items:
             filtered_fields_exist = False
