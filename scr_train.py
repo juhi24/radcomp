@@ -15,7 +15,7 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
-plot = False
+plot = True
 
 locale.setlocale(locale.LC_ALL, 'C')
 
@@ -38,7 +38,7 @@ for row in dts.itertuples():
     print(row.t_start)
     if plot:
         fig, axarr = vpc.plotpn(pane, fields=fields+['KDP'], cmap='viridis')
-        savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'_gc2.png')
+        savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'_mf.png')
         fig.savefig(savepath)
 
 pn = pd.concat(pnd.values(), axis=2)
@@ -51,3 +51,4 @@ vpc.save_pca_kmeans(pca, km, data_scaled, '2014rhi')
 if plot_components:
     learn.plot_pca_components(pca, data_scaled)
 
+pnt = pnd['mar21']

@@ -238,8 +238,23 @@ def fltr_ground_clutter_median(pn, heigth_px=25, size=(18, 3)):
     for field, data in pn.iteritems():
         if field not in keys:
             continue
-        view = pn_new[field]
+        view = pn_new[field].iloc[:heigth_px]
+        
     return pn_new
+
+def median_filter_df(df, param=None, fill=True, **kws):
+    '''median_filter wrapper for DataFrames'''
+    nullmask = df.isnull()
+    if fill and param is not None:
+        df_new = df.fillna(NAN_REPLACEMENT[param.upper()])
+    else:
+        df_new = df.copy()
+    result = median_filter(df_new, **kws)
+    result = pd.DataFrame(result, index=df_new.index, columns=df_new.columns)
+    if param is not None:
+        result[result.isnull()] = NAN_REPLACEMENT[param.upper()]
+    result[nullmask] = np.nan
+    return result
 
 def create_filtered_fields_if_missing(pn, keys):
     pn_new = pn.copy()
