@@ -139,8 +139,8 @@ def prepare_pn(pn, kdpmax=0.5):
     kdp = pn_new['KDP'] # a view
     kdp[kdp>kdpmax] = 0
     kdp[kdp<0] = 0
-    pn_new = fltr_ground_clutter(pn_new)
     pn_new = fltr_median(pn_new)
+    pn_new = fltr_ground_clutter_median(pn_new)
     return pn_new
 
 def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
@@ -229,16 +229,21 @@ def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
                     break
     return pn
 
-def fltr_ground_clutter_median(pn, heigth_px=25, size=(18, 3)):
+def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=18, size=(18, 3)):
     pn_new = pn.copy()
-    ground_threshold = dict(ZDR=3, KDP=0.2)
+    ground_threshold = dict(ZDR=3.5, KDP=0.22)
     keys = list(map(str.lower, ground_threshold.keys()))
     pn_new = create_filtered_fields_if_missing(pn_new, keys)
-    for field, data in pn.iteritems():
-        if field not in keys:
-            continue
+    for field in keys:
         view = pn_new[field].iloc[:heigth_px]
-        
+        fltrd = median_filter_df(view, param=field, fill=True,
+                                     nullmask=pn.ZH.isnull(), size=size)
+        new_values = fltrd.iloc[:crop_px]
+        selection = pn[field.upper()]>ground_threshold[field.upper()]
+        selection.iloc[crop_px:] = False
+        df = pn_new[field].copy()
+        df[selection] = new_values[selection]
+        pn_new[field] = df
     return pn_new
 
 def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
