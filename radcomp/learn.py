@@ -29,7 +29,7 @@ def sq_subplots(n_axes, use_gs=True, **kws):
     return plt.subplot(n_rows_cols, n_rows_cols, **kws)
 
 def plot_class(pn_class, n_cols=5, **kws):
-    fig, axarr, gs = ncols_subplots(pn_class.shape[1], n_cols=n_cols)
+    fig, axarr, gs = ncols_subplots(pn_class.shape[1], n_cols=n_cols, sharey=True)
     for i, key in enumerate(pn_class.major_axis):
         rows = pn_class.major_xs(key)
         ax = axarr.flatten()[i]
@@ -56,7 +56,7 @@ def pca_stats(pca):
     print('PCA captures {:.2f}% of the variance in the dataset.'.format(pca.explained_variance_ratio_.sum() * 100))
 
 def plot_pca_components(pca, pn):
-    fig, axarr, gs = sq_subplots(pca.n_components, sharex=True)
+    fig, axarr, gs = sq_subplots(pca.n_components, sharex=True, sharey=True)
     axarr_flat = axarr.flatten()
     for i in range(pca.n_components):
         ax = axarr_flat[i]
@@ -64,7 +64,7 @@ def plot_pca_components(pca, pn):
         for i, comp in enumerate(comps):
             x = list(pn.minor_axis)
             ax.plot(x, comp, label=pn.items[i])
-    plt.legend()
+    axarr_flat[0].legend()
     return fig, axarr
 
 def pn2df(pn, axis=1, **kws):

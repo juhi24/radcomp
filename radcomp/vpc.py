@@ -149,7 +149,7 @@ def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
         data['KDP'][data['KDP']>kdpmax] = np.nan
     return fillna(data)
 
-def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega10', alpha=1, **kws):
+def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega20', alpha=1, **kws):
     t = classes.index
     dt = mean_delta(t)*1.5
     clss = classes.shift(freq=dt).dropna().astype(int)
@@ -201,6 +201,7 @@ def fltr_rolling(df, window=5, stdlim=0.1, fill_value=0, **kws):
     # not ready, maybe not needed
 
 def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
+    '''simple threshold based gc filter'''
     #return pn_orig
     pn = pn_orig.copy()
     threshold = dict(ZDR=4, KDP=0.28)
@@ -230,6 +231,7 @@ def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
     return pn
 
 def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
+    '''gc filter using a combination of threshold and median filter'''
     pn_new = pn.copy()
     ground_threshold = dict(ZDR=3.5, KDP=0.22)
     keys = list(map(str.lower, ground_threshold.keys()))
@@ -264,6 +266,7 @@ def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
     return result
 
 def create_filtered_fields_if_missing(pn, keys):
+    '''copy original fields as new fields for processing'''
     pn_new = pn.copy()
     filtered_fields_exist = True
     keys = list(map(str.upper, keys))
@@ -291,7 +294,6 @@ def save_data(data, name):
     joblib.dump(metadata, model_path(name + META_SUFFIX))
 
 def load_model(name):
-    '''Return model and metadata if it exists'''
     loadpath = model_path(name)
     model = joblib.load(loadpath)
     return model

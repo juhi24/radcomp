@@ -15,7 +15,7 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
-plot = True
+plot = False
 
 locale.setlocale(locale.LC_ALL, 'C')
 
@@ -28,7 +28,7 @@ dts.index.name = 'id'
 
 fields = ['ZH', 'zdr', 'kdp']
 hmax = 10000
-n_eigens = 10
+n_eigens = 25
 plot_components = True
 
 pnd = {}
@@ -37,8 +37,8 @@ for row in dts.itertuples():
     pnd[row.Index] = pane
     print(row.t_start)
     if plot:
-        fig, axarr = vpc.plotpn(pane, fields=fields+['KDP'], cmap='viridis')
-        savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'_gcmf1.png')
+        fig, axarr = vpc.plotpn(pane, fields=fields, cmap='viridis')
+        savepath = path.join(vpc.RESULTS_DIR, 'cases', row.Index+'.png')
         fig.savefig(savepath)
 
 pn = pd.concat(pnd.values(), axis=2)
@@ -47,7 +47,7 @@ pn = pd.concat(pnd.values(), axis=2)
 data = vpc.prepare_data(pn, fields, hmax)
 data_scaled = vpc.scale_data(data)
 pca, km = vpc.train(data_scaled, n_eigens=n_eigens)
-vpc.save_pca_kmeans(pca, km, data_scaled, '2014rhi')
+vpc.save_pca_kmeans(pca, km, data_scaled, '2014rhi_{n}comp'.format(n=n_eigens))
 if plot_components:
     learn.plot_pca_components(pca, data_scaled)
 
