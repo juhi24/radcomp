@@ -229,7 +229,7 @@ def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
                     break
     return pn
 
-def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=18, size=(18, 3)):
+def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
     pn_new = pn.copy()
     ground_threshold = dict(ZDR=3.5, KDP=0.22)
     keys = list(map(str.lower, ground_threshold.keys()))
@@ -239,7 +239,9 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=18, size=(18, 3)):
         fltrd = median_filter_df(view, param=field, fill=True,
                                      nullmask=pn.ZH.isnull(), size=size)
         new_values = fltrd.iloc[:crop_px]
-        selection = pn[field.upper()]>ground_threshold[field.upper()]
+        selection = pn[field]>ground_threshold[field.upper()]
+        selection.loc[:, selection.iloc[crop_px]] = False # not clutter
+        selection.loc[:, selection.iloc[0]] = True
         selection.iloc[crop_px:] = False
         df = pn_new[field].copy()
         df[selection] = new_values[selection]
