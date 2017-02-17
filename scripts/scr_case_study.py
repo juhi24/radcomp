@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import vpc
+from radcomp import vpc
 from os import path
 
 plt.ion()
@@ -42,7 +42,7 @@ for iax in range(len(axarr)-1):
 csv_path = path.join(vpc.HOME, 'results', 'pip2015', 'params.csv')
 data_ground = pd.read_csv(csv_path, parse_dates=['datetime'], index_col=['winter', 'case', 'datetime'])
 data_g = data_ground.loc['first','2014 Feb 21-2014 Feb 22']
-data_g = fltr_long_period(data_g)
+#data_g = fltr_long_period(data_g) # TODO
 #data_g.density.plot(ax=axarr[-1])
 ax_r = axarr[-3]
 ax_rho = axarr[-2]

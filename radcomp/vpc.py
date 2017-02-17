@@ -15,7 +15,7 @@ from sklearn import decomposition
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
 from scipy.ndimage.filters import median_filter
-import learn
+from radcomp import learn
 
 HOME = path.expanduser('~')
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
