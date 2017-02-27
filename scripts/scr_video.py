@@ -6,36 +6,38 @@
 
 import scipy.io
 import glob
-import os
+from os import path
 import numpy as np
 import pandas as pd
-import radx
+from radcomp import radx
 import copy
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+import getpass
+import j24
 
 debug = False
 save_png = False
 plt.ioff()
 #plt.close('all')
 
-basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
-resultspath = '/home/jussitii/results/radcomp'
-gridpath = os.path.join(basepath, 'grid')
-intrp_path = os.path.join(basepath, 'interpolated')
-composite_r_path = os.path.join(intrp_path, 'composite', 'R')
-composite_frames_path = os.path.join(intrp_path, 'composite', 'video_frames')
+home = j24.home()
+basepath = path.join('/media', getpass.getuser(), '04fafa8f-c3ca-48ee-ae7f-046cf576b1ee')
+resultspath = path.join(home, 'results', 'radcomp', 'interpolate')
+gridpath = path.join(basepath, 'grid')
+intrp_path = path.join(basepath, 'interpolated')
+composite_r_path = path.join(intrp_path, 'composite', 'R')
+composite_frames_path = path.join(intrp_path, 'composite', 'video_frames')
 #matpath_pattern = os.path.join(intrp_path, '???', 'R', 'mat')
-matpath_pattern = os.path.join(intrp_path, '???', 'R', 'mat_comb')
+matpath_pattern = path.join(intrp_path, '???', 'R', 'mat_comb')
 
-times = pd.date_range(pd.datetime(2016, 9, 3, 10, 01), pd.datetime(2016, 9, 4, 6, 59), freq='Min').tolist()
+times = pd.date_range(pd.datetime(2016, 9, 3, 10, 1), pd.datetime(2016, 9, 4, 6, 59), freq='Min').tolist()
 
 df_radx = pd.DataFrame(columns=radx.SITES, index=times)
-filepaths_all = glob.glob(os.path.join(gridpath, '???', '*', 'ncf_20160903_[12]?????.nc'))
-filepaths_all.extend(glob.glob(os.path.join(gridpath, '???', '*', 'ncf_20160904_0[0-6]????.nc')))
+filepaths_all = glob.glob(path.join(gridpath, '???', '*', 'ncf_20160903_[12]?????.nc'))
+filepaths_all.extend(glob.glob(path.join(gridpath, '???', '*', 'ncf_20160904_0[0-6]????.nc')))
 filepaths_all.sort()
-#filepaths_good = radx.filter_filepaths(filepaths_all)
+filepaths_good = radx.filter_filepaths(filepaths_all) # takes a lot of time!
 
 rs = pd.Series(name='rainrate', index=times)
 sitencs_old = {'KER': None, 'KUM': None, 'VAN': None}
@@ -51,7 +53,7 @@ if not debug:
         gridfname_pattern = 'ncf_' + dtstr + '??.nc'
         sitencs = sitencs_old
         for site in radx.SITES:
-            gridfpath_pattern = os.path.join(gridpath, site, dtdir, gridfname_pattern)
+            gridfpath_pattern = path.join(gridpath, site, dtdir, gridfname_pattern)
             for fp in filepaths_good:
                 if glob.fnmatch.fnmatch(fp, gridfpath_pattern):
                     sitencs[site] = radx.RADXgrid(fp)
@@ -60,7 +62,8 @@ if not debug:
                     dbz_d[site] = sitencs[site].dbz()
                     break
         sitencs_old = sitencs
-        matfpath = os.path.join(composite_r_path, 'mat', dtdir, matfname)
+        matdir = j24.ensure_dir(path.join(composite_r_path, 'mat', dtdir))
+        matfpath = path.join(matdir, matfname)
         r = scipy.io.loadmat(matfpath)['R']
         if initialize > 0:
             initialize -= 1
@@ -79,14 +82,14 @@ if not debug:
         radx.plot_rainmap(r, fig=fig, ax=axr, cax=ax_cb_r, orientation='horizontal')
         for site in radx.SITES:
             ax = axsite[site]
-            im = ax.imshow(dbz_d[site], vmin=-30, vmax=60, cmap='gist_ncar')
+            im = ax.pcolormesh(dbz_d[site], vmin=-30, vmax=60, cmap='gist_ncar')
             ax.set_title(site, y=0.82, x=0.82)
             ax.set_xticks([])
             ax.set_yticks([])
         axr.set_title(dt_nice, y=0.9768, x=0.99, va='top', ha='right', bbox={'facecolor':'white'})
         cb_dbz = fig.colorbar(im, cax=ax_cb_dbz)
         cb_dbz.set_label('reflectivity (dBZ)')
-        outdir = radx.ensure_path(os.path.join(composite_frames_path, dtdir))
-        outpath = os.path.join(outdir, 'vid_' + dtstr + '.png')
+        outdir = j24.ensure_dir(path.join(composite_frames_path, dtdir))
+        outpath = path.join(outdir, 'pvid_' + dtstr + '.png')
         fig.savefig(dt.strftime(outpath), bbox_inches='tight')
         plt.close(fig)

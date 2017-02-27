@@ -52,8 +52,10 @@ def plot_rainmap(r, fig=None, ax=None, **cbkws):
     if fig is None or ax is None:
         fig, ax = plt.subplots()
     r_ = r.copy()
-    r_[r < 0.05] = np.nan
-    im = ax.imshow(r_, vmin=0.05, vmax=10)
+    #r_[r < 0.05] = np.nan
+    r_ = np.ma.masked_where(r<0.05, r_)
+    #im = ax.imshow(r_, vmin=0.05, vmax=10)
+    im = ax.pcolormesh(r_, vmin=0.05, vmax=10, cmap='jet')
     cb = fig.colorbar(im, **cbkws)
     cb.set_label('rain rate (mm/h)')
     ax.set_xticks([])
