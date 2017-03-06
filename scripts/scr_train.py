@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import vpc
+from radcomp import vpc
 import learn
 import locale
 from os import path
@@ -19,17 +19,13 @@ plot = False
 
 locale.setlocale(locale.LC_ALL, 'C')
 
-case_id_fmt = lambda t: t.strftime('%b%-d').lower()
-
-casespath = path.join('cases', 'training.csv')
-dts = pd.read_csv(casespath, parse_dates=['t_start', 't_end'])
-dts.index = dts['t_start'].apply(case_id_fmt)
-dts.index.name = 'id'
-
 fields = ['ZH', 'zdr', 'kdp']
 hmax = 10000
 n_eigens = 25
 plot_components = True
+
+casespath = path.join('cases', 'training.csv')
+dts = vpc.read_cases(filepath=casespath)
 
 pnd = {}
 for row in dts.itertuples():

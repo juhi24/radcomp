@@ -23,6 +23,15 @@ RESULTS_DIR = path.join(HOME, 'results', 'radcomp', 'vertical')
 META_SUFFIX = '_metadata'
 NAN_REPLACEMENT = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
 
+def case_id_fmt(t):
+    return t.strftime('%b%-d').lower()
+
+def read_cases(filepath):
+    dts = pd.read_csv(filepath, parse_dates=['t_start', 't_end'])
+    dts.index = dts['t_start'].apply(case_id_fmt)
+    dts.index.name = 'id'
+    return dts
+
 def mean_delta(t):
     dt = t[-1]-t[0]
     return dt/(len(t)-1)
