@@ -7,18 +7,15 @@ Vertical profile classification
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import scipy.io
 import matplotlib as mpl
 from os import path
-from functools import partial
 from sklearn import decomposition
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
-from scipy.ndimage.filters import median_filter
 from radcomp import learn
 
 HOME = path.expanduser('~')
-DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
+USER_DIR = path.join(HOME, '.radcomp')
 RESULTS_DIR = path.join(HOME, 'results', 'radcomp', 'vertical')
 META_SUFFIX = '_metadata'
 NAN_REPLACEMENT = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
@@ -26,7 +23,8 @@ NAN_REPLACEMENT = {'ZH': -10, 'ZDR': 0, 'KDP': 0}
 def case_id_fmt(t):
     return t.strftime('%b%-d').lower()
 
-def read_cases(filepath):
+def read_cases(name):
+    filepath = path.join(USER_DIR, 'cases', name + '.csv')
     dts = pd.read_csv(filepath, parse_dates=['t_start', 't_end'])
     dts.index = dts['t_start'].apply(case_id_fmt)
     dts.index.name = 'id'
@@ -35,32 +33,6 @@ def read_cases(filepath):
 def mean_delta(t):
     dt = t[-1]-t[0]
     return dt/(len(t)-1)
-
-def data_range(dt_start, dt_end):
-    fnames = fname_range(dt_start, dt_end)
-    pns = map(vprhimat2pn, fnames)
-    return pd.concat(pns, axis=2).loc[:, :, dt_start:dt_end]
-
-def fname_range(dt_start, dt_end):
-    dt_range = pd.date_range(dt_start.date(), dt_end.date())
-    dt2path_map = partial(dt2path, datadir=DATA_DIR)
-    return map(dt2path_map, dt_range)
-
-def dt2path(dt, datadir):
-    return path.join(datadir, dt.strftime('%Y%m%d_IKA_VP_from_RHI.mat'))
-
-def vprhimat2pn(datapath):
-    data = scipy.io.loadmat(datapath)['VP_RHI']
-    fields = list(data.dtype.fields)
-    fields.remove('ObsTime')
-    fields.remove('height')
-    str2dt = lambda tstr: pd.datetime.strptime(tstr,'%Y-%m-%dT%H:%M:%S')
-    t = list(map(str2dt, data['ObsTime'][0][0]))
-    h = data['height'][0][0][0]
-    data_dict = {}
-    for field in fields:
-        data_dict[field] = data[field][0][0].T
-    return pd.Panel(data_dict, major_axis=h, minor_axis=t)
 
 def m2km(m, pos):
     '''formatting m in km'''
@@ -134,24 +106,6 @@ def fillna(dat, field=''):
         data.fillna(NAN_REPLACEMENT[field.upper()], inplace=True)
     return data
 
-def kdp2phidp(kdp, dr_km):
-    kdp_filled = kdp.fillna(0)
-    return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
-
-def prepare_pn(pn, kdpmax=0.5):
-    dr = pd.Series(pn.major_axis.values, index=pn.major_axis).diff().bfill()
-    dr_km = dr/1000
-    pn_new = pn.copy()
-    pn_new['KDP_orig'] = pn_new['KDP'].copy()
-    pn_new['KDP'][pn_new['KDP']<0] = np.nan
-    pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
-    kdp = pn_new['KDP'] # a view
-    kdp[kdp>kdpmax] = 0
-    kdp[kdp<0] = 0
-    pn_new = fltr_median(pn_new)
-    pn_new = fltr_ground_clutter_median(pn_new)
-    return pn_new
-
 def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
     data = pn[fields, 0:hmax, :].transpose(0,2,1)
     if kdpmax is not None:
@@ -173,11 +127,14 @@ def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega20', alpha=1, **
                    alpha=alpha, clip_on=False, **kws)
         t0 = t1
 
-def plot_classes(data, classes, n_eigens):
+def plot_classes(data, classes):
     figs = []
     axarrs = []
-    for eigen in range(n_eigens):
+    n_classes = classes.max()+1
+    for eigen in range(n_classes):
         i_classes = np.where(classes==eigen)[0]
+        if len(i_classes)==0:
+            continue
         pn_class = data.iloc[:, i_classes, :]
         fig, axarr = learn.plot_class(pn_class, ylim=(-1, 2))
         axarr[0].legend().set_visible(True)
@@ -187,105 +144,6 @@ def plot_classes(data, classes, n_eigens):
             if ax.xaxis.get_ticklabels()[0].get_visible():
                 ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(m2km))
     return figs, axarrs
-
-def reject_outliers(df, m=2):
-    d = df.subtract(df.median(axis=1), axis=0).abs()
-    mdev = d.median(axis=1)
-    s = d.divide(mdev, axis=0).replace(np.inf, np.nan).fillna(0)
-    return df[s<m].copy()
-
-def fltr_median(pn):
-    pn_out = pn.copy()
-    sizes = {'ZDR': (5, 1), 'KDP': (20, 1)}
-    keys = list(map(str.lower, sizes.keys()))
-    new = create_filtered_fields_if_missing(pn, sizes.keys())[keys]
-    nullmask = pn['ZH'].isnull()
-    for field, data in new.iteritems():
-        df = median_filter_df(data, param=field, nullmask=nullmask, size=sizes[field.upper()])
-        pn_out[field] = df
-    return pn_out
-
-def fltr_rolling(df, window=5, stdlim=0.1, fill_value=0, **kws):
-    r = df.rolling(window=window, center=True)
-    # not ready, maybe not needed
-
-def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
-    '''simple threshold based gc filter'''
-    #return pn_orig
-    pn = pn_orig.copy()
-    threshold = dict(ZDR=4, KDP=0.28)
-    keys = list(map(str.lower, threshold.keys()))
-    pn = create_filtered_fields_if_missing(pn, keys)
-    for field, data in pn.iteritems():
-        if field not in keys:
-            continue
-        for dt, col in data.iteritems():
-            winsize=1
-            while winsize<window:
-                winsize += 1
-                dat = col.iloc[:winsize].copy()
-                med = dat.median()
-                easy_thresh = 0.75*threshold[field.upper()]
-                if med < easy_thresh or np.isnan(col.iloc[0]):
-                    break # Do not filter.
-                threshold_exceeded = dat.isnull().any() and med > threshold[field.upper()]
-                median_limit_exceeded = med > ratio_limit*dat.abs().min()
-                view = pn[field, :, dt].iloc[:window]
-                if median_limit_exceeded:
-                    view[view>0.95*med] = NAN_REPLACEMENT[field.upper()]
-                    break
-                if threshold_exceeded:
-                    view[view>threshold[field.upper()]] = NAN_REPLACEMENT[field.upper()]
-                    break
-    return pn
-
-def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
-    '''gc filter using a combination of threshold and median filter'''
-    pn_new = pn.copy()
-    ground_threshold = dict(ZDR=3.5, KDP=0.22)
-    keys = list(map(str.lower, ground_threshold.keys()))
-    pn_new = create_filtered_fields_if_missing(pn_new, keys)
-    for field in keys:
-        view = pn_new[field].iloc[:heigth_px]
-        fltrd = median_filter_df(view, param=field, fill=True,
-                                     nullmask=pn.ZH.isnull(), size=size)
-        new_values = fltrd.iloc[:crop_px]
-        selection = pn[field]>ground_threshold[field.upper()]
-        selection.loc[:, selection.iloc[crop_px]] = False # not clutter
-        selection.loc[:, selection.iloc[0]] = True
-        selection.iloc[crop_px:] = False
-        df = pn_new[field].copy()
-        df[selection] = new_values[selection]
-        pn_new[field] = df
-    return pn_new
-
-def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
-    '''median_filter wrapper for DataFrames'''
-    if nullmask is None:
-        nullmask = df.isnull()
-    if fill and param is not None:
-        df_new = df.fillna(NAN_REPLACEMENT[param.upper()])
-    else:
-        df_new = df.copy()
-    result = median_filter(df_new, **kws)
-    result = pd.DataFrame(result, index=df_new.index, columns=df_new.columns)
-    if param is not None:
-        result[result.isnull()] = NAN_REPLACEMENT[param.upper()]
-    result[nullmask] = np.nan
-    return result
-
-def create_filtered_fields_if_missing(pn, keys):
-    '''copy original fields as new fields for processing'''
-    pn_new = pn.copy()
-    filtered_fields_exist = True
-    keys = list(map(str.upper, keys))
-    for key in keys:
-        if key.lower() not in pn_new.items:
-            filtered_fields_exist = False
-    if not filtered_fields_exist:
-        for key in keys:
-            pn_new[key.lower()] = pn_new[key]
-    return pn_new
 
 def model_path(name):
     return path.join(RESULTS_DIR, 'models', name + '.pkl')
@@ -341,6 +199,3 @@ def classify(data_scaled, km):
     data_df = learn.pn2df(data_scaled)
     return pd.Series(data=km.predict(data_df), index=data_scaled.major_axis)
 
-def dt2pn(dt0, dt1):
-    pn_raw = data_range(dt0, dt1)
-    return prepare_pn(pn_raw)

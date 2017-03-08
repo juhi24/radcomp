@@ -11,9 +11,12 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
+from glob import glob
 
+home = path.expanduser('~')
 here = path.abspath(path.dirname(__file__))
 name = 'radcomp'
+userdir = path.join(home, '.'+name)
 
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
@@ -106,8 +109,8 @@ setup(
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     data_files=[
-                #('/etc/systemd/system', ['systemd/ilmaruuvi.service'])
-                ],
+                (path.join(userdir, 'cases'), glob('cases/*.csv'))
+    ],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
