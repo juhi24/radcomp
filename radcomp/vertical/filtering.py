@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 from scipy.ndimage.filters import median_filter
-from radcomp.vpc import NAN_REPLACEMENT
+from radcomp.vertical import NAN_REPLACEMENT
 
 
 def create_filtered_fields_if_missing(pn, keys):
