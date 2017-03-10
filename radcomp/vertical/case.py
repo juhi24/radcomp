@@ -27,6 +27,7 @@ def vprhimat2pn(datapath):
         data_dict[field] = data[field][0][0].T
     return pd.Panel(data_dict, major_axis=h, minor_axis=t)
 
+
 def fname_range(dt_start, dt_end):
     dt_range = pd.date_range(dt_start.date(), dt_end.date())
     dt2path_map = partial(dt2path, datadir=DATA_DIR)
@@ -65,6 +66,7 @@ def dt2pn(dt0, dt1):
 
 
 def fillna(dat, field=''):
+    """Fill nan values with values representing zero scatterers."""
     data = dat.copy()
     if isinstance(data, pd.Panel):
         for field in list(data.items):
@@ -75,6 +77,7 @@ def fillna(dat, field=''):
 
 
 def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
+    """Prepare data for classification. Scaling has do be done separately."""
     data = pn[fields, 0:hmax, :].transpose(0,2,1)
     if kdpmax is not None:
         data['KDP'][data['KDP']>kdpmax] = np.nan
@@ -82,10 +85,12 @@ def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
 
 
 def prep_data(pn, vpc):
-    return prepare_data(pn, fields=vpc.fields, hmax=vpc.hmax, kdpmax=vpc.kdpmax)
+    """prepare_data wrapper"""
+    return prepare_data(pn, fields=vpc.params, hmax=vpc.hmax, kdpmax=vpc.kdpmax)
 
 
 def scale_data(pn):
+    """Scale radar parameters so that values are same order of magnitude."""
     scaling_limits = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3), 'KDP': (0, 0.5), 
                       'kdp': (0, 0.15)}
     scaled = pn.copy()
@@ -97,12 +102,13 @@ def scale_data(pn):
 
 
 class Case:
-    def __init__(self, data=None, cl_data=None, cl_data_scaled=None, classes=None):
+    def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
+                 classes=None, class_scheme=None):
         self.data = data
-        self.cl_data = cl_data # classification data
-        self.cl_data_scaled = cl_data_scaled
+        self.cl_data = cl_data # non-scaled classifiable data
+        self.cl_data_scaled = cl_data_scaled # scaled classifiable data
         self.classes = classes
-        self.class_scheme = None
+        self.class_scheme = class_scheme
 
     @classmethod
     def from_dtrange(cls, t0, t1):
@@ -132,11 +138,13 @@ class Case:
             return scaled
         return None
 
-    def classify(self, save=True):
+    def classify(self, scheme=None, save=True):
         """classify based on class_scheme"""
+        if scheme is not None:
+            self.class_scheme = scheme
         if self.cl_data_scaled is None:
             self.scale_cl_data()
-        if self.cl_data_scaled is not None:
+        if self.cl_data_scaled is not None and self.class_scheme is not None:
             classes = classification.classify(self.cl_data_scaled, self.class_scheme.km)
             if save:
                 self.classes = classes
@@ -146,11 +154,16 @@ class Case:
     def plot_classes(self):
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
-    def plot(self, fields=None, **kws):
-        if fields is None:
-            fields = self.class_scheme.fields
-        fig, axarr = plotting.plotpn(self.data, fields=fields, **kws)
+    def plot(self, params=None, **kws):
+        if params is None:
+            if self.class_scheme is not None:
+                params = self.class_scheme.params
+            else:
+                params = ['ZH', 'zdr', 'kdp']
+        fig, axarr = plotting.plotpn(self.data, fields=params, **kws)
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 plotting.class_colors(self.classes, ax=axarr[iax])
-        
+
+    def train(self):
+        return self.class_scheme.train(self.cl_data_scaled)
