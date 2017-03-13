@@ -1,9 +1,15 @@
 # coding: utf-8
-
+#import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from radcomp import vertical, learn
+
+VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0}
+VMINS_CB = dict(VMINS)
+VMINS_CB['ZH'] = -15
+VMAXS = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
+LABELS = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
 
 def mean_delta(t):
     dt = t[-1]-t[0]
@@ -12,9 +18,6 @@ def mean_delta(t):
 def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws):
     if fields is None:
         fields = pn.items
-    vmins = {'ZH': -15, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0}
-    vmaxs = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
-    labels = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
     n_rows = len(fields) + n_extra_ax
     fig = plt.figure(figsize=(8,3+1.1*n_rows))
     gs = mpl.gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
@@ -31,9 +34,9 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
         if scaled:
             scalekws = {'vmin': 0, 'vmax': 1}
             label = 'scaled'
-        elif fieldup in labels:
-            scalekws = {'vmin': vmins[fieldup], 'vmax': vmaxs[fieldup]}
-            label = labels[fieldup]
+        elif fieldup in LABELS:
+            scalekws = {'vmin': VMINS_CB[fieldup], 'vmax': VMAXS[fieldup]}
+            label = LABELS[fieldup]
         else:
             scalekws = {}
             label = field

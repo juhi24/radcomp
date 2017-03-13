@@ -1,11 +1,13 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
+import matplotlib as mpl
+#import matplotlib.pyplot as plt
 import scipy.io
 from os import path
 from functools import partial
 from radcomp.vertical import filtering, classification, plotting, NAN_REPLACEMENT
-from radcomp import HOME
+from radcomp import vertical, HOME
 
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
 
@@ -109,6 +111,7 @@ class Case:
         self.cl_data_scaled = cl_data_scaled # scaled classifiable data
         self.classes = classes
         self.class_scheme = class_scheme
+        self._cl_ax = None
 
     @classmethod
     def from_dtrange(cls, t0, t1):
@@ -116,7 +119,7 @@ class Case:
         return cls(data=pn)
 
     def load_classification(self, name):
-        self.class_scheme = classification.VPC.from_pkl(name)
+        self.class_scheme = classification.VPC.load(name)
         self.classify()
 
     def prepare_cl_data(self, save=True):
@@ -154,7 +157,7 @@ class Case:
     def plot_classes(self):
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
-    def plot(self, params=None, **kws):
+    def plot(self, params=None, interactive=True, **kws):
         if params is None:
             if self.class_scheme is not None:
                 params = self.class_scheme.params
@@ -164,6 +167,48 @@ class Case:
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 plotting.class_colors(self.classes, ax=axarr[iax])
+        if interactive:
+            for ax in axarr:
+                mpl.widgets.Cursor(ax, horizOn=False, color='red', linewidth=2)
+            fig.canvas.mpl_connect('button_press_event', self.on_click_plot_cs)
+        return fig, axarr
 
     def train(self):
         return self.class_scheme.train(self.cl_data_scaled)
+
+    def on_click_plot_cs(self, event):
+        """on click plot cross section"""
+        dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
+        if self._cl_ax is None:
+            axkws = dict()
+            update = False
+        else:
+            cl_ax = self._cl_ax
+            if isinstance(cl_ax, np.ndarray):
+                for ax in cl_ax:
+                    ax.clear()
+            else:
+                ax = cl_ax
+                ax.clear()
+            axkws = dict(ax=cl_ax)
+            update = True
+        self._cl_ax = self.plot_cl_data_at(dt, **axkws)
+        if update:
+            ax.get_figure().canvas.draw()
+
+    def plot_cl_data_at(self, dt, **kws):
+        data = self.cl_data
+        displacement = self.mean_delta()
+        i = data.major_axis.get_loc(dt-displacement, method='nearest')
+        axarr = data.iloc[:, i, :].plot(subplots=True, **kws)
+        axarr[0].set_title(str(dt))
+        for ax in axarr:
+            param=ax.get_lines()[0].get_label().upper()
+            ax.set_ylim(plotting.VMINS[param], plotting.VMAXS[param])
+            ax.set_ylabel(plotting.LABELS[param])
+        ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
+        ax.set_xlabel('height, km')
+        return axarr
+
+    def mean_delta(self):
+        return plotting.mean_delta(self.data.minor_axis)

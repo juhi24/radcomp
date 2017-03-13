@@ -18,7 +18,6 @@ plot = False
 params = ['ZH', 'zdr', 'kdp']
 hmax = 10000
 n_eigens = 20
-plot_components = True
 
 cases = read_cases('training')
 
@@ -30,9 +29,9 @@ if plot:
 
 pns = [c.data for i,c in cases.case.iteritems()]
 data = pd.concat(pns, axis=2)
-scheme = classification.VPC(params=params, n_eigens=n_eigens)
+scheme = classification.VPC(params=params, hmax=hmax, n_eigens=n_eigens)
 c = case.Case(data=data, class_scheme=scheme)
 c.scale_cl_data()
 c.train()
-scheme.save('test')
+scheme.save('2014rhi_{}comp'.format(n_eigens))
 

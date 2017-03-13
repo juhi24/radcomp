@@ -4,7 +4,7 @@
 @author: Jussi Tiira
 """
 import numpy as np
-import pandas as pd
+#import pandas as pd
 import matplotlib.pyplot as plt
 from radcomp.vertical import case, read_cases
 
@@ -26,4 +26,4 @@ c = cases.case['mar3']
 scheme = '2014rhi_{n}comp'.format(n=n_comp)
 c.load_classification(scheme)
 #c.plot_classes()
-c.plot(cmap='viridis', n_extra_ax=0)
+fig, axarr = c.plot(cmap='viridis', n_extra_ax=0)
