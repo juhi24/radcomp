@@ -6,10 +6,30 @@ import matplotlib as mpl
 import scipy.io
 from os import path
 from functools import partial
-from radcomp.vertical import filtering, classification, plotting, NAN_REPLACEMENT
-from radcomp import vertical, HOME
+from radcomp.vertical import (filtering, classification, plotting,
+                              NAN_REPLACEMENT)
+from radcomp import vertical, HOME, USER_DIR
 
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
+
+
+def case_id_fmt(t, fmt='%b%-d'):
+    return t.strftime(fmt).lower()
+
+
+def read_case_times(name):
+    filepath = path.join(USER_DIR, 'cases', name + '.csv')
+    dts = pd.read_csv(filepath, parse_dates=['t_start', 't_end'])
+    dts.index = dts['t_start'].apply(case_id_fmt)
+    dts.index.name = 'id'
+    return dts
+
+
+def read_cases(name):
+    dts = read_case_times(name)
+    cases_list = [Case.from_dtrange(row[1]['t_start'], row[1]['t_end']) for row in dts.iterrows()]
+    dts['case'] = cases_list
+    return dts
 
 
 def dt2path(dt, datadir):
@@ -118,6 +138,15 @@ class Case:
         pn = dt2pn(t0, t1)
         return cls(data=pn)
 
+    def name(self, **kws):
+        return case_id_fmt(self.t_start(), **kws)
+
+    def t_start(self):
+        return self.data.minor_axis[0]
+
+    def t_end(self):
+        return self.data.minor_axis[-1]
+
     def load_classification(self, name):
         self.class_scheme = classification.VPC.load(name)
         self.classify()
@@ -169,6 +198,7 @@ class Case:
                 plotting.class_colors(self.classes, ax=axarr[iax])
         if interactive:
             for ax in axarr:
+                # TODO: cursor not showing
                 mpl.widgets.Cursor(ax, horizOn=False, color='red', linewidth=2)
             fig.canvas.mpl_connect('button_press_event', self.on_click_plot_cs)
         return fig, axarr
