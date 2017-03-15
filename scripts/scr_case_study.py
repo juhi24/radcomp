@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import case, RESULTS_DIR
 from j24 import ensure_dir
+from baecc import prepare
 
 plt.ion()
 plt.close('all')
@@ -16,6 +17,7 @@ np.random.seed(0)
 
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'case_study'))
 cases = case.read_cases('analysis')
+tablekws = dict(casesname_baecc='tiira2017_baecc', casesname_1415='tiira2017_1415')
 home = path.expanduser('~')
 
 def plot_data(data, ax, **kws):
@@ -46,4 +48,5 @@ def plot_case(name, n_comp=20):
     ax_d.legend()
     #figs, axarrs = vpc.plot_classes(data_scaled, classes, pca.n_components)
 
-plot_case('mar3')
+#plot_case('mar3')
+table = prepare.param_table(**tablekws)

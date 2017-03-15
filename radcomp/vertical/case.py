@@ -11,6 +11,8 @@ from radcomp.vertical import (filtering, classification, plotting,
 from radcomp import vertical, HOME, USER_DIR
 
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
+COL_START = 'start'
+COL_END = 'end'
 
 
 def case_id_fmt(t, fmt='%b%-d'):
@@ -19,15 +21,15 @@ def case_id_fmt(t, fmt='%b%-d'):
 
 def read_case_times(name):
     filepath = path.join(USER_DIR, 'cases', name + '.csv')
-    dts = pd.read_csv(filepath, parse_dates=['t_start', 't_end'])
-    dts.index = dts['t_start'].apply(case_id_fmt)
+    dts = pd.read_csv(filepath, parse_dates=[COL_START, COL_END])
+    dts.index = dts[COL_START].apply(case_id_fmt)
     dts.index.name = 'id'
     return dts
 
 
 def read_cases(name):
     dts = read_case_times(name)
-    cases_list = [Case.from_dtrange(row[1]['t_start'], row[1]['t_end']) for row in dts.iterrows()]
+    cases_list = [Case.from_dtrange(row[1][COL_START], row[1][COL_END]) for row in dts.iterrows()]
     dts['case'] = cases_list
     return dts
 
