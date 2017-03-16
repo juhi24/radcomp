@@ -27,7 +27,7 @@ def prep_case(dt0, dt1, n_comp=20):
 cases = case.read_cases('all')
 scheme = '2014rhi_{n}comp'.format(n=n_comp)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified'))
-#c = cases.case['mar3']
+#c = cases.case['140303']
 for i, c in cases.case.iteritems():
     c.load_classification(scheme)
     #c.plot_classes()

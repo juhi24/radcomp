@@ -15,7 +15,7 @@ COL_START = 'start'
 COL_END = 'end'
 
 
-def case_id_fmt(t, fmt='%b%-d'):
+def case_id_fmt(t, fmt='%y%m%d'):
     return t.strftime(fmt).lower()
 
 

@@ -17,7 +17,7 @@ np.random.seed(0)
 
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'case_study'))
 cases = case.read_cases('analysis')
-tablekws = dict(casesname_baecc='tiira2017_baecc', casesname_1415='tiira2017_1415')
+eventkws = dict(casesname_baecc='tiira2017_baecc', casesname_1415='tiira2017_1415')
 home = path.expanduser('~')
 
 def plot_data(data, ax, **kws):
@@ -49,4 +49,5 @@ def plot_case(name, n_comp=20):
     #figs, axarrs = vpc.plot_classes(data_scaled, classes, pca.n_components)
 
 #plot_case('mar3')
-table = prepare.param_table(**tablekws)
+e = prepare.events(**eventkws)
+table = prepare.param_table(e=e)
