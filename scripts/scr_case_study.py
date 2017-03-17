@@ -72,8 +72,14 @@ def plot_case(name, cases, g, n_comp=20):
     ax_d.legend()
     return fig, axarr
 
+def plot_cases(cases, g, save=True, **kws):
+    for name in cases.index.values:
+        fig, axarr = plot_case(name, cases, g, **kws)
+        fig.savefig(path.join(results_dir, name + '.png'))
+
 cases = case.read_cases('analysis')
 g = pd.read_pickle(TABLE_PKL)
-for name in cases.index.values:
-    fig, axarr = plot_case(name, cases, g)
-    fig.savefig(path.join(results_dir, name + '.png'))
+name = '140303'
+data_g = g.loc[name]
+c = cases.case[name]
+fig, axarr = plot_case(name, cases, g)

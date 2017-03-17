@@ -233,8 +233,7 @@ class Case:
 
     def plot_cl_data_at(self, dt, **kws):
         data = self.cl_data
-        displacement = self.mean_delta()
-        i = data.major_axis.get_loc(dt-displacement, method='nearest')
+        i = data.major_axis.get_loc(dt, method='nearest')
         axarr = data.iloc[:, i, :].plot(subplots=True, **kws)
         axarr[0].set_title(str(dt))
         for ax in axarr:

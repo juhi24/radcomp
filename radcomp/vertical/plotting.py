@@ -10,6 +10,7 @@ VMINS_CB = dict(VMINS)
 VMINS_CB['ZH'] = -15
 VMAXS = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
 LABELS = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
+DISPLACEMENT_FACTOR = 0.5
 
 def mean_delta(t):
     dt = t[-1]-t[0]
@@ -41,7 +42,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
             scalekws = {}
             label = field
         t = pn[field].columns
-        t_shifted = t + mean_delta(t)/2
+        t_shifted = t - mean_delta(t)*DISPLACEMENT_FACTOR
         im = ax.pcolormesh(t_shifted, pn[field].index, 
                       np.ma.masked_invalid(pn[field].values), cmap=cmap,
                       **scalekws, label=field, **kws)
@@ -63,7 +64,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
 
 def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega20', alpha=1, **kws):
     t = classes.index
-    dt = mean_delta(t)*1.5
+    dt = mean_delta(t)*DISPLACEMENT_FACTOR
     clss = classes.shift(freq=dt).dropna().astype(int)
     if ax is None:
         ax = plt.gca()
