@@ -1,8 +1,10 @@
 # coding: utf-8
 import locale
 from os import path
+from j24 import home, ensure_join
 
 locale.setlocale(locale.LC_ALL, 'C')
-HOME = path.expanduser('~')
+HOME = home()
 USER_DIR = path.join(HOME, '.radcomp')
-RESULTS_DIR = path.join(HOME, 'results', 'radcomp')
+RESULTS_DIR = ensure_join(HOME, 'results', 'radcomp')
+CACHE_DIR = ensure_join(HOME, '.cache', 'radcomp')
