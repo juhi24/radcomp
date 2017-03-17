@@ -10,7 +10,7 @@ from os import path
 from radcomp.vertical import case, RESULTS_DIR
 from j24 import ensure_dir
 
-plt.ion()
+plt.ioff()
 plt.close('all')
 np.random.seed(0)
 

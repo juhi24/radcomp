@@ -9,20 +9,23 @@ from functools import partial
 from radcomp.vertical import (filtering, classification, plotting,
                               NAN_REPLACEMENT)
 from radcomp import vertical, HOME, USER_DIR
+from j24 import daterange2str
 
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
 COL_START = 'start'
 COL_END = 'end'
 
 
-def case_id_fmt(t, fmt='%y%m%d'):
-    return t.strftime(fmt).lower()
-
+def case_id_fmt(t_start, t_end=None, fmt='{year}{month}{day}', hour_fmt='%H',
+                day_fmt='%d', month_fmt='%m', year_fmt='%y'):
+    return daterange2str(t_start, t_end, dtformat=fmt, day_fmt=day_fmt,
+                         month_fmt=month_fmt, year_fmt=year_fmt).lower()
 
 def read_case_times(name):
     filepath = path.join(USER_DIR, 'cases', name + '.csv')
     dts = pd.read_csv(filepath, parse_dates=[COL_START, COL_END])
-    dts.index = dts[COL_START].apply(case_id_fmt)
+    indexing_func = lambda row: case_id_fmt(row[COL_START], row[COL_END])
+    dts.index = dts.apply(indexing_func, axis=1)
     dts.index.name = 'id'
     return dts
 
@@ -141,7 +144,7 @@ class Case:
         return cls(data=pn)
 
     def name(self, **kws):
-        return case_id_fmt(self.t_start(), **kws)
+        return case_id_fmt(self.t_start(), self.t_end(), **kws)
 
     def t_start(self):
         return self.data.minor_axis[0]
