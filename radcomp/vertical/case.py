@@ -183,6 +183,7 @@ class Case:
             self.scale_cl_data()
         if self.cl_data_scaled is not None and self.class_scheme is not None:
             classes = classification.classify(self.cl_data_scaled, self.class_scheme.km)
+            classes.name = 'class'
             if save:
                 self.classes = classes
             return classes
@@ -205,13 +206,13 @@ class Case:
             for ax in axarr:
                 # TODO: cursor not showing
                 mpl.widgets.Cursor(ax, horizOn=False, color='red', linewidth=2)
-            fig.canvas.mpl_connect('button_press_event', self.on_click_plot_cs)
+            fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cs)
         return fig, axarr
 
     def train(self):
         return self.class_scheme.train(self.cl_data_scaled)
 
-    def on_click_plot_cs(self, event):
+    def _on_click_plot_cs(self, event):
         """on click plot cross section"""
         dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
         if self._cl_ax is None:
