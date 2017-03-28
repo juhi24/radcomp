@@ -143,6 +143,12 @@ class Case:
         pn = dt2pn(t0, t1)
         return cls(data=pn)
 
+    @classmethod
+    def by_combining(cls, cases):
+        datas = list(cases.case.apply(lambda c: c.data)) # data of each case
+        data = pd.concat(datas, axis=2)
+        return cls(data=data)
+
     def name(self, **kws):
         return case_id_fmt(self.t_start(), self.t_end(), **kws)
 
