@@ -29,7 +29,6 @@ rate_list = []
 for name in cases.index:
     data_g = g.loc[name]
     c = cases.case[name]
-    #c = case.Case.by_combining(cases)
     scheme = '2014rhi_{n}comp'.format(n=n_comp)
     c.load_classification(scheme)
     classes = c.classes
@@ -41,7 +40,6 @@ for name in cases.index:
                                      base=base)
     rate.fillna(0, inplace=True)
     rate_list.append(rate)
-#rate.hist(by=classes, sharex=True, sharey=True, bins=np.arange(0, 4, 0.5))
 classes_all = pd.concat(classes_list)
 rate_all = pd.concat(rate_list)
 axarr = rate_all.hist(by=classes_all, sharex=True, sharey=True,
