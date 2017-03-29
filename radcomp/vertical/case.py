@@ -251,5 +251,14 @@ class Case:
         ax.set_xlabel('height, km')
         return axarr
 
+    def pcolor_classes(self):
+        groups = self.cl_data.groupby(self.classes)
+        axarrs = groups.apply(plotting.pcolor_class)
+        for i, axarr in axarrs.iteritems():
+            axarr[0].set_title('Class {}'.format(i))
+        figs = axarrs.apply(lambda axarr: axarr[0].get_figure())
+        figs.apply(lambda fig: fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cs))
+
     def mean_delta(self):
         return plotting.mean_delta(self.data.minor_axis)
+

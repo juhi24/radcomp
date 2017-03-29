@@ -17,4 +17,4 @@ scheme = '2014rhi_{n}comp'.format(n=n_comp)
 cases = case.read_cases('training')
 c = case.Case.by_combining(cases)
 c.load_classification(scheme)
-
+c.pcolor_classes()

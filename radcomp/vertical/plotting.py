@@ -16,7 +16,8 @@ def mean_delta(t):
     dt = t[-1]-t[0]
     return dt/(len(t)-1)
 
-def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws):
+def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
+           x_is_date=True, **kws):
     if fields is None:
         fields = pn.items
     n_rows = len(fields) + n_extra_ax
@@ -41,13 +42,17 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
         else:
             scalekws = {}
             label = field
-        t = pn[field].columns
-        t_shifted = t - mean_delta(t)*DISPLACEMENT_FACTOR
-        im = ax.pcolormesh(t_shifted, pn[field].index, 
+        if x_is_date:
+            t = pn[field].columns
+            x = t - mean_delta(t)*DISPLACEMENT_FACTOR
+        else:
+            x = pn[field].columns
+        im = ax.pcolormesh(x, pn[field].index, 
                       np.ma.masked_invalid(pn[field].values), cmap=cmap,
                       **scalekws, label=field, **kws)
         #fig.autofmt_xdate()
-        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
+        if x_is_date:
+            ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
         ax.set_ylim(0,11000)
         ax.set_ylabel('Height, km')
@@ -56,8 +61,9 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0, **kws)
     for j in range(n_extra_ax):
         ax = fig.add_subplot(gs[i+1+j, 0], sharex=axarr[0])
         axarr.append(ax)
-    axarr[-1].set_xlabel('Time, UTC')
-    axarr[0].set_title(str(pn[field].columns[0].date()))
+    if x_is_date:
+        axarr[-1].set_xlabel('Time, UTC')
+        axarr[0].set_title(str(pn[field].columns[0].date()))
     for ax in axarr[:-1]:
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
@@ -94,3 +100,9 @@ def plot_classes(data, classes):
             if ax.xaxis.get_ticklabels()[0].get_visible():
                 ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     return figs, axarrs
+
+def pcolor_class(g):
+    gt = g.transpose(0, 2, 1)
+    gt.minor_axis = list(range(gt.shape[2]))
+    fig, axarr = plotpn(gt, x_is_date=False)
+    return axarr
