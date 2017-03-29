@@ -7,14 +7,16 @@ from os import path
 from radcomp.vertical import case, RESULTS_DIR
 from j24 import ensure_dir
 
-plt.ion()
+plt.ioff()
 plt.close('all')
 np.random.seed(0)
-results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary'))
 n_comp = 20
 scheme = '2014rhi_{n}comp'.format(n=n_comp)
+results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary', scheme))
 
 cases = case.read_cases('training')
 c = case.Case.by_combining(cases)
 c.load_classification(scheme)
-c.pcolor_classes()
+df = c.pcolor_classes()
+for i, fig in df.fig.iteritems():
+    fig.savefig(path.join(results_dir, 'class{:02d}.png'.format(i)))

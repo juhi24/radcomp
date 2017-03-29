@@ -57,10 +57,6 @@ def reject_outliers(df, m=2):
     s = d.divide(mdev, axis=0).replace(np.inf, np.nan).fillna(0)
     return df[s<m].copy()
 
-def fltr_rolling(df, window=5, stdlim=0.1, fill_value=0, **kws):
-    r = df.rolling(window=window, center=True)
-    # not ready, maybe not needed
-
 def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
     '''simple threshold based gc filter'''
     #return pn_orig

@@ -258,6 +258,9 @@ class Case:
             axarr[0].set_title('Class {}'.format(i))
         figs = axarrs.apply(lambda axarr: axarr[0].get_figure())
         figs.apply(lambda fig: fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cs))
+        out = pd.concat([figs, axarrs], axis=1)
+        out.columns = ['fig', 'axarr']
+        return out
 
     def mean_delta(self):
         return plotting.mean_delta(self.data.minor_axis)
