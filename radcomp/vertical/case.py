@@ -14,7 +14,8 @@ from j24 import daterange2str
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
 COL_START = 'start'
 COL_END = 'end'
-
+SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3), 
+                  'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 
 def case_id_fmt(t_start, t_end=None, fmt='{year}{month}{day}', hour_fmt='%H',
                 day_fmt='%d', month_fmt='%m', year_fmt='%y'):
@@ -116,14 +117,16 @@ def prep_data(pn, vpc):
     return prepare_data(pn, fields=vpc.params, hmax=vpc.hmax, kdpmax=vpc.kdpmax)
 
 
-def scale_data(pn):
+def scale_data(pn, reverse=False):
     """Scale radar parameters so that values are same order of magnitude."""
-    scaling_limits = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3), 'KDP': (0, 0.5), 
-                      'kdp': (0, 0.15)}
     scaled = pn.copy()
     for field, data in scaled.iteritems():
-        data -= scaling_limits[field][0]
-        data *= 1.0/scaling_limits[field][1]
+        if reverse:
+            data *= SCALING_LIMITS[field][1]
+            data += SCALING_LIMITS[field][0]
+        else:
+            data -= SCALING_LIMITS[field][0]
+            data *= 1.0/SCALING_LIMITS[field][1]
         scaled[field] = data
     return scaled
 
