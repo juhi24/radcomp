@@ -40,5 +40,6 @@ pn_decoded = case.scale_data(pn, reverse=True)
 pn_plt = pn_decoded.copy()
 pn_plt.minor_axis=pn_decoded.minor_axis-0.5
 fig, axarr = plotting.plotpn(pn_plt, x_is_date=False)
-ax=axarr[0]
-ax.set_xticks(range(20))
+ax=axarr[-1]
+ax.set_xticks(range(n_comp))
+ax.set_xlim(-0.5,n_comp-0.5)

@@ -45,8 +45,12 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         if x_is_date:
             t = pn[field].columns
             x = t - mean_delta(t)*DISPLACEMENT_FACTOR
+            x
         else:
             x = pn[field].columns
+        dx = mean_delta(x)
+        x_last = x[-1:]+dx
+        x = x.append(x_last)
         im = ax.pcolormesh(x, pn[field].index, 
                       np.ma.masked_invalid(pn[field].values), cmap=cmap,
                       **scalekws, label=field, **kws)
@@ -54,7 +58,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         if x_is_date:
             ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
-        ax.set_ylim(0,11000)
+        ax.set_ylim(0,10000)
         ax.set_ylabel('Height, km')
         #fig.colorbar(im, ax=ax, label=label)
         fig.colorbar(im, cax=ax_cb, label=label)
