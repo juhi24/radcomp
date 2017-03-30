@@ -20,10 +20,12 @@ cases = case.read_cases('training')
 c = case.Case.by_combining(cases)
 c.load_classification(scheme)
 
-df = c.pcolor_classes()
+#df = c.pcolor_classes()
 f_cen, axarr_cen = c.plot_cluster_centroids()
 
 if save:
     for i, fig in df.fig.iteritems():
         fig.savefig(path.join(results_dir, 'class{:02d}.png'.format(i)))
     f_cen.savefig(path.join(results_dir, 'centroids.png'))
+
+

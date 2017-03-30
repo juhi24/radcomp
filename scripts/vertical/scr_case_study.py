@@ -45,7 +45,7 @@ def plot_cases(cases, g, save=True, **kws):
         fig.savefig(path.join(results_dir, name + '.png'))
 
 cases = case.read_cases('analysis')
-g = pd.read_pickle(insitu.TABLE_PKL)
+g = pd.read_pickle(insitu.TABLE_FILTERED_PKL)
 data_g = g.loc[name]
 c = cases.case[name]
 scheme = '2014rhi_{n}comp'.format(n=n_comp)
