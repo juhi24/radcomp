@@ -9,7 +9,7 @@ from functools import partial
 from radcomp.vertical import (filtering, classification, plotting,
                               NAN_REPLACEMENT)
 from radcomp import vertical, HOME, USER_DIR
-from j24 import daterange2str
+from j24 import daterange2str, limitslist
 
 DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
 COL_START = 'start'
@@ -260,10 +260,29 @@ class Case:
         for i, axarr in axarrs.iteritems():
             axarr[0].set_title('Class {}'.format(i))
         figs = axarrs.apply(lambda axarr: axarr[0].get_figure())
-        figs.apply(lambda fig: fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cs))
         out = pd.concat([figs, axarrs], axis=1)
         out.columns = ['fig', 'axarr']
         return out
+
+    def plot_cluster_centroids(self):
+        clus_centers = pd.DataFrame(self.class_scheme.km.cluster_centers_.T)
+        lims = limitslist(np.arange(0,601,200))
+        dfs={}
+        for lim, param in zip(lims, self.class_scheme.params):
+            df = clus_centers.iloc[lim[0]:lim[1],:]
+            df.index = self.cl_data_scaled.minor_axis
+            dfs[param] = df
+        pn = pd.Panel(dfs)
+        pn_decoded = scale_data(pn, reverse=True)
+        pn_plt = pn_decoded.copy()
+        pn_plt.minor_axis=pn_decoded.minor_axis-0.5
+        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False)
+        ax=axarr[-1]
+        n_comp = self.class_scheme.pca.n_components
+        ax.set_xticks(range(n_comp))
+        ax.set_xlim(-0.5,n_comp-0.5)
+        fig = ax.get_figure()
+        return fig, axarr
 
     def mean_delta(self):
         return plotting.mean_delta(self.data.minor_axis)
