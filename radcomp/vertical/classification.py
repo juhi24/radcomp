@@ -61,6 +61,7 @@ class VPC:
         self.data = None # training data
         self._n_eigens = n_eigens
 
+
     @classmethod
     def by_training(cls, data, n_eigens):
         pca, km, metadata = train(data, n_eigens)
