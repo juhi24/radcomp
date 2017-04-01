@@ -63,3 +63,5 @@ def mdf():
     dfs = datalist().apply(nc2df)
     return pd.concat(dfs.values, keys=dfs.index)
 
+def anyround(x, prec=100):
+    return round(x/prec)*prec
