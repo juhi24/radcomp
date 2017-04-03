@@ -4,15 +4,19 @@ import numpy as np
 #import matplotlib as mpl
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import case, RESULTS_DIR
+from radcomp.vertical import case, classification, RESULTS_DIR
 from j24 import ensure_dir
 
 
 plt.ion()
 plt.close('all')
 np.random.seed(0)
-n_comp = 20
-scheme = '2014rhi_{n}comp'.format(n=n_comp)
+n_eigens = 30
+n_clusters = 20
+reduced = True
+scheme = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
+                                    n_clusters=n_clusters, reduced=reduced)
+#scheme = '2014rhi_{n}comp'.format(n=n_comp)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary', scheme))
 save = False
 

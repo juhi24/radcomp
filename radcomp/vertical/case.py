@@ -23,6 +23,7 @@ def case_id_fmt(t_start, t_end=None, fmt='{year}{month}{day}', hour_fmt='%H',
                          month_fmt=month_fmt, year_fmt=year_fmt).lower()
 
 def read_case_times(name):
+    """Read case starting and ending times from cases directory."""
     filepath = path.join(USER_DIR, 'cases', name + '.csv')
     dts = pd.read_csv(filepath, parse_dates=[COL_START, COL_END])
     indexing_func = lambda row: case_id_fmt(row[COL_START], row[COL_END])
@@ -191,7 +192,7 @@ class Case:
         if self.cl_data_scaled is None:
             self.scale_cl_data()
         if self.cl_data_scaled is not None and self.class_scheme is not None:
-            classes = classification.classify(self.cl_data_scaled, self.class_scheme.km)
+            classes = self.class_scheme.classify(self.cl_data_scaled)
             classes.name = 'class'
             if save:
                 self.classes = classes
@@ -218,8 +219,10 @@ class Case:
             fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cs)
         return fig, axarr
 
-    def train(self):
-        return self.class_scheme.train(self.cl_data_scaled)
+    def train(self, **kws):
+        if self.cl_data_scaled is None:
+            self.scale_cl_data()
+        return self.class_scheme.train(self.cl_data_scaled, **kws)
 
     def _on_click_plot_cs(self, event):
         """on click plot cross section"""
@@ -265,11 +268,11 @@ class Case:
         return out
 
     def plot_cluster_centroids(self):
-        clus_centers = pd.DataFrame(self.class_scheme.km.cluster_centers_.T)
+        clus_centroids = self.class_scheme.cluster_centroids()
         lims = limitslist(np.arange(0,601,200))
         dfs={}
         for lim, param in zip(lims, self.class_scheme.params):
-            df = clus_centers.iloc[lim[0]:lim[1],:]
+            df = clus_centroids.iloc[lim[0]:lim[1],:]
             df.index = self.cl_data_scaled.minor_axis
             dfs[param] = df
         pn = pd.Panel(dfs)
@@ -278,7 +281,7 @@ class Case:
         pn_plt.minor_axis=pn_decoded.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False)
         ax=axarr[-1]
-        n_comp = self.class_scheme.pca.n_components
+        n_comp = self.class_scheme.km.n_clusters
         ax.set_xticks(range(n_comp))
         ax.set_xlim(-0.5,n_comp-0.5)
         fig = ax.get_figure()

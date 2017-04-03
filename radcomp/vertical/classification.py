@@ -13,6 +13,16 @@ from j24 import ensure_dir
 META_SUFFIX = '_metadata'
 MODEL_DIR = ensure_dir(path.join(USER_DIR, 'class_schemes'))
 
+def scheme_name(basename='baecc+1415', n_eigens=30, n_clusters=20,
+                reduced=True):
+    if reduced:
+        qualifier = '_reduced'
+    else:
+        qualifier = ''
+    schemefmt = '{base}_{neig}eig{nclus}clus{qualifier}'
+    return schemefmt.format(base=basename, neig=n_eigens, nclus=n_clusters,
+                            qualifier=qualifier)
+
 def model_path(name):
     """/path/to/classification_scheme_name.pkl"""
     return path.join(MODEL_DIR, name + '.pkl')
@@ -31,7 +41,7 @@ def train(data, n_eigens, quiet=False, reduced=False, **kws):
     return pca, km, metadata
 
 
-def pca_fit(data_df, whiten=True, **kws):
+def pca_fit(data_df, whiten=False, **kws):
     pca = decomposition.PCA(whiten=whiten, **kws)
     pca.fit(data_df)
     return pca
@@ -48,11 +58,6 @@ def kmeans_pca_reduced(data_df, pca, n_clusters=20):
     reduced = pca.transform(data_df)
     km.fit(reduced)
     return km
-
-
-def classify(data_scaled, km):
-    data_df = learn.pn2df(data_scaled)
-    return pd.Series(data=km.predict(data_df), index=data_scaled.major_axis)
 
 
 def load(name):
@@ -97,11 +102,13 @@ def plot_reduced(data, n_clusters):
 class VPC:
     """vertical profile classification scheme"""
     
-    def __init__(self, pca=None, km=None, hmax=None, params=None, n_eigens=None):
+    def __init__(self, pca=None, km=None, hmax=None, params=None,
+                 reduced=False, n_eigens=None):
         self.pca = pca
         self.km = km # k means
         self.hmax = hmax
         self.params = params
+        self.reduced = reduced
         self.kdpmax = None
         self.data = None # training data
         self._n_eigens = n_eigens
@@ -129,9 +136,22 @@ class VPC:
     def train(self, data, n_eigens=None, **kws):
         if n_eigens is None:
             n_eigens = self._n_eigens
-        pca, km, metadata = train(data, n_eigens, **kws)
+        pca, km, metadata = train(data, n_eigens, reduced=self.reduced, **kws)
         self.pca = pca
         self.km = km
         self.params = metadata['fields']
         self.hmax = metadata['hmax']
 
+    def classify(self, data_scaled):
+        data_df = learn.pn2df(data_scaled)
+        if self.reduced:
+            data = self.pca.transform(data_df)
+        else:
+            data = data_df
+        return pd.Series(data=self.km.predict(data), index=data_scaled.major_axis)
+
+    def cluster_centroids(self):
+        centroids = self.km.cluster_centers_
+        if self.reduced:
+            centroids = self.pca.inverse_transform(centroids)
+        return pd.DataFrame(centroids.T)

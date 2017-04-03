@@ -7,19 +7,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
 from radcomp import RESULTS_DIR
-from radcomp.vertical import case, classification, read_cases
+from radcomp.vertical import case, classification
 
 plt.ion()
 plt.close('all')
 np.random.seed(0)
 
 plot = False
+reduced = True
 
 params = ['ZH', 'zdr', 'kdp']
 hmax = 10000
-n_eigens = 20
+n_eigens = 30
+n_clusters = 20
 
-cases = read_cases('training')
+cases = case.read_cases('training')
 
 if plot:
     for name, c in cases.case.iteritems():
@@ -29,9 +31,14 @@ if plot:
 
 pns = [c.data for i,c in cases.case.iteritems()]
 data = pd.concat(pns, axis=2)
-scheme = classification.VPC(params=params, hmax=hmax, n_eigens=n_eigens)
+scheme = classification.VPC(params=params, hmax=hmax, n_eigens=n_eigens,
+                            reduced=reduced)
 c = case.Case(data=data, class_scheme=scheme)
-c.scale_cl_data()
-c.train()
-scheme.save('2014rhi_{}comp'.format(n_eigens))
+trainkws = {}
+if reduced:
+    trainkws['n_clusters'] = n_clusters
+c.train(**trainkws)
+name = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
+                                  n_clusters=n_clusters, reduced=reduced)
+scheme.save(name)
 
