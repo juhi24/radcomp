@@ -65,3 +65,10 @@ def mdf():
 
 def anyround(x, prec=100):
     return round(x/prec)*prec
+
+def resample_numeric(df, **kws):
+    """Resample dataframe with numeric index"""
+    alt = pd.Series(df.index, index=df.index)
+    ralt=alt.apply(anyround, **kws)
+    return df.groupby(by=ralt).mean()
+    
