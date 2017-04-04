@@ -105,9 +105,9 @@ def fillna(dat, field=''):
     return data
 
 
-def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
+def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hlimits=(190, 10e3), kdpmax=None):
     """Prepare data for classification. Scaling has do be done separately."""
-    data = pn[fields, 0:hmax, :].transpose(0,2,1)
+    data = pn[fields, hlimits[0]:hlimits[1], :].transpose(0,2,1)
     if kdpmax is not None:
         data['KDP'][data['KDP']>kdpmax] = np.nan
     return fillna(data)
@@ -115,7 +115,7 @@ def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hmax=10e3, kdpmax=None):
 
 def prep_data(pn, vpc):
     """prepare_data wrapper"""
-    return prepare_data(pn, fields=vpc.params, hmax=vpc.hmax, kdpmax=vpc.kdpmax)
+    return prepare_data(pn, fields=vpc.params, hlimits=vpc.hlimits, kdpmax=vpc.kdpmax)
 
 
 def scale_data(pn, reverse=False):
@@ -202,13 +202,17 @@ class Case:
     def plot_classes(self):
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
-    def plot(self, params=None, interactive=True, **kws):
+    def plot(self, params=None, interactive=True, raw=False, **kws):
+        if raw:
+            data = self.data
+        else:
+            data = self.cl_data.transpose(0,2,1)
         if params is None:
             if self.class_scheme is not None:
                 params = self.class_scheme.params
             else:
                 params = ['ZH', 'zdr', 'kdp']
-        fig, axarr = plotting.plotpn(self.data, fields=params, **kws)
+        fig, axarr = plotting.plotpn(data, fields=params, **kws)
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 plotting.class_colors(self.classes, ax=axarr[iax])
@@ -257,9 +261,9 @@ class Case:
         ax.set_xlabel('height, km')
         return axarr
 
-    def pcolor_classes(self):
+    def pcolor_classes(self, **kws):
         groups = self.cl_data.groupby(self.classes)
-        axarrs = groups.apply(plotting.pcolor_class)
+        axarrs = groups.apply(plotting.pcolor_class, **kws)
         for i, axarr in axarrs.iteritems():
             axarr[0].set_title('Class {}'.format(i))
         figs = axarrs.apply(lambda axarr: axarr[0].get_figure())
@@ -267,7 +271,7 @@ class Case:
         out.columns = ['fig', 'axarr']
         return out
 
-    def plot_cluster_centroids(self):
+    def plot_cluster_centroids(self, **kws):
         clus_centroids = self.class_scheme.cluster_centroids()
         lims = limitslist(np.arange(0,601,200))
         dfs={}
@@ -279,7 +283,7 @@ class Case:
         pn_decoded = scale_data(pn, reverse=True)
         pn_plt = pn_decoded.copy()
         pn_plt.minor_axis=pn_decoded.minor_axis-0.5
-        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False)
+        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False, **kws)
         ax=axarr[-1]
         n_comp = self.class_scheme.km.n_clusters
         ax.set_xticks(range(n_comp))

@@ -17,8 +17,8 @@ plot = False
 reduced = True
 
 params = ['ZH', 'zdr', 'kdp']
-hmax = 10000
-n_eigens = 30
+hlimits = (190, 10e3)
+n_eigens = 20
 n_clusters = 20
 
 cases = case.read_cases('training')
@@ -31,7 +31,7 @@ if plot:
 
 pns = [c.data for i,c in cases.case.iteritems()]
 data = pd.concat(pns, axis=2)
-scheme = classification.VPC(params=params, hmax=hmax, n_eigens=n_eigens,
+scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
                             reduced=reduced)
 c = case.Case(data=data, class_scheme=scheme)
 trainkws = {}

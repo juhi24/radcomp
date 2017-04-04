@@ -29,7 +29,8 @@ def model_path(name):
 
 
 def train(data, n_eigens, quiet=False, reduced=False, **kws):
-    metadata = dict(fields=data.items.values, hmax=data.minor_axis.max())
+    metadata = dict(fields=data.items.values,
+                    hlimits=(data.minor_axis.min(), data.minor_axis.max()))
     data_df = learn.pn2df(data)
     pca = pca_fit(data_df, n_components=n_eigens)
     if not quiet:
@@ -102,11 +103,11 @@ def plot_reduced(data, n_clusters):
 class VPC:
     """vertical profile classification scheme"""
     
-    def __init__(self, pca=None, km=None, hmax=None, params=None,
+    def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None):
         self.pca = pca
         self.km = km # k means
-        self.hmax = hmax
+        self.hlimits = hlimits
         self.params = params
         self.reduced = reduced
         self.kdpmax = None
@@ -120,7 +121,7 @@ class VPC:
 
     @classmethod
     def using_metadict(cls, metadata, **kws):
-        return cls(hmax=metadata['hmax'], params=metadata['fields'], **kws)
+        return cls(hlimits=metadata['hlimits'], params=metadata['fields'], **kws)
 
     @classmethod
     def load(cls, name):
@@ -140,7 +141,7 @@ class VPC:
         self.pca = pca
         self.km = km
         self.params = metadata['fields']
-        self.hmax = metadata['hmax']
+        self.hlimits = metadata['hlimits']
 
     def classify(self, data_scaled):
         data_df = learn.pn2df(data_scaled)

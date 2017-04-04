@@ -105,8 +105,8 @@ def plot_classes(data, classes):
                 ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     return figs, axarrs
 
-def pcolor_class(g):
+def pcolor_class(g, **kws):
     gt = g.transpose(0, 2, 1)
     gt.minor_axis = list(range(gt.shape[2]))
-    fig, axarr = plotpn(gt, x_is_date=False)
+    fig, axarr = plotpn(gt, x_is_date=False, **kws)
     return axarr

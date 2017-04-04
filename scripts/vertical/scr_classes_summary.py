@@ -8,24 +8,24 @@ from radcomp.vertical import case, classification, RESULTS_DIR
 from j24 import ensure_dir
 
 
-plt.ion()
+plt.ioff()
 plt.close('all')
 np.random.seed(0)
-n_eigens = 30
+n_eigens = 20
 n_clusters = 20
 reduced = True
 scheme = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
 #scheme = '2014rhi_{n}comp'.format(n=n_comp)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary', scheme))
-save = False
+save = True
 
 cases = case.read_cases('training')
 c = case.Case.by_combining(cases)
 c.load_classification(scheme)
 
-#df = c.pcolor_classes()
-f_cen, axarr_cen = c.plot_cluster_centroids()
+df = c.pcolor_classes(cmap='viridis')
+f_cen, axarr_cen = c.plot_cluster_centroids(cmap='viridis')
 
 if save:
     for i, fig in df.fig.iteritems():
