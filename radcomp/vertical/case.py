@@ -11,7 +11,7 @@ from radcomp.vertical import (filtering, classification, plotting,
 from radcomp import vertical, HOME, USER_DIR
 from j24 import daterange2str, limitslist
 
-DATA_DIR = path.join(HOME, 'DATA', 'ToJussi')
+DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
 COL_START = 'start'
 COL_END = 'end'
 SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3), 
@@ -44,6 +44,7 @@ def dt2path(dt, datadir):
 
 
 def vprhimat2pn(datapath):
+    """Read vertical profile mat files to Panel."""
     data = scipy.io.loadmat(datapath)['VP_RHI']
     fields = list(data.dtype.fields)
     fields.remove('ObsTime')

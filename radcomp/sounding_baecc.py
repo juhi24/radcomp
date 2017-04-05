@@ -72,3 +72,7 @@ def resample_numeric(df, **kws):
     ralt=alt.apply(anyround, **kws)
     return df.groupby(by=ralt).mean()
     
+def prepare_for_pca(ncdata):
+    df = nc2df(ncdata).loc[:,['tdry','dp']]
+    return resample_numeric(df).loc[200:10000]
+
