@@ -54,7 +54,7 @@ def kmeans_pca_init(data_df, pca):
     return km
 
 
-def kmeans_pca_reduced(data_df, pca, n_clusters=20):
+def kmeans_pca_reduced(data_df, pca, n_clusters=20, extra=None):
     km = KMeans(init='k-means++', n_clusters=n_clusters, n_init=10)
     reduced = pca.transform(data_df)
     km.fit(reduced)

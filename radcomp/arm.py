@@ -9,20 +9,24 @@ from j24 import home
 
 
 SOUNDING_DIR = path.join(home(), 'DATA', 'arm', 'sounding')
+GROUND_DIR = gdir=path.join(home(), 'DATA', 'arm', 'ground')
 all_soundings_f = 'tmpsondewnpnM1.b1.20140121.125200..20140330.172000.custom.cdf'
 sounding_f = 'tmpsondewnpnM1.b1.20140131.115000.cdf' # sample
 all_soundings_path = path.join(SOUNDING_DIR, all_soundings_f)
 sounding_path = path.join(SOUNDING_DIR, sounding_f)
+SOUNDING_GLOB = path.join(SOUNDING_DIR, 'tmpsondewnpnM1.b1.20??????.??????.cdf')
+GROUND_GLOB = path.join(GROUND_DIR, 'tmpmetM1.b1.20??????.??????.cdf')
 #s = nc.Dataset(soundings_f)
 
 def time(ncdata, as_np=False):
-    """time from ARM sounding netCDF"""
+    """time from ARM netCDF"""
     t0 = ncdata.variables['base_time'][0]
     if as_np:
         return np.array(t0 + ncdata.variables['time_offset'][:]).astype('datetime64[s]')
     return pd.to_datetime(t0 + ncdata.variables['time_offset'][:], unit='s')
 
-def nc2df(ncdata, index='alt', variables=None):
+def nc2df(ncdata, index='time', variables=None):
+    """ARM netCDF to dataframe"""
     if variables is None:
         variables = list(ncdata.variables)
         for rmvar in ['base_time', 'time_offset', 'time']:
@@ -33,6 +37,7 @@ def nc2df(ncdata, index='alt', variables=None):
     for var in variables:
         df[var] = ncdata.variables[var]
     df.index = df[index]
+    df.drop(index, axis=1, inplace=True)
     return df
 
 def deltat(ncdata):
@@ -44,18 +49,20 @@ def deltat(ncdata):
 
 def path2t(sounding_path):
     fname = path.basename(sounding_path)
-    return datetime.strptime(fname, 'tmpsondewnpnM1.b1.%Y%m%d.%H%M%S.cdf')
+    dtstr = ''.join(fname.split('.')[-3:-1])
+    return datetime.strptime(dtstr, '%Y%m%d%H%M%S')
 
-def datalist():
-    sounding_files = pd.Series(glob(path.join(SOUNDING_DIR, 'tmpsondewnpnM1.b1.20??????.??????.cdf')))
+def datalist(globfmt=GROUND_GLOB):
+    sounding_files = pd.Series(glob(globfmt))
     t = sounding_files.apply(path2t)
     ncs = sounding_files.apply(nc.Dataset)
     ncs.index = t
     ncs.name = 'dataset'
     return ncs.sort_index()
 
-def nearest(i):
-    df = datalist()
+def nearest(i, df=None, **kws):
+    if df is None:
+        df = datalist(**kws)
     return df.iloc[np.argmin(np.abs(df.index - pd.Timestamp(i)))]
 
 def mdf():
@@ -72,7 +79,21 @@ def resample_numeric(df, **kws):
     ralt=alt.apply(anyround, **kws)
     return df.groupby(by=ralt).mean()
     
-def prepare_for_pca(ncdata):
+def resampled_t_dp(ncdata):
     df = nc2df(ncdata).loc[:,['tdry','dp']]
-    return resample_numeric(df).loc[200:10000]
+    return resample_numeric(df).loc[200:7000]
+
+def df2series(df):
+    return df.T.stack()
+
+def prep4pca(df):
+    return df.apply(lambda x: df2series(resampled_t_dp(x))).dropna()
+
+def var_in_timerange(tstart, tend, var='temp_mean'):
+    gnc = datalist(globfmt=GROUND_GLOB)
+    gnc.index = gnc.index.map(lambda t: t.date())
+    ncs = gnc.loc[tstart.date():tend.date()]
+    t = pd.concat(map(lambda x: nc2df(x, index='time')[var], ncs))
+    return t.loc[tstart:tend]
+
 

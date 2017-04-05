@@ -35,7 +35,7 @@ for name in cases.index:
     classes.index = classes.index.round('1min')
     classes.name = 'class'
     classes_list.append(classes)
-    base = classes.index[0].minute%15
+    base = c.base_minute()
     rate = insitu.time_weighted_mean(data_g, rule='15min', param=param,
                                      base=base)
     rate.fillna(0, inplace=True)

@@ -8,7 +8,7 @@ from os import path
 from functools import partial
 from radcomp.vertical import (filtering, classification, plotting,
                               NAN_REPLACEMENT)
-from radcomp import vertical, HOME, USER_DIR
+from radcomp import vertical, arm, HOME, USER_DIR
 from j24 import daterange2str, limitslist
 
 DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
@@ -135,12 +135,13 @@ def scale_data(pn, reverse=False):
 
 class Case:
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, class_scheme=None):
+                 classes=None, class_scheme=None, temperature=None):
         self.data = data
         self.cl_data = cl_data # non-scaled classifiable data
         self.cl_data_scaled = cl_data_scaled # scaled classifiable data
         self.classes = classes
         self.class_scheme = class_scheme
+        self.temperature = temperature
         self._cl_ax = None
 
     @classmethod
@@ -294,4 +295,14 @@ class Case:
 
     def mean_delta(self):
         return plotting.mean_delta(self.data.minor_axis)
+
+    def base_minute(self):
+        return self.data.minor_axis[0].round('1min').minute%15
+
+    def ground_temperature(self, save=False):
+        t = arm.var_in_timerange(self.t_start(), self.t_end()+pd.Timedelta(minutes=15), var='temp_mean')
+        tre = t.resample('15min', base=self.base_minute()).mean()
+        if save:
+            self.temperature = tre
+        return tre
 

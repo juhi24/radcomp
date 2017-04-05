@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import case, insitu, RESULTS_DIR
+from radcomp.vertical import case, insitu, classification, RESULTS_DIR
 from j24 import ensure_dir
 
 plt.ion()
@@ -15,7 +15,12 @@ plt.close('all')
 np.random.seed(0)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'case_study'))
 name = '140303'
-n_comp = 20
+n_eigens = 20
+n_clusters = 20
+reduced = True
+#scheme = '2014rhi_{n}comp'.format(n=n_comp)
+scheme = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
+                                    n_clusters=n_clusters, reduced=reduced)
 
 def plot_data(data, ax, **kws):
     return ax.plot(data.index, data.values, drawstyle='steps', **kws)
@@ -48,6 +53,5 @@ cases = case.read_cases('analysis')
 g = pd.read_pickle(insitu.TABLE_FILTERED_PKL)
 data_g = g.loc[name]
 c = cases.case[name]
-scheme = '2014rhi_{n}comp'.format(n=n_comp)
 c.load_classification(scheme)
 fig, axarr = plot_case(c, data_g)

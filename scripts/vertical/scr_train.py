@@ -21,7 +21,7 @@ hlimits = (190, 10e3)
 n_eigens = 20
 n_clusters = 20
 
-cases = case.read_cases('training')
+cases = case.read_cases('training_baecc')
 
 if plot:
     for name, c in cases.case.iteritems():
@@ -30,6 +30,7 @@ if plot:
         fig.savefig(savepath)
 
 pns = [c.data for i,c in cases.case.iteritems()]
+t = pd.concat([c.ground_temperature() for i,c in cases.case.iteritems()])
 data = pd.concat(pns, axis=2)
 scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
                             reduced=reduced)
@@ -38,7 +39,7 @@ trainkws = {}
 if reduced:
     trainkws['n_clusters'] = n_clusters
 c.train(**trainkws)
-name = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
+name = classification.scheme_name(basename='baecc', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
 scheme.save(name)
 
