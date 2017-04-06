@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import case, insitu, classification, RESULTS_DIR
+from radcomp.vertical import case, insitu, classification, plotting, RESULTS_DIR
 from j24 import ensure_dir
 
 plt.ion()
@@ -22,23 +22,20 @@ reduced = True
 scheme = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
 
-def plot_data(data, ax, **kws):
-    return ax.plot(data.index, data.values, drawstyle='steps', **kws)
-
 def plot_case(c, data_g):
     fig, axarr = c.plot(cmap='viridis', n_extra_ax=3)
     ax_r = axarr[-3]
     ax_rho = axarr[-2]
     ax_d = axarr[-1]
-    plot_data(data_g['intensity'], ax_r)
+    plotting.plot_data(data_g['intensity'], ax_r)
     #data_g['intensity'].plot(drawstyle='steps', ax=ax_r) # bug?
     ax_r.set_ylabel('LWE, mm$\,$h$^{-1}$')
     ax_r.set_ylim([0, 6])
-    plot_data(data_g['density'], ax_rho)
+    plotting.plot_data(data_g['density'], ax_rho)
     ax_rho.set_ylabel('Density, kg$\,$m$^{-3}$')
     ax_rho.set_ylim([0, 600])
-    plot_data(data_g['D_max'], ax_d, label='$D_{max}$')
-    plot_data(data_g['D_0_gamma'], ax_d, label='$D_0$')
+    plotting.plot_data(data_g['D_max'], ax_d, label='$D_{max}$')
+    plotting.plot_data(data_g['D_0_gamma'], ax_d, label='$D_0$')
     ax_d.set_ylabel('mm')
     ax_d.set_ylim([0, 15])
     ax_d.legend()

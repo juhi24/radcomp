@@ -20,8 +20,10 @@ params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
 n_eigens = 20
 n_clusters = 20
+use_temperature = False
 
 cases = case.read_cases('training_baecc')
+basename = 'baecc'
 
 if plot:
     for name, c in cases.case.iteritems():
@@ -29,17 +31,17 @@ if plot:
         savepath = path.join(RESULTS_DIR, 'cases', name+'.png')
         fig.savefig(savepath)
 
-pns = [c.data for i,c in cases.case.iteritems()]
-t = pd.concat([c.ground_temperature() for i,c in cases.case.iteritems()])
-data = pd.concat(pns, axis=2)
 scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
                             reduced=reduced)
-c = case.Case(data=data, class_scheme=scheme)
+c = case.Case.by_combining(cases, class_scheme=scheme)
 trainkws = {}
 if reduced:
     trainkws['n_clusters'] = n_clusters
+    trainkws['use_temperature'] = use_temperature
 c.train(**trainkws)
-name = classification.scheme_name(basename='baecc', n_eigens=n_eigens,
+if use_temperature:
+    basename += '_t'
+name = classification.scheme_name(basename=basename, n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
 scheme.save(name)
 

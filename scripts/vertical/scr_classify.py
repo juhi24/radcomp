@@ -16,7 +16,7 @@ np.random.seed(0)
 
 #dt0 = pd.datetime(2014, 2, 21, 12, 30)
 #dt1 = pd.datetime(2014, 2, 22, 15, 30)
-case_set = 'training'
+case_set = 'training_baecc'
 n_eigens = 20
 n_clusters = 20
 reduced = True
@@ -28,7 +28,7 @@ def prep_case(dt0, dt1, n_comp=20):
     return c
 
 cases = case.read_cases(case_set)
-name = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
+name = classification.scheme_name(basename='baecc', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
 #name = '2014rhi_{n}comp'.format(n=n_eigens)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))
@@ -36,6 +36,6 @@ results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))
 for i, c in cases.case.iteritems():
     c.load_classification(name)
     #c.plot_classes()
-    fig, axarr = c.plot(cmap='viridis', n_extra_ax=0)
+    fig, axarr = c.plot(n_extra_ax=0)
     if save:
         fig.savefig(path.join(results_dir, c.name()+'.png'))

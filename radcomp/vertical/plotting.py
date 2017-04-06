@@ -12,6 +12,9 @@ VMAXS = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
 LABELS = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
 DISPLACEMENT_FACTOR = 0.5
 
+def plot_data(data, ax, **kws):
+    return ax.plot(data.index, data.values, drawstyle='steps', **kws)
+
 def mean_delta(t):
     dt = t[-1]-t[0]
     return dt/(len(t)-1)

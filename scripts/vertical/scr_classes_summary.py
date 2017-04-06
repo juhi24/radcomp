@@ -8,19 +8,19 @@ from radcomp.vertical import case, classification, RESULTS_DIR
 from j24 import ensure_dir
 
 
-plt.ioff()
+plt.ion()
 plt.close('all')
 np.random.seed(0)
 n_eigens = 20
 n_clusters = 20
 reduced = True
-scheme = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
+scheme = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
 #scheme = '2014rhi_{n}comp'.format(n=n_comp)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary', scheme))
 save = True
 
-cases = case.read_cases('training')
+cases = case.read_cases('training_baecc')
 c = case.Case.by_combining(cases)
 c.load_classification(scheme)
 

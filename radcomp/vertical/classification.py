@@ -28,37 +28,21 @@ def model_path(name):
     return path.join(MODEL_DIR, name + '.pkl')
 
 
-def train(data, n_eigens, quiet=False, reduced=False, **kws):
-    metadata = dict(fields=data.items.values,
-                    hlimits=(data.minor_axis.min(), data.minor_axis.max()))
-    data_df = learn.pn2df(data)
-    pca = pca_fit(data_df, n_components=n_eigens)
+def train(data_df, pca, quiet=False, reduced=False, n_clusters=20):
     if not quiet:
         learn.pca_stats(pca)
     if reduced:
-        km = kmeans_pca_reduced(data_df, pca, **kws)
+        km = KMeans(init='k-means++', n_clusters=n_clusters, n_init=10)
     else:
-        km = kmeans_pca_init(data_df, pca, **kws)
-    return pca, km, metadata
+        km = KMeans(init=pca.components_, n_clusters=pca.n_components, n_init=1)
+    km.fit(data_df)
+    return km
 
 
 def pca_fit(data_df, whiten=False, **kws):
     pca = decomposition.PCA(whiten=whiten, **kws)
     pca.fit(data_df)
     return pca
-
-
-def kmeans_pca_init(data_df, pca):
-    km = KMeans(init=pca.components_, n_clusters=pca.n_components, n_init=1)
-    km.fit(data_df)
-    return km
-
-
-def kmeans_pca_reduced(data_df, pca, n_clusters=20, extra=None):
-    km = KMeans(init='k-means++', n_clusters=n_clusters, n_init=10)
-    reduced = pca.transform(data_df)
-    km.fit(reduced)
-    return km
 
 
 def load(name):
@@ -109,15 +93,11 @@ class VPC:
         self.km = km # k means
         self.hlimits = hlimits
         self.params = params
+        self.params_extra = []
         self.reduced = reduced
         self.kdpmax = None
-        self.data = None # training data
+        self.data = None # training or classification data
         self._n_eigens = n_eigens
-
-    @classmethod
-    def by_training(cls, data, n_eigens):
-        pca, km, metadata = train(data, n_eigens)
-        return cls.using_metadict(metadata, pca=pca, km=km)
 
     @classmethod
     def using_metadict(cls, metadata, **kws):
@@ -134,25 +114,50 @@ class VPC:
         with open(model_path(name), 'wb') as f:
             pickle.dump(self, f)
 
-    def train(self, data, n_eigens=None, **kws):
+    def train(self, data=None, n_eigens=None, extra_df=None, **kws):
         if n_eigens is None:
             n_eigens = self._n_eigens
-        pca, km, metadata = train(data, n_eigens, reduced=self.reduced, **kws)
-        self.pca = pca
-        self.km = km
-        self.params = metadata['fields']
-        self.hlimits = metadata['hlimits']
-
-    def classify(self, data_scaled):
-        data_df = learn.pn2df(data_scaled)
-        if self.reduced:
-            data = self.pca.transform(data_df)
+        if data is None:
+            training_data = self.data
         else:
-            data = data_df
+            training_data = self.prepare_data(data, n_components=n_eigens,
+                                              extra_df=extra_df)
+        km = train(training_data, self.pca, reduced=self.reduced, **kws)
+        self.km = km
+
+    def classify(self, data_scaled, **kws):
+        data = self.prepare_data(data_scaled, **kws)
         return pd.Series(data=self.km.predict(data), index=data_scaled.major_axis)
 
     def cluster_centroids(self):
         centroids = self.km.cluster_centers_
+        n_extra = len(self.params_extra)
+        if n_extra<1:
+            components = centroids
+        else:
+            components = centroids[:, :-n_extra]
         if self.reduced:
-            centroids = self.pca.inverse_transform(centroids)
+            centroids = self.pca.inverse_transform(components)
         return pd.DataFrame(centroids.T)
+
+    def prepare_data(self, data_scaled, extra_df=None, n_components=0, save=True):
+        metadata = dict(fields=data_scaled.items.values,
+                        hlimits=(data_scaled.minor_axis.min(),
+                                 data_scaled.minor_axis.max()))   
+        data_df = learn.pn2df(data_scaled)
+        if self.pca is None:
+            self.pca = pca_fit(data_df, n_components=n_components)
+        if self.reduced:
+            data = pd.DataFrame(self.pca.transform(data_df), index=data_df.index)
+        else:
+            data = data_df
+        data.index = data.index.round('1min')
+        if extra_df is not None:
+            data = pd.concat([data, extra_df], axis=1)
+        if save:
+            self.data = data
+            self.params = metadata['fields']
+            if extra_df is not None:
+                self.params_extra = pd.DataFrame(extra_df).columns.values
+            self.hlimits = metadata['hlimits']
+        return data

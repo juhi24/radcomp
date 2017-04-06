@@ -135,7 +135,8 @@ def scale_data(pn, reverse=False):
 
 class Case:
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, class_scheme=None, temperature=None):
+                 classes=None, class_scheme=None, temperature=None,
+                 use_temperature=False):
         self.data = data
         self.cl_data = cl_data # non-scaled classifiable data
         self.cl_data_scaled = cl_data_scaled # scaled classifiable data
@@ -150,10 +151,11 @@ class Case:
         return cls(data=pn)
 
     @classmethod
-    def by_combining(cls, cases):
+    def by_combining(cls, cases, **kws):
+        t = pd.concat([c.ground_temperature() for i,c in cases.case.iteritems()])
         datas = list(cases.case.apply(lambda c: c.data)) # data of each case
         data = pd.concat(datas, axis=2)
-        return cls(data=data)
+        return cls(data=data, temperature=t, **kws)
 
     def name(self, **kws):
         return case_id_fmt(self.t_start(), self.t_end(), **kws)
@@ -164,9 +166,9 @@ class Case:
     def t_end(self):
         return self.data.minor_axis[-1]
 
-    def load_classification(self, name):
+    def load_classification(self, name, **kws):
         self.class_scheme = classification.VPC.load(name)
-        self.classify()
+        self.classify(**kws)
 
     def prepare_cl_data(self, save=True):
         if self.data is not None:
@@ -177,7 +179,8 @@ class Case:
         return None
         
     def scale_cl_data(self, save=True):
-        """scaled version of classification data"""
+        """scaled version of classification data,
+        time rounded to the nearest minute"""
         if self.cl_data is None:
             self.prepare_cl_data()
         if self.cl_data is not None:
@@ -193,8 +196,11 @@ class Case:
             self.class_scheme = scheme
         if self.cl_data_scaled is None:
             self.scale_cl_data()
+        classify_kws = {}
+        if 'temp_mean' in self.class_scheme.params_extra:
+            classify_kws['extra_df'] = self.ground_temperature()
         if self.cl_data_scaled is not None and self.class_scheme is not None:
-            classes = self.class_scheme.classify(self.cl_data_scaled)
+            classes = self.class_scheme.classify(self.cl_data_scaled, **classify_kws)
             classes.name = 'class'
             if save:
                 self.classes = classes
@@ -204,7 +210,8 @@ class Case:
     def plot_classes(self):
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
-    def plot(self, params=None, interactive=True, raw=False, **kws):
+    def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
+             **kws):
         if raw:
             data = self.data
         else:
@@ -214,7 +221,13 @@ class Case:
                 params = self.class_scheme.params
             else:
                 params = ['ZH', 'zdr', 'kdp']
-        fig, axarr = plotting.plotpn(data, fields=params, **kws)
+        plot_t = 'temp_mean' in self.class_scheme.params_extra
+        if plot_t:
+            n_extra_ax += 1
+        fig, axarr = plotting.plotpn(data, fields=params,
+                                     n_extra_ax=n_extra_ax, **kws)
+        if plot_t:
+            self.plot_t(ax=axarr[-1])
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 plotting.class_colors(self.classes, ax=axarr[iax])
@@ -225,10 +238,21 @@ class Case:
             fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cs)
         return fig, axarr
 
-    def train(self, **kws):
+    def plot_t(self, ax):
+        plotting.plot_data(self.ground_temperature(), ax=ax)
+        ax.set_ylabel('Temperature, $^{\circ}$C')
+        ax.set_ylim([-15, 5])
+        ax.yaxis.grid(True)
+
+    def train(self, use_temperature, **kws):
+        if use_temperature:
+            extra_df = self.ground_temperature()
+        else:
+            extra_df = None
         if self.cl_data_scaled is None:
             self.scale_cl_data()
-        return self.class_scheme.train(self.cl_data_scaled, **kws)
+        return self.class_scheme.train(data=self.cl_data_scaled,
+                                       extra_df=extra_df, **kws)
 
     def _on_click_plot_cs(self, event):
         """on click plot cross section"""
@@ -275,7 +299,8 @@ class Case:
 
     def plot_cluster_centroids(self, **kws):
         clus_centroids = self.class_scheme.cluster_centroids()
-        lims = limitslist(np.arange(0,601,200))
+        n_levels = clus_centroids.shape[0]
+        lims = limitslist(np.arange(0, n_levels+1, int(n_levels/3)))
         dfs={}
         for lim, param in zip(lims, self.class_scheme.params):
             df = clus_centroids.iloc[lim[0]:lim[1],:]
@@ -284,7 +309,7 @@ class Case:
         pn = pd.Panel(dfs)
         pn_decoded = scale_data(pn, reverse=True)
         pn_plt = pn_decoded.copy()
-        pn_plt.minor_axis=pn_decoded.minor_axis-0.5
+        pn_plt.minor_axis = pn_decoded.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False, **kws)
         ax=axarr[-1]
         n_comp = self.class_scheme.km.n_clusters
@@ -300,6 +325,8 @@ class Case:
         return self.data.minor_axis[0].round('1min').minute%15
 
     def ground_temperature(self, save=False):
+        if self.temperature is not None:
+            return self.temperature
         t = arm.var_in_timerange(self.t_start(), self.t_end()+pd.Timedelta(minutes=15), var='temp_mean')
         tre = t.resample('15min', base=self.base_minute()).mean()
         if save:
