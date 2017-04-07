@@ -134,11 +134,13 @@ class VPC:
         n_extra = len(self.params_extra)
         if n_extra<1:
             components = centroids
+            extra = []
         else:
             components = centroids[:, :-n_extra]
+            extra = centroids[:, -n_extra:]
         if self.reduced:
             centroids = self.pca.inverse_transform(components)
-        return pd.DataFrame(centroids.T)
+        return pd.DataFrame(centroids.T), pd.DataFrame(extra, columns=self.params_extra)
 
     def prepare_data(self, data_scaled, extra_df=None, n_components=0, save=True):
         metadata = dict(fields=data_scaled.items.values,

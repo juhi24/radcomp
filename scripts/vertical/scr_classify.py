@@ -28,7 +28,7 @@ def prep_case(dt0, dt1, n_comp=20):
     return c
 
 cases = case.read_cases(case_set)
-name = classification.scheme_name(basename='baecc', n_eigens=n_eigens,
+name = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
 #name = '2014rhi_{n}comp'.format(n=n_eigens)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))

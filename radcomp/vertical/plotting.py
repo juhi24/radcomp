@@ -1,6 +1,7 @@
 # coding: utf-8
 #import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from radcomp import vertical, learn
@@ -9,7 +10,8 @@ VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0}
 VMINS_CB = dict(VMINS)
 VMINS_CB['ZH'] = -15
 VMAXS = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
-LABELS = {'ZH': 'dBZ', 'ZDR': 'dB', 'KDP': 'deg/km', 'DP': 'deg', 'PHIDP': 'deg'}
+LABELS = {'ZH': '$Z$, dBZ', 'ZDR': '$Z_{dr}$, dB', 'KDP': '$K_{dp}$, deg/km',
+          'DP': 'deg', 'PHIDP': 'deg'}
 DISPLACEMENT_FACTOR = 0.5
 
 def plot_data(data, ax, **kws):
@@ -76,16 +78,21 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
     return fig, axarr
 
 def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega20', alpha=1, **kws):
-    t = classes.index
-    dt = mean_delta(t)*DISPLACEMENT_FACTOR
-    clss = classes.shift(freq=dt).dropna().astype(int)
+    if isinstance(classes.index, pd.DatetimeIndex):
+        t = classes.index
+        dt = mean_delta(t)*DISPLACEMENT_FACTOR
+        clss = classes.shift(freq=dt).dropna().astype(int)
+    else:
+        clss = classes
+        dt = DISPLACEMENT_FACTOR
+        clss.index = clss.index+dt
     if ax is None:
         ax = plt.gca()
     cm = plt.get_cmap(cmap)
-    t0 = clss.index[0]
+    t0 = clss.index[0]-2*dt
     for t1, icolor in clss.iteritems():
         if t1<=t0:
-            continue
+            print('HALP')
         ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=cm.colors[icolor], 
                    alpha=alpha, clip_on=False, **kws)
         t0 = t1

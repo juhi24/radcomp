@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import scipy.io
 from os import path
 from functools import partial
@@ -10,6 +10,7 @@ from radcomp.vertical import (filtering, classification, plotting,
                               NAN_REPLACEMENT)
 from radcomp import vertical, arm, HOME, USER_DIR
 from j24 import daterange2str, limitslist
+from collections import OrderedDict
 
 DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
 COL_START = 'start'
@@ -298,10 +299,12 @@ class Case:
         return out
 
     def plot_cluster_centroids(self, **kws):
-        clus_centroids = self.class_scheme.cluster_centroids()
+        clus_centroids, extra = self.class_scheme.cluster_centroids()
+        n_extra = extra.shape[1]
         n_levels = clus_centroids.shape[0]
-        lims = limitslist(np.arange(0, n_levels+1, int(n_levels/3)))
-        dfs={}
+        n_radarparams = self.cl_data_scaled.items.size
+        lims = limitslist(np.arange(0, n_levels+1, int(n_levels/n_radarparams)))
+        dfs = OrderedDict()
         for lim, param in zip(lims, self.class_scheme.params):
             df = clus_centroids.iloc[lim[0]:lim[1],:]
             df.index = self.cl_data_scaled.minor_axis
@@ -310,12 +313,24 @@ class Case:
         pn_decoded = scale_data(pn, reverse=True)
         pn_plt = pn_decoded.copy()
         pn_plt.minor_axis = pn_decoded.minor_axis-0.5
-        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False, **kws)
+        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
+                                     n_extra_ax=n_extra, **kws)
+        for iax in range(len(axarr)-1):
+            plotting.class_colors(pd.Series(clus_centroids.columns), ax=axarr[iax])
         ax=axarr[-1]
+        if n_extra>0:
+            extra.plot.bar(ax=ax)
+            lgd = plt.legend()
+            lgd.set_visible(False)
+            ax.set_ylim([-15, 6])
+            ax.set_ylabel('Temperature, $^{\circ}$C')
+            ax.yaxis.grid(True)
         n_comp = self.class_scheme.km.n_clusters
         ax.set_xticks(range(n_comp))
         ax.set_xlim(-0.5,n_comp-0.5)
+        ax.set_xlabel('class')
         fig = ax.get_figure()
+        axarr[0].set_title('Class centroids')
         return fig, axarr
 
     def mean_delta(self):

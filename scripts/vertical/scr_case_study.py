@@ -19,7 +19,7 @@ n_eigens = 20
 n_clusters = 20
 reduced = True
 #scheme = '2014rhi_{n}comp'.format(n=n_comp)
-scheme = classification.scheme_name(basename='baecc+1415', n_eigens=n_eigens,
+scheme = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
 
 def plot_case(c, data_g):

@@ -24,8 +24,8 @@ cases = case.read_cases('training_baecc')
 c = case.Case.by_combining(cases)
 c.load_classification(scheme)
 
-df = c.pcolor_classes(cmap='viridis')
-f_cen, axarr_cen = c.plot_cluster_centroids(cmap='viridis')
+#df = c.pcolor_classes(cmap='viridis')
+f_cen, axarr_cen = c.plot_cluster_centroids()
 
 if save:
     for i, fig in df.fig.iteritems():
