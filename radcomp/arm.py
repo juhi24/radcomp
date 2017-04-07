@@ -8,14 +8,17 @@ from os import path
 from j24 import home
 
 
-SOUNDING_DIR = path.join(home(), 'DATA', 'arm', 'sounding')
-GROUND_DIR = gdir=path.join(home(), 'DATA', 'arm', 'ground')
+arm_dir = path.join(home(), 'DATA', 'arm')
+SOUNDING_DIR = path.join(arm_dir, 'sounding')
+GROUND_DIR = path.join(arm_dir, 'ground')
+MWR_DIR = path.join(arm_dir, 'MWR')
 all_soundings_f = 'tmpsondewnpnM1.b1.20140121.125200..20140330.172000.custom.cdf'
 sounding_f = 'tmpsondewnpnM1.b1.20140131.115000.cdf' # sample
 all_soundings_path = path.join(SOUNDING_DIR, all_soundings_f)
 sounding_path = path.join(SOUNDING_DIR, sounding_f)
 SOUNDING_GLOB = path.join(SOUNDING_DIR, 'tmpsondewnpnM1.b1.20??????.??????.cdf')
 GROUND_GLOB = path.join(GROUND_DIR, 'tmpmetM1.b1.20??????.??????.cdf')
+MWR_GLOB = path.join(MWR_DIR, '*.cdf')
 #s = nc.Dataset(soundings_f)
 
 def time(ncdata, as_np=False):
@@ -89,8 +92,8 @@ def df2series(df):
 def prep4pca(df):
     return df.apply(lambda x: df2series(resampled_t_dp(x))).dropna()
 
-def var_in_timerange(tstart, tend, var='temp_mean'):
-    gnc = datalist(globfmt=GROUND_GLOB)
+def var_in_timerange(tstart, tend, var='temp_mean', globfmt=GROUND_GLOB):
+    gnc = datalist(globfmt=globfmt)
     gnc.index = gnc.index.map(lambda t: t.date())
     ncs = gnc.loc[tstart.date():tend.date()]
     t = pd.concat(map(lambda x: nc2df(x, index='time')[var], ncs))

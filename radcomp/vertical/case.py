@@ -342,9 +342,16 @@ class Case:
     def ground_temperature(self, save=False):
         if self.temperature is not None:
             return self.temperature
-        t = arm.var_in_timerange(self.t_start(), self.t_end()+pd.Timedelta(minutes=15), var='temp_mean')
+        t_end = self.t_end()+pd.Timedelta(minutes=15)
+        t = arm.var_in_timerange(self.t_start(), t_end, var='temp_mean')
         tre = t.resample('15min', base=self.base_minute()).mean()
         if save:
             self.temperature = tre
         return tre
+
+    def lwp(self):
+        t_end = self.t_end()+pd.Timedelta(minutes=15)
+        lwp = arm.var_in_timerange(self.t_start(), t_end, var='liq',
+                                   globfmt=arm.MWR_GLOB)
+        return lwp.resample('15min', base=self.base_minute()).mean()
 
