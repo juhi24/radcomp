@@ -15,13 +15,13 @@ results_dir = ensure_dir(path.join(RESULTS_DIR, 'class_scatter'))
 n_eigens = 20
 n_clusters = 20
 reduced = True
-param = 'intensity'
+param = 'density'
 
 scheme = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
 
 table = dict(density=insitu.TABLE_FILTERED_PKL, intensity=insitu.TABLE_PKL)
-XMAX = dict(density=600, intensity=2, liq=0.08)
+XMAX = dict(density=500, intensity=2, liq=0.08)
 incr = dict(density=50, intensity=0.25, liq=0.01)
 XLABEL = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               intensity='LWE, mm$\,$h$^{-1}$',

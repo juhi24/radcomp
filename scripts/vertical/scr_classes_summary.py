@@ -18,7 +18,7 @@ scheme = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
 #scheme = '2014rhi_{n}comp'.format(n=n_comp)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary', scheme))
-save = False
+save = True
 
 cases = case.read_cases('training_baecc')
 c = case.Case.by_combining(cases)
