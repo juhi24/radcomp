@@ -314,23 +314,28 @@ class Case:
         pn_plt = pn_decoded.copy()
         pn_plt.minor_axis = pn_decoded.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
-                                     n_extra_ax=n_extra, **kws)
+                                     n_extra_ax=n_extra+1, **kws)
         for iax in range(len(axarr)-1):
             plotting.class_colors(pd.Series(clus_centroids.columns), ax=axarr[iax])
-        ax=axarr[-1]
+        ax_last=axarr[-1]
+        ax_extra = axarr[-2]
         if n_extra>0:
-            extra.plot.bar(ax=ax)
-            lgd = plt.legend()
-            lgd.set_visible(False)
-            ax.set_ylim([-15, 6])
-            ax.set_ylabel('Temperature, $^{\circ}$C')
-            ax.yaxis.grid(True)
+            extra.plot.bar(ax=ax_extra)
+            ax_extra.get_legend().set_visible(False)
+            ax_extra.set_ylim([-15, 6])
+            ax_extra.set_ylabel('Temperature, $^{\circ}$C')
+            ax_extra.yaxis.grid(True)
         n_comp = self.class_scheme.km.n_clusters
-        ax.set_xticks(range(n_comp))
-        ax.set_xlim(-0.5,n_comp-0.5)
-        ax.set_xlabel('class')
-        fig = ax.get_figure()
+        ax_last.set_xticks(range(n_comp))
+        ax_last.set_xlim(-0.5,n_comp-0.5)
+        ax_last.set_xlabel('class')
+        fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
+        # plot counts
+        count = self.class_counts()
+        count.plot.bar(ax=ax_last)
+        ax_last.set_ylabel('Occurance')
+        ax_last.yaxis.grid(True)
         return fig, axarr
 
     def mean_delta(self):
@@ -354,4 +359,9 @@ class Case:
         lwp = arm.var_in_timerange(self.t_start(), t_end, var='liq',
                                    globfmt=arm.MWR_GLOB)
         return lwp.resample('15min', base=self.base_minute()).mean()
+
+    def class_counts(self):
+        count = self.classes.groupby(self.classes).count()
+        count.name = 'count'
+        return count
 
