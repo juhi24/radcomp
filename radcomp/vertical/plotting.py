@@ -120,3 +120,36 @@ def pcolor_class(g, **kws):
     gt.minor_axis = list(range(gt.shape[2]))
     fig, axarr = plotpn(gt, x_is_date=False, **kws)
     return axarr
+
+def hists_by_class(data, classes):
+    """histograms of data grouping by class"""
+    cm = mpl.cm.get_cmap('Vega20')
+    xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15)
+    xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5)
+    incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2)
+    xlabel = dict(density='$\\rho$, kg$\,$m$^{-3}$',
+                  intensity='LWE, mm$\,$h$^{-1}$',
+                  liq='LWP, cm',
+                  temp_mean='Temperature, $^{\circ}C$')
+    param = data.name
+    axarr = data.hist(by=classes, sharex=True, sharey=True,
+                         bins=np.arange(xmin[param], xmax[param], incr[param]))
+    axflat = axarr.flatten()
+    axflat[0].set_xlim(xmin[param], xmax[param])
+    fig = axflat[0].get_figure()
+    frameax = fig.add_subplot(111, frameon=False)
+    frameax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+    frameax.set_xlabel(xlabel[param])
+    frameax.set_ylabel('count')
+    for i, ax in enumerate(axflat):
+        for tick in ax.get_xticklabels():
+            tick.set_rotation(0)
+        try:
+            iclass = int(float(ax.get_title()))
+        except ValueError:
+            continue
+        ax.set_title('class {}'.format(iclass))
+        for p in ax.patches:
+            p.set_color(cm.colors[iclass])
+    #plt.tight_layout()
+    return fig

@@ -4,10 +4,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
+from collections import OrderedDict
 from sklearn import decomposition
 from sklearn.cluster import KMeans
 from radcomp import learn, USER_DIR
-from j24 import ensure_dir
+from j24 import ensure_dir, limitslist
 
 
 META_SUFFIX = '_metadata'
@@ -129,7 +130,7 @@ class VPC:
         data = self.prepare_data(data_scaled, **kws)
         return pd.Series(data=self.km.predict(data), index=data_scaled.major_axis)
 
-    def cluster_centroids(self):
+    def clus_centroids_df(self):
         centroids = self.km.cluster_centers_
         n_extra = len(self.params_extra)
         if n_extra<1:
@@ -141,6 +142,19 @@ class VPC:
         if self.reduced:
             centroids = self.pca.inverse_transform(components)
         return pd.DataFrame(centroids.T), pd.DataFrame(extra, columns=self.params_extra)
+
+    def clus_centroids_pn(self):
+        clus_centroids, extra = self.clus_centroids_df()
+        n_levels = clus_centroids.shape[0]
+        n_radarparams = self.params.size
+        lims = limitslist(np.arange(0, n_levels+1, int(n_levels/n_radarparams)))
+        dfs = OrderedDict()
+        for lim, param in zip(lims, self.params):
+            df = clus_centroids.iloc[lim[0]:lim[1],:]
+            df.index = pd.RangeIndex(stop=df.index.size)
+            dfs[param] = df
+        pn = pd.Panel(dfs)
+        return pn, extra
 
     def prepare_data(self, data_scaled, extra_df=None, n_components=0, save=True):
         metadata = dict(fields=data_scaled.items.values,

@@ -2,15 +2,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import scipy.io
 from os import path
 from functools import partial
 from radcomp.vertical import (filtering, classification, plotting,
                               NAN_REPLACEMENT)
 from radcomp import vertical, arm, HOME, USER_DIR
-from j24 import daterange2str, limitslist
-from collections import OrderedDict
+from j24 import daterange2str
 
 DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
 COL_START = 'start'
@@ -298,25 +297,22 @@ class Case:
         out.columns = ['fig', 'axarr']
         return out
 
+    def clus_centroids(self):
+        clus_centroids, extra = self.class_scheme.clus_centroids_pn()
+        clus_centroids.major_axis = self.cl_data_scaled.minor_axis
+        return clus_centroids, extra
+
     def plot_cluster_centroids(self, **kws):
-        clus_centroids, extra = self.class_scheme.cluster_centroids()
+        scheme = self.class_scheme
+        clus_centroids, extra = self.clus_centroids()
         n_extra = extra.shape[1]
-        n_levels = clus_centroids.shape[0]
-        n_radarparams = self.cl_data_scaled.items.size
-        lims = limitslist(np.arange(0, n_levels+1, int(n_levels/n_radarparams)))
-        dfs = OrderedDict()
-        for lim, param in zip(lims, self.class_scheme.params):
-            df = clus_centroids.iloc[lim[0]:lim[1],:]
-            df.index = self.cl_data_scaled.minor_axis
-            dfs[param] = df
-        pn = pd.Panel(dfs)
-        pn_decoded = scale_data(pn, reverse=True)
+        pn_decoded = scale_data(clus_centroids, reverse=True)
         pn_plt = pn_decoded.copy()
         pn_plt.minor_axis = pn_decoded.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+1, **kws)
         for iax in range(len(axarr)-1):
-            plotting.class_colors(pd.Series(clus_centroids.columns), ax=axarr[iax])
+            plotting.class_colors(pd.Series(clus_centroids.minor_axis), ax=axarr[iax])
         ax_last=axarr[-1]
         ax_extra = axarr[-2]
         if n_extra>0:
@@ -325,7 +321,7 @@ class Case:
             ax_extra.set_ylim([-15, 6])
             ax_extra.set_ylabel('Temperature, $^{\circ}$C')
             ax_extra.yaxis.grid(True)
-        n_comp = self.class_scheme.km.n_clusters
+        n_comp = scheme.km.n_clusters
         ax_last.set_xticks(range(n_comp))
         ax_last.set_xlim(-0.5,n_comp-0.5)
         ax_last.set_xlabel('class')
@@ -334,7 +330,7 @@ class Case:
         # plot counts
         count = self.class_counts()
         count.plot.bar(ax=ax_last)
-        ax_last.set_ylabel('Occurance')
+        ax_last.set_ylabel('Occurrence')
         ax_last.yaxis.grid(True)
         return fig, axarr
 

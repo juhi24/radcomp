@@ -17,7 +17,7 @@ np.random.seed(0)
 #dt0 = pd.datetime(2014, 2, 21, 12, 30)
 #dt1 = pd.datetime(2014, 2, 22, 15, 30)
 case_set = 'training_baecc'
-n_eigens = 20
+n_eigens = 25
 n_clusters = 20
 reduced = True
 save = True
