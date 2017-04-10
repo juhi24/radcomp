@@ -8,7 +8,7 @@ from radcomp.vertical import case, classification, RESULTS_DIR
 from j24 import ensure_dir
 
 
-plt.ioff()
+plt.ion()
 plt.close('all')
 np.random.seed(0)
 n_eigens = 25
@@ -28,8 +28,6 @@ c.load_classification(scheme)
 if plot_by_class:
     df = c.pcolor_classes(cmap='viridis')
 f_cen, axarr_cen = c.plot_cluster_centroids()
-
-cen, cen_t = c.class_scheme.clus_centroids_pn()
 
 if save:
     if plot_by_class:

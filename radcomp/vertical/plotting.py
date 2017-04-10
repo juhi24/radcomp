@@ -17,6 +17,12 @@ DISPLACEMENT_FACTOR = 0.5
 def plot_data(data, ax, **kws):
     return ax.plot(data.index, data.values, drawstyle='steps', **kws)
 
+def rotate_tick_labels(rot, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    for tick in ax.get_xticklabels():
+        tick.set_rotation(rot)
+
 def mean_delta(t):
     dt = t[-1]-t[0]
     return dt/(len(t)-1)
@@ -142,8 +148,7 @@ def hists_by_class(data, classes):
     frameax.set_xlabel(xlabel[param])
     frameax.set_ylabel('count')
     for i, ax in enumerate(axflat):
-        for tick in ax.get_xticklabels():
-            tick.set_rotation(0)
+        rotate_tick_labels(0, ax=ax)
         try:
             iclass = int(float(ax.get_title()))
         except ValueError:

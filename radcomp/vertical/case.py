@@ -132,6 +132,34 @@ def scale_data(pn, reverse=False):
         scaled[field] = data
     return scaled
 
+def finish_cl_data_plot(axarr):
+    for ax in axarr:
+        param=ax.get_lines()[0].get_label().upper()
+        ax.set_ylim(plotting.VMINS[param], plotting.VMAXS[param])
+        ax.set_ylabel(plotting.LABELS[param])
+    ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
+    ax.set_xlabel('height, km')
+    plotting.rotate_tick_labels(0, ax=ax)
+    return axarr
+
+
+def handle_ax(ax):
+    if ax is None:
+        ax_out = None
+        axkws = dict()
+        update = False
+    else:
+        cl_ax = ax
+        if isinstance(cl_ax, np.ndarray):
+            for ax_out in cl_ax:
+                ax_out.clear()
+        else:
+            ax_out = cl_ax
+            ax_out.clear()
+        axkws = dict(ax=cl_ax)
+        update = True
+    return ax_out, update, axkws
+
 
 class Case:
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
@@ -144,6 +172,7 @@ class Case:
         self.class_scheme = class_scheme
         self.temperature = temperature
         self._cl_ax = None
+        self._dt_ax = None
 
     @classmethod
     def from_dtrange(cls, t0, t1):
@@ -235,7 +264,7 @@ class Case:
             for ax in axarr:
                 # TODO: cursor not showing
                 mpl.widgets.Cursor(ax, horizOn=False, color='red', linewidth=2)
-            fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cs)
+            fig.canvas.mpl_connect('button_press_event', self._on_click_plot_dt_cs)
         return fig, axarr
 
     def plot_t(self, ax):
@@ -254,23 +283,18 @@ class Case:
         return self.class_scheme.train(data=self.cl_data_scaled,
                                        extra_df=extra_df, **kws)
 
-    def _on_click_plot_cs(self, event):
+    def _on_click_plot_dt_cs(self, event):
         """on click plot cross section"""
         dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
-        if self._cl_ax is None:
-            axkws = dict()
-            update = False
-        else:
-            cl_ax = self._cl_ax
-            if isinstance(cl_ax, np.ndarray):
-                for ax in cl_ax:
-                    ax.clear()
-            else:
-                ax = cl_ax
-                ax.clear()
-            axkws = dict(ax=cl_ax)
-            update = True
-        self._cl_ax = self.plot_cl_data_at(dt, **axkws)
+        ax, update, axkws = handle_ax(self._dt_ax)
+        self._dt_ax = self.plot_cl_data_at(dt, **axkws)
+        if update:
+            ax.get_figure().canvas.draw()
+
+    def _on_click_plot_cl_cs(self, event):
+        n = round(event.xdata)
+        ax, update, axkws = handle_ax(self._cl_ax)
+        self._cl_ax = self.plot_centroid(n, **axkws)
         if update:
             ax.get_figure().canvas.draw()
 
@@ -279,13 +303,15 @@ class Case:
         i = data.major_axis.get_loc(dt, method='nearest')
         axarr = data.iloc[:, i, :].plot(subplots=True, **kws)
         axarr[0].set_title(str(dt))
-        for ax in axarr:
-            param=ax.get_lines()[0].get_label().upper()
-            ax.set_ylim(plotting.VMINS[param], plotting.VMAXS[param])
-            ax.set_ylabel(plotting.LABELS[param])
-        ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
-        ax.set_xlabel('height, km')
-        return axarr
+        return finish_cl_data_plot(axarr)
+
+    def plot_centroid(self, n, **kws):
+        cen, t = self.clus_centroids()
+        data = cen.minor_xs(n)
+        axarr = data.plot(subplots=True, legend=False, **kws)
+        titlestr = 'Class {n}, $T={t:.1f}^{{\circ}}$C'
+        axarr[0].set_title(titlestr.format(n=int(n), t=t.temp_mean[n]))
+        return finish_cl_data_plot(axarr)
 
     def pcolor_classes(self, **kws):
         groups = self.cl_data.groupby(self.classes)
@@ -300,19 +326,19 @@ class Case:
     def clus_centroids(self):
         clus_centroids, extra = self.class_scheme.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
-        return clus_centroids, extra
+        decoded = scale_data(clus_centroids, reverse=True)
+        return decoded, extra
 
     def plot_cluster_centroids(self, **kws):
         scheme = self.class_scheme
-        clus_centroids, extra = self.clus_centroids()
+        pn_decoded, extra = self.clus_centroids()
         n_extra = extra.shape[1]
-        pn_decoded = scale_data(clus_centroids, reverse=True)
         pn_plt = pn_decoded.copy()
         pn_plt.minor_axis = pn_decoded.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+1, **kws)
         for iax in range(len(axarr)-1):
-            plotting.class_colors(pd.Series(clus_centroids.minor_axis), ax=axarr[iax])
+            plotting.class_colors(pd.Series(pn_decoded.minor_axis), ax=axarr[iax])
         ax_last=axarr[-1]
         ax_extra = axarr[-2]
         if n_extra>0:
@@ -324,7 +350,7 @@ class Case:
         n_comp = scheme.km.n_clusters
         ax_last.set_xticks(range(n_comp))
         ax_last.set_xlim(-0.5,n_comp-0.5)
-        ax_last.set_xlabel('class')
+        ax_last.set_xlabel('Class')
         fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
         # plot counts
@@ -332,6 +358,7 @@ class Case:
         count.plot.bar(ax=ax_last)
         ax_last.set_ylabel('Occurrence')
         ax_last.yaxis.grid(True)
+        fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr
 
     def mean_delta(self):

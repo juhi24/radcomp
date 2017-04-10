@@ -151,6 +151,7 @@ class VPC:
         dfs = OrderedDict()
         for lim, param in zip(lims, self.params):
             df = clus_centroids.iloc[lim[0]:lim[1],:]
+            # we don't know row names here
             df.index = pd.RangeIndex(stop=df.index.size)
             dfs[param] = df
         pn = pd.Panel(dfs)
