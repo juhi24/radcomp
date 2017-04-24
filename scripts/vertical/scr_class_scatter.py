@@ -11,14 +11,14 @@ from j24 import ensure_dir
 plt.ion()
 plt.close('all')
 np.random.seed(0)
-results_dir = ensure_dir(path.join(RESULTS_DIR, 'class_scatter'))
 n_eigens = 25
 n_clusters = 20
 reduced = True
-param = 'intensity'
+param = 'density'
 
 scheme = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
+results_dir = ensure_dir(path.join(RESULTS_DIR, 'class_scatter', scheme))
 
 table = dict(density=insitu.TABLE_FILTERED_PKL, intensity=insitu.TABLE_PKL)
 

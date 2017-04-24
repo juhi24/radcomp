@@ -9,8 +9,8 @@ import glob
 import os
 import numpy as np
 import pandas as pd
-import radx
 import matplotlib.pyplot as plt
+from radcomp import radx
 
 save_png = False
 plt.ioff()

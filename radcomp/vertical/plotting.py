@@ -138,15 +138,15 @@ def hists_by_class(data, classes):
                   liq='LWP, cm',
                   temp_mean='Temperature, $^{\circ}C$')
     param = data.name
-    axarr = data.hist(by=classes, sharex=True, sharey=True,
-                         bins=np.arange(xmin[param], xmax[param], incr[param]))
+    axarr = data.hist(by=classes, sharex=True, sharey=True, normed=True,
+                      bins=np.arange(xmin[param], xmax[param], incr[param]))
     axflat = axarr.flatten()
     axflat[0].set_xlim(xmin[param], xmax[param])
     fig = axflat[0].get_figure()
     frameax = fig.add_subplot(111, frameon=False)
     frameax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
     frameax.set_xlabel(xlabel[param])
-    frameax.set_ylabel('count')
+    frameax.set_ylabel('probability density')
     for i, ax in enumerate(axflat):
         rotate_tick_labels(0, ax=ax)
         try:

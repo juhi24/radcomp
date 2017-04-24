@@ -18,7 +18,7 @@ reduced = True
 
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
-n_eigens = 25
+n_eigens = 20
 n_clusters = 20
 use_temperature = True
 

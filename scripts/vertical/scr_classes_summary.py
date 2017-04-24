@@ -9,7 +9,7 @@ from j24 import ensure_dir
 
 
 plt.ion()
-plt.close('all')
+#plt.close('all')
 np.random.seed(0)
 n_eigens = 25
 n_clusters = 20
