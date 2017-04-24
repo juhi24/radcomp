@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import netCDF4 as nc
 import copy
+from radcomp.radar import RADARS
 
 SITES = ['KUM', 'KER', 'VAN']
-
 
 def data_is_bad(ncdata):
     lvar = list(ncdata.variables)
@@ -100,11 +100,12 @@ class RADXgrid:
             return 'VAN'
         return '???'
 
+    def radar(self):
+        return RADARS[self.site()]
+
     def radar_latlon(self):
         """(deg_n, deg_e)"""
-        if self.site() == 'KER':
-            return (60+23.3/60, 25+6.8/60)
-        return (np.nan, np.nan)
+        return (self.radar().lat, self.radar().lon)
 
     @property
     def radar_pixel(self):
@@ -156,6 +157,12 @@ class RADXgrid:
     def distance_from_radar(self, x, y):
         (x0, y0) = self.radar_pixel
         return self.distance(x0, y0, x, y)
+
+    def range_field(self):
+        ran = self.data.variables['lat0'][:].copy()
+        for (x,y), element in np.ndenumerate(ran):
+            ran[y, x] = self.distance_from_radar(x, y)
+        return ran
 
     def scantime(self):
         ts=self.datetime('time_bounds')[0]
