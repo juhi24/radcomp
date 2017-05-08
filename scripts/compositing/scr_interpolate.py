@@ -14,7 +14,8 @@ import glob
 import itertools
 import datetime
 import scipy.io
-import radx
+from radcomp import radx
+from j24 import ensure_dir
 
 plt.ioff()
 debug = True
@@ -34,6 +35,7 @@ def interp(I1, I2, n=1):
     # Interpolate n frames between the input images.
     return interpolate(I1, I2, VF, n, VB=VB)
 
+
 def motion(I1, I2):
     # Convert the rainfall maps to unsigned byte, as required by the Optflow 
     # motion detection algorithms. Gaussian filter with std. dev. 3 is applied.
@@ -44,14 +46,16 @@ def motion(I1, I2):
     # algorithm.
     return extract_motion_proesmans(Iu[0], Iu[1], lam=25.0, num_iter=250, num_levels=6)
 
+
 def discard(filepath, ncdata):
     """Return True if the file was discarded."""
     datadir = os.path.dirname(filepath)
     discardir = os.path.join(datadir, 'discarded')
-    radx.ensure_path(discardir)
+    ensure_dir(discardir)
     ncdata.close()
     discardfilepath = os.path.join(discardir, os.path.basename(filepath))
     os.rename(filepath, discardfilepath)
+
 
 def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False):
     #elev = []
@@ -87,13 +91,13 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png = False)
             datedir = t.strftime('%Y%m%d')
             fbasename = t.strftime('intrp_%Y%m%d_%H%M%S')
             matfname = fbasename + '.mat'
-            matsitepath = radx.ensure_path(os.path.join(outpath, data_site, 'R', 'mat', datedir))
+            matsitepath = ensure_dir(os.path.join(outpath, data_site, 'R', 'mat', datedir))
             matfilepath = os.path.join(matsitepath, matfname)
             mdict = {'time': np.array(str(t)), 'R': r}
             scipy.io.savemat(matfilepath, mdict, do_compression=True)
             if save_png:
                 pngfname = fbasename + '.png'
-                pngsitepath = radx.ensure_path(os.path.join(outpath, data_site, 'R', 'png', datedir))
+                pngsitepath = ensure_dir(os.path.join(outpath, data_site, 'R', 'png', datedir))
                 pngfilepath = os.path.join(pngsitepath, pngfname)
                 fig, ax = radx.plot_rainmap(r)
                 ax.set_title(str(t))
