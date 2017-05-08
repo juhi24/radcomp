@@ -49,8 +49,10 @@ def db2lin(db):
 
 
 def plot_rainmap(r, fig=None, ax=None, **cbkws):
-    if fig is None or ax is None:
+    if ax is None:
         fig, ax = plt.subplots()
+    if fig is None:
+        fig = ax.figure
     r_ = r.copy()
     #r_[r < 0.05] = np.nan
     r_ = np.ma.masked_where(r<0.05, r_)
