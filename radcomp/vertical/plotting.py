@@ -53,6 +53,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         else:
             scalekws = {}
             label = field
+        kws.update(scalekws)
         if x_is_date:
             t = pn[field].columns
             x = t - mean_delta(t)*DISPLACEMENT_FACTOR
@@ -64,7 +65,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         x = x.append(x_last)
         im = ax.pcolormesh(x, pn[field].index, 
                       np.ma.masked_invalid(pn[field].values), cmap=cmap,
-                      **scalekws, label=field, **kws)
+                      label=field, **kws)
         #fig.autofmt_xdate()
         if x_is_date:
             ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))

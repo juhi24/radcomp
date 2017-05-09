@@ -8,7 +8,7 @@ from os import path
 from pyoptflow import utils
 from pyoptflow.core import extract_motion_proesmans
 from pyoptflow.interpolation import interpolate
-from radcomp import radx
+from radcomp.qpe import radx
 from j24 import ensure_dir
 
 
@@ -30,8 +30,8 @@ def motion(I1, I2):
     return extract_motion_proesmans(Iu[0], Iu[1], lam=25.0, num_iter=250, num_levels=6)
 
 
-def batch_interpolate(filepaths_good, outpath, data_site=None, save_png=False,
-                      interval_s=10.):
+def batch_interpolate_sites(filepaths_good, outpath, data_site=None,
+                            save_png=False, interval_s=10.):
     #elev = []
     #l_dt = []
     #l_t0_str = []
@@ -47,8 +47,8 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png=False,
         if data_site == 'KER':
             nc0, nc1 = radx.equalize_ker_zmin(nc0, nc1)
         #elev.append(nc0.variables['z0'][0])
-        I1 = nc0.rainrate()
-        I2 = nc1.rainrate()
+        r0 = nc0.rainrate()
+        r1 = nc1.rainrate()
         t0 = nc0.elevation_end_time()
         t1 = nc1.elevation_end_time()
         dt = t1-t0
@@ -59,7 +59,7 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png=False,
         selection = [t.second<10 for t in intrp_timestamps]
         #l_dt.append(dt)
         print(dt.total_seconds())
-        intrp = np.array(interp(I1, I2, n))
+        intrp = np.array(interp(r0, r1, n))
         for i in np.where(selection)[0]:
             t = intrp_timestamps[i]
             r = intrp[i]

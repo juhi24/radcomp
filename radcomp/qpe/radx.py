@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import netCDF4 as nc
 import copy
-from radcomp.radar import RADARS
+from radcomp.qpe.radar import RADARS
 
 SITES = ['KUM', 'KER', 'VAN']
 

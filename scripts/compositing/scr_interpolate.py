@@ -7,13 +7,14 @@
 import os
 import matplotlib.pyplot as plt
 #import numpy as np
-import glob
+import pandas as pd
 import itertools
-from radcomp import radx, interpolation
+from glob import glob
+from radcomp.qpe import radx, radxpaths, interpolation
 from j24 import ensure_dir
 
 plt.ion()
-debug = False
+debug = True
 
 basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
 resultspath = '/home/jussitii/results/radcomp'
@@ -21,7 +22,7 @@ if debug:
     gridpath = os.path.join(basepath, 'test', 'cf', 'grids')
 else:
     gridpath = os.path.join(basepath, 'grids')
-intrp_path = os.path.join(basepath, 'interpolated')
+intrp_path = os.path.join(gridpath, 'interpolated')
 
 
 def discard(filepath, ncdata):
@@ -46,12 +47,26 @@ def dts(filepaths):
     return l_dt
 
 
+def filepaths_sep3(fromlist=True):
+    if fromlist:
+        fpaths_dict = radxpaths.load()
+        fpaths_df = pd.concat(fpaths_dict.values())
+        fpaths_good = list(fpaths_df.filepath.values)
+        fpaths_good.sort()
+    else:
+        fpaths_all = glob(os.path.join(gridpath, site, '*', 'ncf_20160903_[12]?????.nc'))
+        fpaths_all.extend(glob(os.path.join(gridpath, site, '*', 'ncf_20160904_0[0-6]????.nc')))
+        fpaths_all.sort()
+        fpaths_good = radxpaths.filter_filepaths(fpaths_all)
+    return fpaths_good
+
+
 if debug and False:
     testpath = os.path.join(basepath, 'test')
-    testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
+    testfilepaths = glob(os.path.join(testpath, 'KER', '03', '*.nc'))
     #testfilepaths = glob.glob(os.path.join(testpath, 'KUM', '*.nc'))
     testfilepaths.sort()
-    testfilepaths_good = radx.filter_filepaths(testfilepaths)
+    testfilepaths_good = radxpaths.filter_filepaths(testfilepaths)
     testncs=[radx.RADXgrid(f) for f in testfilepaths_good]
     test_interp = False
     if test_interp:
@@ -78,12 +93,9 @@ if debug and False:
         plt.colorbar()
 
 for site in radx.SITES:
-    filepaths_all = glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160903_[12]?????.nc'))
-    filepaths_all.extend(glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160904_0[0-6]????.nc')))
-    filepaths_all.sort()
-    filepaths_good = radx.filter_filepaths(filepaths_all)
+    filepaths_good = filepaths_sep3()
     interpolation.batch_interpolate(filepaths_good, intrp_path,
-                                      data_site=site, save_png=True)
+                                    data_site=site, save_png=True)
 
 
 def testcase():
