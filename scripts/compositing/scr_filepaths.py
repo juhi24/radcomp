@@ -1,19 +1,16 @@
 # coding: utf-8
-
-import glob
 import getpass
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
 from scipy.io import savemat
-from radcomp import radx
+from radcomp.qpe import radx, radxpaths
 
 basepath = path.join('/media', getpass.getuser(), '04fafa8f-c3ca-48ee-ae7f-046cf576b1ee')
-GRIDPATH = path.join(basepath, 'grid')
+gridpath = path.join(basepath, 'grid')
 
 
-d = load()
+d = radxpaths.load(gridpath)
 dran = {}
 for site in radx.SITES:
     f = d[site].iloc[0].values[0]
@@ -26,5 +23,5 @@ for site in radx.SITES:
         plt.figure()
         plt.pcolormesh(ran)
         plt.title(site)
-ran_mat_path = path.join(GRIDPATH, 'range.mat')
+ran_mat_path = path.join(gridpath, 'range.mat')
 savemat(ran_mat_path, dran)

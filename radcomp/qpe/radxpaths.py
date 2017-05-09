@@ -1,9 +1,15 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # coding: utf-8
 import copy
+import getpass
+import pandas as pd
 import netCDF4 as nc
 from os import path
 from glob import glob
+from radcomp.qpe import radx
+
+basepath = path.join('/media', getpass.getuser(), '04fafa8f-c3ca-48ee-ae7f-046cf576b1ee')
+GRIDPATH = path.join(basepath, 'grid')
 
 
 def data_is_bad(ncdata):
@@ -29,24 +35,24 @@ def filter_filepaths(filepaths_all):
     return filepaths_good
 
 
-def fpath(site):
-    return path.join(GRIDPATH, '{}_goodfiles.csv'.format(site))
+def fpath(site, gridpath=GRIDPATH):
+    return path.join(gridpath, '{}_goodfiles.csv'.format(site))
 
 
-def save():
-    filepaths_all = glob(path.join(GRIDPATH, '???', '*', 'ncf_20160903_[12]?????.nc'))
-    filepaths_all.extend(glob(path.join(GRIDPATH, '???', '*', 'ncf_20160904_0[0-6]????.nc')))
+def save(gridpath=GRIDPATH):
+    filepaths_all = glob(path.join(gridpath, '???', '*', 'ncf_20160903_[12]?????.nc'))
+    filepaths_all.extend(glob(path.join(gridpath, '???', '*', 'ncf_20160904_0[0-6]????.nc')))
     filepaths_all.sort()
     filepaths_good = filter_filepaths(filepaths_all) # takes a lot of time!
     for site in radx.SITES:
         paths = [k for k in filepaths_good if '/{}/'.format(site) in k]
-        outpath = fpath(site)
+        outpath = fpath(site, gridpath=gridpath)
         spaths = pd.Series(paths)
         spaths.to_csv(path=outpath, index=False)
 
 
-def load():
+def load(**kws):
     out = dict(KUM=None, KER=None, VAN=None)
     for site in out:
-        out[site] = pd.read_csv(fpath(site), header=None, names=['filepath'])
+        out[site] = pd.read_csv(fpath(site, **kws), header=None, names=['filepath'])
     return out
