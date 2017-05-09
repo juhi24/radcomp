@@ -13,11 +13,14 @@ from radcomp import radx, interpolation
 from j24 import ensure_dir
 
 plt.ion()
-debug = True
+debug = False
 
 basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
 resultspath = '/home/jussitii/results/radcomp'
-gridpath = os.path.join(basepath, 'grid')
+if debug:
+    gridpath = os.path.join(basepath, 'test', 'cf', 'grids')
+else:
+    gridpath = os.path.join(basepath, 'grids')
 intrp_path = os.path.join(basepath, 'interpolated')
 
 
@@ -43,7 +46,7 @@ def dts(filepaths):
     return l_dt
 
 
-if debug:
+if debug and False:
     testpath = os.path.join(basepath, 'test')
     testfilepaths = glob.glob(os.path.join(testpath, 'KER', '03', '*.nc'))
     #testfilepaths = glob.glob(os.path.join(testpath, 'KUM', '*.nc'))
@@ -73,13 +76,13 @@ if debug:
         plt.imshow(task.dbz(), vmin=-20, vmax=60)
         plt.title('corrected DBZ for ' + task.task_name)
         plt.colorbar()
-else:
-    for site in radx.SITES:
-        filepaths_all = glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160903_[12]?????.nc'))
-        filepaths_all.extend(glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160904_0[0-6]????.nc')))
-        filepaths_all.sort()
-        filepaths_good = radx.filter_filepaths(filepaths_all)
-        interpolation.batch_interpolate(filepaths_good, intrp_path,
+
+for site in radx.SITES:
+    filepaths_all = glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160903_[12]?????.nc'))
+    filepaths_all.extend(glob.glob(os.path.join(gridpath, site, '*', 'ncf_20160904_0[0-6]????.nc')))
+    filepaths_all.sort()
+    filepaths_good = radx.filter_filepaths(filepaths_all)
+    interpolation.batch_interpolate(filepaths_good, intrp_path,
                                       data_site=site, save_png=True)
 
 

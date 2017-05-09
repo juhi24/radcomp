@@ -78,3 +78,4 @@ def batch_interpolate(filepaths_good, outpath, data_site=None, save_png=False,
                 ax.set_title(str(t))
                 fig.savefig(pngfilepath, bbox_inches="tight")
                 plt.close(fig)
+
