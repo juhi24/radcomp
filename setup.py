@@ -87,7 +87,8 @@ setup(
         'scikit-learn',
         'scipy',
         'matplotlib',
-        'numpy'
+        'numpy',
+        'netCDF4'
     ],
 
     # List additional groups of dependencies here (e.g. development

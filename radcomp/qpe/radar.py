@@ -1,4 +1,9 @@
 # coding: utf-8
+from __future__ import absolute_import, division, print_function, unicode_literals
+__metaclass__ = type
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class Radar:
@@ -6,9 +11,23 @@ class Radar:
         self.lat = lat
         self.lon = lon
 
+    def radar_pixel(self, lats, lons):
+        """radar pixel coordinates from latitude and longitude grids"""
+        latmid = int(lats.shape[0]/2)
+        lonmid = int(lons.shape[1]/2)
+        lat1 = lats[latmid, :]
+        lon1 = lons[:, lonmid]
+        y = np.abs(lat1-self.lat).argmin()
+        x = np.abs(lon1-self.lon).argmin()
+        return x, y
 
-ker = Radar(lat=60.3881, lon=25.1139)
-kum = Radar(lat=60.2045, lon=24.9633)
-van = Radar(lat=60.2706, lon=24.8690)
-RADARS = dict(KER=ker, KUM=kum, VAN=van)
+    def draw_marker(self, ax=None, marker='D', color='black'):
+        if ax is None:
+            ax = plt.gca()
+        return ax.plot(self.lon, self.lat, marker=marker, color=color)
+
+KER = Radar(lat=60.3881, lon=25.1139)
+KUM = Radar(lat=60.2045, lon=24.9633)
+VAN = Radar(lat=60.2706, lon=24.8690)
+RADARS = dict(KER=KER, KUM=KUM, VAN=VAN)
 

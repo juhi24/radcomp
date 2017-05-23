@@ -19,10 +19,10 @@ debug = True
 basepath = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
 resultspath = '/home/jussitii/results/radcomp'
 if debug:
-    gridpath = os.path.join(basepath, 'test', 'cf', 'grids')
+    GRIDPATH = os.path.join(basepath, 'test', 'cf', 'grids')
 else:
-    gridpath = os.path.join(basepath, 'grids')
-intrp_path = os.path.join(gridpath, 'interpolated')
+    GRIDPATH = os.path.join(basepath, 'grids')
+intrp_path = os.path.join(GRIDPATH, 'interpolated')
 
 
 def discard(filepath, ncdata):
@@ -47,7 +47,7 @@ def dts(filepaths):
     return l_dt
 
 
-def filepaths_sep3(fromlist=True):
+def filepaths_sep3(fromlist=True, gridpath=GRIDPATH):
     if fromlist:
         fpaths_dict = radxpaths.load()
         fpaths_df = pd.concat(fpaths_dict.values())
@@ -61,7 +61,7 @@ def filepaths_sep3(fromlist=True):
     return fpaths_good
 
 
-if debug and False:
+if debug:
     testpath = os.path.join(basepath, 'test')
     testfilepaths = glob(os.path.join(testpath, 'KER', '03', '*.nc'))
     #testfilepaths = glob.glob(os.path.join(testpath, 'KUM', '*.nc'))
@@ -91,11 +91,11 @@ if debug and False:
         plt.imshow(task.dbz(), vmin=-20, vmax=60)
         plt.title('corrected DBZ for ' + task.task_name)
         plt.colorbar()
-
-for site in radx.SITES:
-    filepaths_good = filepaths_sep3()
-    interpolation.batch_interpolate(filepaths_good, intrp_path,
-                                    data_site=site, save_png=True)
+if False:
+    for site in radx.SITES:
+        filepaths_good = filepaths_sep3()
+        interpolation.batch_interpolate(filepaths_good, intrp_path,
+                                        data_site=site, save_png=True)
 
 
 def testcase():

@@ -1,12 +1,9 @@
-#!/usr/bin/env python2
 # coding: utf-8
-"""
-@author: Jussi Tiira
-"""
-import matplotlib.pyplot as plt
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import netCDF4 as nc
 import copy
+import radcomp.visualization as vis
 from radcomp.qpe.radar import RADARS
 
 SITES = ['KUM', 'KER', 'VAN']
@@ -24,23 +21,6 @@ def equalize_ker_zmin(nc0, nc1):
 
 def db2lin(db):
     return 10.**(db/10.)
-
-
-def plot_rainmap(r, fig=None, ax=None, **cbkws):
-    if ax is None:
-        fig, ax = plt.subplots()
-    if fig is None:
-        fig = ax.figure
-    r_ = r.copy()
-    #r_[r < 0.05] = np.nan
-    r_ = np.ma.masked_where(r<0.05, r_)
-    #im = ax.imshow(r_, vmin=0.05, vmax=10)
-    im = ax.pcolormesh(r_, vmin=0.05, vmax=10, cmap='jet')
-    cb = fig.colorbar(im, **cbkws)
-    cb.set_label('rain rate (mm/h)')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    return fig, ax
 
 
 class RADXgrid:
@@ -122,8 +102,8 @@ class RADXgrid:
         dbz_corrected.mask = self.mask()
         return dbz_corrected
 
-    def plot_rainmap(self):
-        return plot_rainmap(self.rainrate())
+    def plot_r(self):
+        return vis.plot_r(self.rainrate())
 
     def datetime(self, var='time'):
         times = self.data.variables[var]

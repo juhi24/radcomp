@@ -4,14 +4,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from radcomp import vertical, learn
+from radcomp import vertical, learn, visualization
 
-VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0}
-VMINS_CB = dict(VMINS)
-VMINS_CB['ZH'] = -15
-VMAXS = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360}
-LABELS = {'ZH': '$Z$, dBZ', 'ZDR': '$Z_{dr}$, dB', 'KDP': '$K_{dp}$, deg/km',
-          'DP': 'deg', 'PHIDP': 'deg'}
 DISPLACEMENT_FACTOR = 0.5
 
 def plot_data(data, ax, **kws):
@@ -34,7 +28,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
     n_rows = len(fields) + n_extra_ax
     fig = plt.figure(figsize=(8,3+1.1*n_rows))
     gs = mpl.gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
-                           top=1-0.22/n_rows, bottom=0.35/n_rows, left=0.1, right=0.905)
+                               top=1-0.22/n_rows, bottom=0.35/n_rows, left=0.1,
+                               right=0.905)
     axarr = []
     for i, field in enumerate(fields):
         subplot_kws = {}
@@ -47,9 +42,10 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         if scaled:
             scalekws = {'vmin': 0, 'vmax': 1}
             label = 'scaled'
-        elif fieldup in LABELS:
-            scalekws = {'vmin': VMINS_CB[fieldup], 'vmax': VMAXS[fieldup]}
-            label = LABELS[fieldup]
+        elif fieldup in visualization.LABELS:
+            scalekws = {'vmin': visualization.VMINS_CB[fieldup],
+                        'vmax': visualization.VMAXS[fieldup]}
+            label = visualization.LABELS[fieldup]
         else:
             scalekws = {}
             label = field
@@ -84,7 +80,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
 
-def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega20', alpha=1, **kws):
+def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega20', alpha=1,
+                 **kws):
     if isinstance(classes.index, pd.DatetimeIndex):
         t = classes.index
         dt = mean_delta(t)*DISPLACEMENT_FACTOR
