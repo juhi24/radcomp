@@ -1,6 +1,7 @@
 # coding: utf-8
 import numpy as np
 import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
 
 VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
          'R': 0.05}
@@ -13,7 +14,9 @@ LABELS = {'ZH': '$Z$, dBZ', 'ZDR': '$Z_{dr}$, dB', 'KDP': '$K_{dp}$, deg/km',
 
 
 def _plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10, mask=None,
-              cblabel='rain rate (mm/h)', cmap='jet', **cbkws):
+              cblabel='rain rate (mm/h)', cmap='jet',
+              transform=ccrs.Orthographic(central_longitude=25, central_latitude=60),
+              **cbkws):
     """base function for pcolormesh plotting"""
     if ax is None:
         fig, ax = plt.subplots()
@@ -26,7 +29,7 @@ def _plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10, mas
         r_ = np.ma.masked_where(np.isnan(r), r_)
     pc_kws = dict(vmin=vmin, vmax=vmax, cmap=cmap)
     if lon is not None and lat is not None:
-        im = ax.pcolormesh(lon, lat, r_, **pc_kws)
+        im = ax.pcolormesh(lon, lat, r_, transform=transform, **pc_kws)
     else:
         im = ax.pcolormesh(r_, **pc_kws)
         ax.set_xticks([])
@@ -38,8 +41,7 @@ def _plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10, mas
 
 def _plotmeta(key):
     vmin = VMINS[key]
-    vmax = VMAXS[
-            key]
+    vmax = VMAXS[key]
     label = LABELS[key]
     return dict(vmin=vmin, vmax=vmax, label=label)
 

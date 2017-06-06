@@ -21,10 +21,10 @@ class Radar:
         x = np.abs(lon1-self.lon).argmin()
         return x, y
 
-    def draw_marker(self, ax=None, marker='D', color='black'):
+    def draw_marker(self, ax=None, marker='D', color='black', **kws):
         if ax is None:
             ax = plt.gca()
-        return ax.plot(self.lon, self.lat, marker=marker, color=color)
+        return ax.plot(self.lon, self.lat, marker=marker, color=color, **kws)
 
 KER = Radar(lat=60.3881, lon=25.1139)
 KUM = Radar(lat=60.2045, lon=24.9633)

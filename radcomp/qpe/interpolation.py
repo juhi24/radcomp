@@ -24,7 +24,7 @@ def motion(I1, I2):
     # motion detection algorithms. Gaussian filter with std. dev. 3 is applied.
     Iu = []
     for i, I in enumerate([I1, I2]):
-        Iu.append(utils.rainfall_to_ubyte(I, R_min=0.05, R_max=30.0, filter_stddev=3.0))
+        Iu.append(utils.rainfall_to_ubyte(I, R_min=0.05, R_max=15.0, filter_stddev=3.0))
     # Compute the motion field by using the Python <-> C++ API and the Proesmans 
     # algorithm.
     return extract_motion_proesmans(Iu[0], Iu[1], lam=25.0, num_iter=250, num_levels=6)
