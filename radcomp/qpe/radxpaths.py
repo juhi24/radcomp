@@ -9,7 +9,7 @@ from glob import glob
 from radcomp.qpe import radx
 
 basepath = path.join('/media', getpass.getuser(), '04fafa8f-c3ca-48ee-ae7f-046cf576b1ee')
-GRIDPATH = path.join(basepath, 'grid')
+GRIDPATH = path.join(basepath, 'grids')
 
 
 def data_is_bad(ncdata):
@@ -40,8 +40,8 @@ def fpath(site, gridpath=GRIDPATH):
 
 
 def save(gridpath=GRIDPATH):
-    filepaths_all = glob(path.join(gridpath, '???', '*', 'ncf_20160903_[12]?????.nc'))
-    filepaths_all.extend(glob(path.join(gridpath, '???', '*', 'ncf_20160904_0[0-6]????.nc')))
+    filepaths_all = glob(path.join(gridpath, '???', '*', 'ncf_20160???_??????.nc'))
+    #filepaths_all.extend(glob(path.join(gridpath, '???', '*', 'ncf_20160904_0[0-6]????.nc')))
     filepaths_all.sort()
     filepaths_good = filter_filepaths(filepaths_all) # takes a lot of time!
     for site in radx.SITES:
