@@ -69,7 +69,7 @@ def plot_reduced(data, n_clusters):
     plt.figure()
     plt.imshow(Z, interpolation='nearest',
                extent=(xx.min(), xx.max(), yy.min(), yy.max()),
-               cmap=plt.cm.Vega20,
+               cmap=plt.cm.tab20,
                aspect='auto', origin='lower')
     plt.plot(reduced_data[:, 0], reduced_data[:, 1], 'k.', markersize=2)
     # Plot the centroids as a white X

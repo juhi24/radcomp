@@ -3,7 +3,6 @@
 @author: Jussi Tiira
 """
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
 from radcomp import RESULTS_DIR
@@ -18,7 +17,7 @@ reduced = True
 
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
-n_eigens = 20
+n_eigens = 25
 n_clusters = 20
 use_temperature = True
 

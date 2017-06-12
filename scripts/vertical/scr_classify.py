@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# -*- coding: utf-8 -*-
+# coding: utf-8
 """
 @author: Jussi Tiira
 """
@@ -22,11 +22,6 @@ n_clusters = 20
 reduced = True
 save = True
 
-def prep_case(dt0, dt1, n_comp=20):
-    c = case.Case.from_dtrange(dt0, dt1)
-    c.load_classification('2014rhi_{n}comp'.format(n=n_comp))
-    return c
-
 cases = case.read_cases(case_set)
 name = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
@@ -39,3 +34,4 @@ for i, c in cases.case.iteritems():
     fig, axarr = c.plot(n_extra_ax=0)
     if save:
         fig.savefig(path.join(results_dir, c.name()+'.png'))
+

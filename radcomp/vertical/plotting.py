@@ -80,7 +80,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
 
-def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='Vega20', alpha=1,
+def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='tab20', alpha=1,
                  **kws):
     if isinstance(classes.index, pd.DatetimeIndex):
         t = classes.index
@@ -127,7 +127,7 @@ def pcolor_class(g, **kws):
 
 def hists_by_class(data, classes):
     """histograms of data grouping by class"""
-    cm = mpl.cm.get_cmap('Vega20')
+    cm = mpl.cm.get_cmap('tab20')
     xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15)
     xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5)
     incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2)

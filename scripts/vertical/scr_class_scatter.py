@@ -22,7 +22,7 @@ results_dir = ensure_dir(path.join(RESULTS_DIR, 'class_scatter', scheme))
 
 table = dict(density=insitu.TABLE_FILTERED_PKL, intensity=insitu.TABLE_PKL)
 
-cm=mpl.cm.get_cmap('Vega20')
+cm=mpl.cm.get_cmap('tab20')
 
 cases = case.read_cases('training_baecc')
 g = pd.read_pickle(table[param])
