@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib as mpl
 #import matplotlib.pyplot as plt
 import scipy.io
+import radcomp.visualization as vis
 from os import path
 from functools import partial
 from radcomp.vertical import (filtering, classification, plotting,
@@ -135,8 +136,8 @@ def scale_data(pn, reverse=False):
 def finish_cl_data_plot(axarr):
     for ax in axarr:
         param=ax.get_lines()[0].get_label().upper()
-        ax.set_ylim(plotting.VMINS[param], plotting.VMAXS[param])
-        ax.set_ylabel(plotting.LABELS[param])
+        ax.set_ylim(vis.VMINS[param], vis.VMAXS[param])
+        ax.set_ylabel(vis.LABELS[param])
     ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     ax.set_xlabel('height, km')
     plotting.rotate_tick_labels(0, ax=ax)
