@@ -9,7 +9,7 @@ from functools import partial
 from radcomp.vertical import (filtering, classification, plotting,
                               NAN_REPLACEMENT)
 from radcomp import vertical, arm, HOME, USER_DIR
-from j24 import daterange2str
+from j24 import home, daterange2str
 
 DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
 COL_START = 'start'
@@ -367,11 +367,16 @@ class Case:
     def base_minute(self):
         return self.data.minor_axis[0].round('1min').minute%15
 
-    def ground_temperature(self, save=False):
+    def ground_temperature(self, save=False, use_arm=False):
         if self.temperature is not None:
             return self.temperature
         t_end = self.t_end()+pd.Timedelta(minutes=15)
-        t = arm.var_in_timerange(self.t_start(), t_end, var='temp_mean')
+        if use_arm:
+            t = arm.var_in_timerange(self.t_start(), t_end, var='temp_mean')
+        else:
+            hdfpath = path.join(home(), 'DATA', 't_fmi_14-17.h5')
+            t = pd.read_hdf(hdfpath, 'data')['TC'][self.t_start():t_end]
+            t.name = 'temp_mean'
         tre = t.resample('15min', base=self.base_minute()).mean()
         if save:
             self.temperature = tre

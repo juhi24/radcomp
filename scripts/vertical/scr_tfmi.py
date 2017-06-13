@@ -9,6 +9,7 @@ from os import path
 from j24 import home, mldatenum2datetime
 
 fpath = path.join(home(), 'DATA', 'FMI_meteo_data_2014_2017.mat')
+hdfpath = path.join(home(), 'DATA', 't_fmi_14-17.h5')
 data = loadmat(fpath)['meteo_fmi']
 
 class TFMI:
@@ -36,4 +37,5 @@ class TFMI:
 
 
 t = TFMI(data)
-
+df = t.to_dataframe()
+df.to_hdf(hdfpath, 'data', mode='w')
