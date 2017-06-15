@@ -268,10 +268,10 @@ class Case:
             fig.canvas.mpl_connect('button_press_event', self._on_click_plot_dt_cs)
         return fig, axarr
 
-    def plot_t(self, ax):
+    def plot_t(self, ax, tmin=-20, tmax=10):
         plotting.plot_data(self.ground_temperature(), ax=ax)
         ax.set_ylabel('Temperature, $^{\circ}$C')
-        ax.set_ylim([-15, 5])
+        ax.set_ylim([tmin, tmax])
         ax.yaxis.grid(True)
 
     def train(self, use_temperature, **kws):
