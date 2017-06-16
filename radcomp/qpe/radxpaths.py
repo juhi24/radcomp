@@ -22,7 +22,8 @@ def data_is_bad(ncdata):
     is_correct_van_elev = int(round(z[0]*10)) == 7
     van_wrong_elev = ncdata.title == 'VANTAA' and not is_correct_van_elev
     weird_kum = 'kum' in ncdata.title and not ('UNKNOWN_ID_73' in lvar or 'UNKNOWN_ID_74' in lvar)
-    return no_kdp or high_elev or not_ppi or van_wrong_elev or low_elev or weird_kum
+    extra_missing = 'range_km' not in lvar
+    return no_kdp or high_elev or not_ppi or van_wrong_elev or low_elev or weird_kum or extra_missing
 
 
 def filter_filepaths(filepaths_all):
