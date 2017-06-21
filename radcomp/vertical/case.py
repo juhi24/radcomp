@@ -15,7 +15,7 @@ from j24 import home, daterange2str
 DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
 COL_START = 'start'
 COL_END = 'end'
-SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3), 
+SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 
 def case_id_fmt(t_start, t_end=None, fmt='{year}{month}{day}', hour_fmt='%H',
@@ -207,7 +207,7 @@ class Case:
                 self.cl_data = cl_data
             return cl_data
         return None
-        
+
     def scale_cl_data(self, save=True):
         """scaled version of classification data,
         time rounded to the nearest minute"""
@@ -362,11 +362,25 @@ class Case:
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr
 
+    def half_freq(self):
+        # TODO: fixme
+        return '7.5min'
+
+    def set_xlim(self, ax):
+        start = self.t_start()-self.mean_delta()/2
+        end = self.t_end()+self.mean_delta()/2
+        ax.set_xlim(left=start, right=end)
+        return ax
+
     def mean_delta(self):
-        return plotting.mean_delta(self.data.minor_axis)
+        return plotting.mean_delta(self.data.minor_axis).round('1min')
 
     def base_minute(self):
         return self.data.minor_axis[0].round('1min').minute%15
+
+    def base_middle(self):
+        dt_minutes = round(self.mean_delta().total_seconds()/60)
+        return self.base_minute()-dt_minutes/2
 
     def ground_temperature(self, save=False, use_arm=False):
         if self.temperature is not None:

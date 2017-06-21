@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from datetime import timedelta
 from os import path
 from radcomp.vertical import case, insitu, classification, plotting, RESULTS_DIR
 from j24 import ensure_dir
@@ -38,8 +39,10 @@ for name in cases.index:
     classes.index = classes.index.round('1min')
     classes.name = 'class'
     classes_list.append(classes)
+    #base = c.base_middle()
     base = c.base_minute()
     rate = insitu.time_weighted_mean(data_g[param], rule='15min', base=base)
+    #rate.index = rate.index-timedelta(seconds=round(c.mean_delta().total_seconds()/60)/2)
     rate.fillna(0, inplace=True)
     rate_list.append(rate)
     lwp_list.append(c.lwp())

@@ -10,7 +10,7 @@ from os import path
 from glob import glob
 from datetime import datetime, timedelta
 from radcomp import CACHE_TMP_DIR
-from radcomp.vertical import case, classification, RESULTS_DIR
+from radcomp.vertical import insitu, case, classification, plotting, RESULTS_DIR
 from j24 import home
 
 plt.ion()
@@ -25,8 +25,10 @@ reduced = True
 DATADIR = path.join(home(), 'DATA')
 STORE_FILE = path.join(CACHE_TMP_DIR, 'cases.hdf')
 
+
 def dateparser(dstr):
     return datetime.strptime(dstr, '%y%m%d').date()
+
 
 def time_start():
     vpdir = path.join(DATADIR, 'vprhi')
@@ -40,6 +42,7 @@ def time_start():
     date_start = date_start.loc[start:end].copy()
     return date_start
 
+
 def dates():
     date_start = time_start()
     date_end = date_start + timedelta(days=1) - timedelta(minutes=1)
@@ -51,20 +54,24 @@ def dates():
     uniqdates_t = sdates_t.apply(lambda t: t.date()).unique()
     return date.loc[uniqdates_t].dropna()
 
+
 def dates_str():
     d = dates()
     dt2str = lambda t: t.strftime('%Y-%m-%d %H:%M')
     return d.apply(lambda row: row.apply(dt2str))
+
 
 def everycase():
     date = dates_str()
     dtpath = path.join(home(), '.radcomp', 'cases', 'everything.csv')
     date.to_csv(dtpath, mode='w', index=False, header=True)
 
+
 def pluvglobs(dates, pattern):
     pluvglobpatterns = dates.apply(lambda t: t.strftime(pattern))
     globs = pluvglobpatterns.apply(glob)
     return globs.loc[globs.apply(lambda l: len(l)>1)]
+
 
 def pluvs(pluvtype='200'):
     pluvtype = str(pluvtype)
@@ -76,6 +83,7 @@ def pluvs(pluvtype='200'):
     df.name = 'pluvio{}'.format(pluvtype)
     return df
 
+
 def store(store_file=STORE_FILE):
     cases = case.read_cases(case_set)
     cases.index=list(map(dateparser, cases.index.values))
@@ -84,9 +92,31 @@ def store(store_file=STORE_FILE):
     data = pd.concat([cases, df2, df4], join='inner', axis=1)
     data.to_hdf(store_file, 'data')
 
+
 if __name__ == '__main__':
     name = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                       n_clusters=n_clusters, reduced=reduced)
     data = pd.read_hdf(STORE_FILE)
-    i=data.pluvio400.iloc[7].intensity()
-    time_weighted_mean(i)
+    row = data.iloc[14]
+    c = row.case
+    c.load_classification(name)
+    i2 = row.pluvio200.intensity()
+    i4 = row.pluvio400.intensity()
+    iw2 = insitu.time_weighted_mean(i2, base=c.base_middle(), offset=c.half_freq()).shift(periods=-1, freq=c.half_freq())
+    iw4 = insitu.time_weighted_mean(i4, base=c.base_middle(), offset=c.half_freq()).shift(periods=-1, freq=c.half_freq())
+    fig, axarr = c.plot(n_extra_ax=1)
+    axi = axarr[-2]
+    plotting.plot_data(iw2, ax=axi, label='pluvio200')
+    plotting.plot_data(iw4, ax=axi, label='pluvio400')
+    axi.yaxis.grid(True)
+    axi.legend()
+    for ax in axarr:
+        ax.xaxis.grid(True)
+        c.set_xlim(ax)
+
+
+
+
+
+
+
