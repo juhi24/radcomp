@@ -14,7 +14,7 @@ np.random.seed(0)
 n_eigens = 25
 n_clusters = 20
 reduced = True
-param = 'density'
+param = 'intensity'
 
 scheme = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                     n_clusters=n_clusters, reduced=reduced)
@@ -39,8 +39,7 @@ for name in cases.index:
     classes.name = 'class'
     classes_list.append(classes)
     base = c.base_minute()
-    rate = insitu.time_weighted_mean(data_g, rule='15min', param=param,
-                                     base=base)
+    rate = insitu.time_weighted_mean(data_g[param], rule='15min', base=base)
     rate.fillna(0, inplace=True)
     rate_list.append(rate)
     lwp_list.append(c.lwp())
