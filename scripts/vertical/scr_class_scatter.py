@@ -41,7 +41,7 @@ for name in cases.index:
     classes_list.append(classes)
     #base = c.base_middle()
     base = c.base_minute()
-    rate = insitu.time_weighted_mean(data_g[param], rule='15min', base=base)
+    rate = c.time_weighted_mean(data_g[param])
     #rate.index = rate.index-timedelta(seconds=round(c.mean_delta().total_seconds()/60)/2)
     rate.fillna(0, inplace=True)
     rate_list.append(rate)
