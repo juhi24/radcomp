@@ -17,3 +17,4 @@ p2 = pl.Pluvio(filenames=[filename1, filename2])
 
 p2.acc().plot(drawstyle='steps')
 p4.acc().plot(drawstyle='steps')
+

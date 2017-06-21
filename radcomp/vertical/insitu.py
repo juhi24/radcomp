@@ -10,9 +10,9 @@ TABLE_PKL = path.join(CACHE_DIR, 'insitu_table.pkl')
 TABLE_FILTERED_PKL = path.join(CACHE_DIR, 'insitu_table_fltrd.pkl')
 EVENTS_PKL = path.join(CACHE_DIR, 'insitu_events.pkl')
 
-def store_insitu(casesname_baecc='tiira2017_baecc', 
+def store_insitu(casesname_baecc='tiira2017_baecc',
                       casesname_1415='tiira2017_1415', cases=None, **kws):
-    e = prepare.events(casesname_baecc=casesname_baecc, 
+    e = prepare.events(casesname_baecc=casesname_baecc,
                        casesname_1415=casesname_1415)
     table_fltr = prep_table(e, cases=cases, **kws)
     table = prep_table(e, cases=cases, cond=None, **kws)
@@ -35,13 +35,20 @@ def prep_table(e, cases=None, **kws):
         table.index.set_levels(cases.index, level=0, inplace=True)
     return table
 
-def time_weighted_mean(data, rule='15min', param='intensity', offset=0, **kws):
-    resampler = data.resample(rule=rule, loffset=pd.Timedelta(offset), **kws)
-    return resampler.agg(weighted_avg, param=param)[param]
+def time_weighted_mean(data, rule='15min', offset=None, **kws):
+    if offset is None:
+        offset = rule
+    name = data.name
+    t = pd.Series(data.index, index=data.index)
+    tdelta = t.diff().dropna()
+    tdelta.name = 'tdelta'
+    dat = pd.concat([data, tdelta], axis=1, join='inner')
+    resampler = dat.resample(rule=rule, loffset=pd.Timedelta(offset), **kws)
+    return resampler.agg(weighted_avg, name=name)[name]
 
-def weighted_avg(df, param='intensity'):
-    out = df[param].dropna()
-    w = weights(df.tdelta.dropna())
+def weighted_avg(data, name):
+    out = data[name].dropna()
+    w = weights(data.tdelta.dropna())
     if w.size < 1:
         return np.nan
     return np.average(out, weights=w)

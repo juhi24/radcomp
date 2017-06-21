@@ -23,10 +23,7 @@ n_clusters = 20
 reduced = True
 
 DATADIR = path.join(home(), 'DATA')
-
-cases = case.read_cases(case_set)
-name = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
-                                  n_clusters=n_clusters, reduced=reduced)
+STORE_FILE = path.join(CACHE_TMP_DIR, 'cases.hdf')
 
 def dateparser(dstr):
     return datetime.strptime(dstr, '%y%m%d').date()
@@ -38,8 +35,9 @@ def time_start():
     date_start = dates.apply(datetime.strptime, args=['%Y%m%d'])
     date_start.index = date_start.apply(lambda t: t.date())
     date_start.name = 'start'
-    # January 2014 data is bad
-    date_start = date_start.loc[datetime(2014, 2, 1).date():].copy()
+    start = datetime(2014, 2, 1).date()
+    end = datetime(2016, 5, 1).date()
+    date_start = date_start.loc[start:end].copy()
     return date_start
 
 def dates():
@@ -47,25 +45,48 @@ def dates():
     date_end = date_start + timedelta(days=1) - timedelta(minutes=1)
     date_end.name = 'end'
     date_end.index = date_start.index
-    dt2str = lambda t: t.strftime('%Y-%m-%d %H:%M')
-    date = pd.concat([date_start.apply(dt2str), date_end.apply(dt2str)], axis=1)
+    date = pd.concat([date_start, date_end], axis=1)
     dates_t = pd.read_hdf(path.join(home(), 'DATA', 't_fmi_14-17.h5'), 'data').index
     sdates_t = pd.Series(dates_t, index=dates_t)
     uniqdates_t = sdates_t.apply(lambda t: t.date()).unique()
     return date.loc[uniqdates_t].dropna()
 
+def dates_str():
+    d = dates()
+    dt2str = lambda t: t.strftime('%Y-%m-%d %H:%M')
+    return d.apply(lambda row: row.apply(dt2str))
+
 def everycase():
-    date = dates()
+    date = dates_str()
     dtpath = path.join(home(), '.radcomp', 'cases', 'everything.csv')
     date.to_csv(dtpath, mode='w', index=False, header=True)
 
 def pluvglobs(dates, pattern):
     pluvglobpatterns = dates.apply(lambda t: t.strftime(pattern))
-    return pluvglobpatterns.apply(glob)
+    globs = pluvglobpatterns.apply(glob)
+    return globs.loc[globs.apply(lambda l: len(l)>1)]
 
-cases.index=list(map(dateparser, cases.index.values))
-d = time_start()
-p2patt = path.join(DATADIR, 'Pluvio200', 'pluvio200_0?_%Y%m%d??.txt')
-p4patt = path.join(DATADIR, 'Pluvio400', 'pluvio400_0?_%Y%m%d??.txt')
-p2globs = pluvglobs(d, p2patt)
-p4globs = pluvglobs(d, p4patt)
+def pluvs(pluvtype='200'):
+    pluvtype = str(pluvtype)
+    d = dates()['start']
+    fnamefmt = 'pluvio{}_0?_%Y%m%d??.txt'.format(pluvtype)
+    patt = path.join(DATADIR, 'Pluvio{}'.format(pluvtype), fnamefmt)
+    globs = pluvglobs(d, patt)
+    df = globs.apply(pl.Pluvio)
+    df.name = 'pluvio{}'.format(pluvtype)
+    return df
+
+def store(store_file=STORE_FILE):
+    cases = case.read_cases(case_set)
+    cases.index=list(map(dateparser, cases.index.values))
+    df2 = pluvs(pluvtype='200')
+    df4 = pluvs(pluvtype='400')
+    data = pd.concat([cases, df2, df4], join='inner', axis=1)
+    data.to_hdf(store_file, 'data')
+
+if __name__ == '__main__':
+    name = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
+                                      n_clusters=n_clusters, reduced=reduced)
+    data = pd.read_hdf(STORE_FILE)
+    i=data.pluvio400.iloc[7].intensity()
+    time_weighted_mean(i)
