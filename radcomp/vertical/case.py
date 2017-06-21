@@ -362,10 +362,6 @@ class Case:
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr
 
-    def half_freq(self):
-        # TODO: fixme
-        return '7.5min'
-
     def set_xlim(self, ax):
         start = self.t_start()-self.mean_delta()/2
         end = self.t_end()+self.mean_delta()/2

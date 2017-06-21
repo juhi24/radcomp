@@ -97,13 +97,14 @@ if __name__ == '__main__':
     name = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                       n_clusters=n_clusters, reduced=reduced)
     data = pd.read_hdf(STORE_FILE)
-    row = data.iloc[14]
+    row = data.iloc[7] # 14
     c = row.case
     c.load_classification(name)
     i2 = row.pluvio200.intensity()
     i4 = row.pluvio400.intensity()
-    iw2 = insitu.time_weighted_mean(i2, base=c.base_middle(), offset=c.half_freq()).shift(periods=-1, freq=c.half_freq())
-    iw4 = insitu.time_weighted_mean(i4, base=c.base_middle(), offset=c.half_freq()).shift(periods=-1, freq=c.half_freq())
+    half_dt=c.mean_delta()/2
+    iw2 = insitu.time_weighted_mean(i2, base=c.base_middle(), offset=half_dt).shift(freq=-half_dt)
+    iw4 = insitu.time_weighted_mean(i4, base=c.base_middle(), offset=half_dt).shift(freq=-half_dt)
     fig, axarr = c.plot(n_extra_ax=1)
     axi = axarr[-2]
     plotting.plot_data(iw2, ax=axi, label='pluvio200')
