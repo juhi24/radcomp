@@ -103,8 +103,8 @@ if __name__ == '__main__':
     i2 = row.pluvio200.intensity()
     i4 = row.pluvio400.intensity()
     half_dt=c.mean_delta()/2
-    iw2 = insitu.time_weighted_mean(i2, base=c.base_middle(), offset=half_dt).shift(freq=-half_dt)
-    iw4 = insitu.time_weighted_mean(i4, base=c.base_middle(), offset=half_dt).shift(freq=-half_dt)
+    iw2 = c.time_weighted_mean(i2).shift(freq=-half_dt)
+    iw4 = c.time_weighted_mean(i4).shift(freq=-half_dt)
     fig, axarr = c.plot(n_extra_ax=1)
     axi = axarr[-2]
     plotting.plot_data(iw2, ax=axi, label='pluvio200')

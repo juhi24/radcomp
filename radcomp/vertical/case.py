@@ -7,7 +7,7 @@ import scipy.io
 import radcomp.visualization as vis
 from os import path
 from functools import partial
-from radcomp.vertical import (filtering, classification, plotting,
+from radcomp.vertical import (filtering, classification, plotting, insitu,
                               NAN_REPLACEMENT)
 from radcomp import vertical, arm, HOME, USER_DIR
 from j24 import home, daterange2str
@@ -377,6 +377,16 @@ class Case:
     def base_middle(self):
         dt_minutes = round(self.mean_delta().total_seconds()/60)
         return self.base_minute()-dt_minutes/2
+
+    def time_weighted_mean(self, data, offset_half_delta=True):
+        dt = self.mean_delta()
+        if offset_half_delta:
+            base = self.base_middle()
+            offset = dt/2
+        else:
+            base = self.base_minute()
+            offset = dt
+        return insitu.time_weighted_mean(data, rule=dt, base=base, offset=offset)
 
     def ground_temperature(self, save=False, use_arm=False):
         if self.temperature is not None:
