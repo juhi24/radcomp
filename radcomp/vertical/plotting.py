@@ -7,6 +7,10 @@ import matplotlib as mpl
 from radcomp import vertical, learn, visualization
 
 DISPLACEMENT_FACTOR = 0.5
+LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
+              intensity='LWE, mm$\,$h$^{-1}$',
+              liq='LWP, cm',
+              temp_mean='Temperature, $^{\circ}C$')
 
 def plot_data(data, ax, **kws):
     return ax.plot(data.index, data.values, drawstyle='steps', **kws)
@@ -59,7 +63,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         dx = mean_delta(x)
         x_last = x[-1:]+dx
         x = x.append(x_last)
-        im = ax.pcolormesh(x, pn[field].index, 
+        im = ax.pcolormesh(x, pn[field].index,
                       np.ma.masked_invalid(pn[field].values), cmap=cmap,
                       label=field, **kws)
         #fig.autofmt_xdate()
@@ -97,7 +101,7 @@ def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='tab20', alpha=1,
     for t1, icolor in clss.iteritems():
         if t1<=t0:
             print('HALP')
-        ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=cm.colors[icolor], 
+        ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=cm.colors[icolor],
                    alpha=alpha, clip_on=False, **kws)
         t0 = t1
 
@@ -131,10 +135,6 @@ def hists_by_class(data, classes):
     xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15)
     xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5)
     incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2)
-    xlabel = dict(density='$\\rho$, kg$\,$m$^{-3}$',
-                  intensity='LWE, mm$\,$h$^{-1}$',
-                  liq='LWP, cm',
-                  temp_mean='Temperature, $^{\circ}C$')
     param = data.name
     axarr = data.hist(by=classes, sharex=True, sharey=True, normed=True,
                       bins=np.arange(xmin[param], xmax[param], incr[param]))
@@ -143,7 +143,7 @@ def hists_by_class(data, classes):
     fig = axflat[0].get_figure()
     frameax = fig.add_subplot(111, frameon=False)
     frameax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
-    frameax.set_xlabel(xlabel[param])
+    frameax.set_xlabel(LABELS[param])
     frameax.set_ylabel('probability density')
     for i, ax in enumerate(axflat):
         rotate_tick_labels(0, ax=ax)

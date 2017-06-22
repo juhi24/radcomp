@@ -8,22 +8,26 @@ import matplotlib.pyplot as plt
 import baecc.instruments.pluvio as pl
 from os import path
 from glob import glob
+from warnings import warn
 from datetime import datetime, timedelta
 from radcomp import CACHE_TMP_DIR
 from radcomp.vertical import insitu, case, classification, plotting, RESULTS_DIR
-from j24 import home
+from j24 import home, ensure_join
 
-plt.ion()
+plt.ioff()
 plt.close('all')
 np.random.seed(0)
 
-case_set = 'everything'
+CASE_SET = 'everything'
 n_eigens = 25
 n_clusters = 20
 reduced = True
 
+NAME = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
+                                  n_clusters=n_clusters, reduced=reduced)
 DATADIR = path.join(home(), 'DATA')
 STORE_FILE = path.join(CACHE_TMP_DIR, 'cases.hdf')
+fig_dir = ensure_join(RESULTS_DIR, 'class_r_t', NAME, CASE_SET)
 
 
 def dateparser(dstr):
@@ -85,7 +89,7 @@ def pluvs(pluvtype='200'):
 
 
 def store(store_file=STORE_FILE):
-    cases = case.read_cases(case_set)
+    cases = case.read_cases(CASE_SET)
     cases.index=list(map(dateparser, cases.index.values))
     df2 = pluvs(pluvtype='200')
     df4 = pluvs(pluvtype='400')
@@ -93,27 +97,39 @@ def store(store_file=STORE_FILE):
     data.to_hdf(store_file, 'data')
 
 
-if __name__ == '__main__':
-    name = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
-                                      n_clusters=n_clusters, reduced=reduced)
-    data = pd.read_hdf(STORE_FILE)
-    row = data.iloc[7] # 14
-    c = row.case
-    c.load_classification(name)
-    i2 = row.pluvio200.intensity()
-    i4 = row.pluvio400.intensity()
-    half_dt=c.mean_delta()/2
-    iw2 = c.time_weighted_mean(i2).shift(freq=-half_dt)
-    iw4 = c.time_weighted_mean(i4).shift(freq=-half_dt)
-    fig, axarr = c.plot(n_extra_ax=1)
+def plot_case(c, *pluvs, **kws):
+    try:
+        c.load_classification(NAME)
+    except ValueError:
+        warn('ValueError while trying classification. Skipping case.')
+        return None, None
+    half_dt = c.mean_delta()/2
+    fig, axarr = c.plot(n_extra_ax=1, **kws)
     axi = axarr[-2]
-    plotting.plot_data(iw2, ax=axi, label='pluvio200')
-    plotting.plot_data(iw4, ax=axi, label='pluvio400')
+    for pluv in pluvs:
+        i = pluv.intensity()
+        iw = c.time_weighted_mean(i).shift(freq=-half_dt)
+        plotting.plot_data(iw, ax=axi, label=pluv.name)
     axi.yaxis.grid(True)
     axi.legend()
+    axi.set_ylim(bottom=0, top=4)
+    axi.set_ylabel(plotting.LABELS['intensity'])
     for ax in axarr:
         ax.xaxis.grid(True)
         c.set_xlim(ax)
+    return fig, axarr
+
+if __name__ == '__main__':
+    data = pd.read_hdf(STORE_FILE)
+    for t, row in data.iterrows():
+        c = row.case
+        print(c.name())
+        fig, axarr = plot_case(c, row.pluvio200, row.pluvio400)
+        if fig is None:
+            continue
+        fig.savefig(path.join(fig_dir, c.name()+'.png'))
+        plt.close(fig)
+
 
 
 
