@@ -19,15 +19,21 @@ plt.ion()
 plt.close('all')
 np.random.seed(0)
 
+def nextval(df, time):
+    try:
+        return df[df.index>time][0]
+    except IndexError:
+        return np.nan
+
 if __name__ == '__main__':
     data = pd.read_hdf(STORE_FILE)
     row=data.loc[datetime(2015, 1, 7).date()]
     c = row.case
     fig, axarr = plot_case(c, row.pluvio200, row.pluvio400)
-    axi=axarr[-2]
+    axi = axarr[-2]
     axi.set_ylim(bottom=0, top=1.5)
-    p4=row.pluvio400
-    i=p4.intensity()
+    p4 = row.pluvio400
+    i = p4.intensity()
     iw = c.time_weighted_mean(i)
     ii = i.between_time('11:00', '14:00')
     iiw = iw.between_time('11:00', '14:00')
