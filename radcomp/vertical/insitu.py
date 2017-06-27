@@ -38,7 +38,7 @@ def prep_table(e, cases=None, **kws):
 def nextval(df, time):
     """Return value of df, whose index is closest higher to time."""
     try:
-        return df[df.index>time][0]
+        return df[df.index>time].iloc[:1]
     except IndexError:
         return np.nan
 
@@ -60,7 +60,7 @@ def time_weighted_mean(data, rule='15min', **kws):
     prev.name = 'previous'
     df = pd.concat([out, prev], axis=1)
     easy = df.apply(lambda row: data.loc[row.previous:row.name].size<1, axis=1)
-    out.loc[easy] = t.loc[easy].apply(lambda k: nextval(data, k))
+    out.loc[easy] = t.loc[easy].apply(lambda k: nextval(data, k)[0])
     return out
 
 def weighted_avg(data, name):

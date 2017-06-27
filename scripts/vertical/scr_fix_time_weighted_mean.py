@@ -21,9 +21,23 @@ np.random.seed(0)
 
 def nextval(df, time):
     try:
-        return df[df.index>time][0]
+        return df[df.index>time].iloc[:1]
     except IndexError:
         return np.nan
+
+
+def prevval(df, time):
+    try:
+        return ii[ii.index<time].iloc[-1:]
+    except IndexError:
+        return np.nan
+
+
+def vals_around(df, time):
+    post = nextval(df, time)
+    pre = prevval(df, time)
+    return pd.concat([pre, post])
+
 
 if __name__ == '__main__':
     data = pd.read_hdf(STORE_FILE)
@@ -37,6 +51,17 @@ if __name__ == '__main__':
     iw = c.time_weighted_mean(i)
     ii = i.between_time('11:00', '14:00')
     iiw = iw.between_time('11:00', '14:00')
+    t = pd.Series(data=iiw.index, index=iiw.index)
+    prev = t.shift(freq='15min').iloc[:-1]
+    prev.name = 'previous'
+    df = pd.concat([iiw, prev], axis=1)
+    tw = iiw.index[4]
+    to_avg = vals_around(ii, tw)
+    r = df.iloc[4]
+    t = ii.loc[r.previous:r.name].index[0]
+    tt = vals_around(iiw, t).index
+    w = abs(tt-t).values.astype(int)
+    val = np.average(to_avg, weights=w)
     plt.figure()
     iiw.plot(drawstyle='steps')
     ii.plot(drawstyle='steps')
