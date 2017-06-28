@@ -108,7 +108,7 @@ def plot_case(c, *pluvs, **kws):
     axi = axarr[-2]
     for pluv in pluvs:
         i = pluv.intensity()
-        iw = c.time_weighted_mean(i)#.shift(freq=half_dt)
+        iw = c.time_weighted_mean(i).shift(freq=half_dt)
         plotting.plot_data(iw, ax=axi, label=pluv.name)
     axi.yaxis.grid(True)
     axi.legend()
@@ -118,6 +118,7 @@ def plot_case(c, *pluvs, **kws):
         ax.xaxis.grid(True)
         c.set_xlim(ax)
     return fig, axarr
+
 
 if __name__ == '__main__':
     data = pd.read_hdf(STORE_FILE)
