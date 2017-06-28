@@ -108,7 +108,7 @@ def plot_case(c, *pluvs, **kws):
     axi = axarr[-2]
     for pluv in pluvs:
         i = pluv.intensity()
-        iw = c.time_weighted_mean(i).shift(freq=-half_dt)
+        iw = c.time_weighted_mean(i)#.shift(freq=half_dt)
         plotting.plot_data(iw, ax=axi, label=pluv.name)
     axi.yaxis.grid(True)
     axi.legend()
@@ -129,10 +129,6 @@ if __name__ == '__main__':
             continue
         fig.savefig(path.join(fig_dir, c.name()+'.png'))
         plt.close(fig)
-
-
-
-
 
 
 

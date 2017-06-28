@@ -382,11 +382,9 @@ class Case:
         dt = self.mean_delta()
         if offset_half_delta:
             base = self.base_middle()
-            offset = dt/2
         else:
             base = self.base_minute()
-            offset = dt
-        return insitu.time_weighted_mean(data, rule=dt, base=base, offset=offset)
+        return insitu.time_weighted_mean(data, rule=dt, base=base, offset=dt)
 
     def ground_temperature(self, save=False, use_arm=False):
         if self.temperature is not None:
