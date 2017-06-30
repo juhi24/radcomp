@@ -125,7 +125,7 @@ if __name__ == '__main__':
     for t, row in data.iterrows():
         c = row.case
         print(c.name())
-        fig, axarr = plot_case(c, row.pluvio200, row.pluvio400)
+        fig, axarr = plot_case(c, row.pluvio200, row.pluvio400, cmap='viridis')
         if fig is None:
             continue
         fig.savefig(path.join(fig_dir, c.name()+'.png'))
