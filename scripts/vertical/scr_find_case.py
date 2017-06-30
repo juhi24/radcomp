@@ -26,7 +26,7 @@ reduced = True
 NAME = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
 DATADIR = path.join(home(), 'DATA')
-STORE_FILE = path.join(CACHE_TMP_DIR, 'cases.hdf')
+STORE_FILE = path.join(CACHE_TMP_DIR, CASE_SET + '.hdf')
 fig_dir = ensure_join(RESULTS_DIR, 'class_r_t', NAME, CASE_SET)
 
 
@@ -53,7 +53,7 @@ def dates():
     date_end.name = 'end'
     date_end.index = date_start.index
     date = pd.concat([date_start, date_end], axis=1)
-    dates_t = pd.read_hdf(path.join(home(), 'DATA', 't_fmi_14-17.h5'), 'data').index
+    dates_t = pd.read_hdf(path.join(DATADIR, 't_fmi_14-17.h5'), 'data').index
     sdates_t = pd.Series(dates_t, index=dates_t)
     uniqdates_t = sdates_t.apply(lambda t: t.date()).unique()
     return date.loc[uniqdates_t].dropna()
@@ -114,9 +114,9 @@ def plot_case(c, *pluvs, **kws):
     axi.legend()
     axi.set_ylim(bottom=0, top=4)
     axi.set_ylabel(plotting.LABELS['intensity'])
+    c.set_xlim(axi)
     for ax in axarr:
         ax.xaxis.grid(True)
-        c.set_xlim(ax)
     return fig, axarr
 
 

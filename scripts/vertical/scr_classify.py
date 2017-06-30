@@ -14,7 +14,7 @@ plt.ioff()
 plt.close('all')
 np.random.seed(0)
 
-case_set = 'everything'
+case_set = '14-16by_hand'
 n_eigens = 25
 n_clusters = 20
 reduced = True
@@ -29,11 +29,12 @@ for i, c in cases.case.iteritems():
     print(i)
     try:
         c.load_classification(name)
+        c.load_pluvio()
     except ValueError as e:
         warn(str(e))
         continue
     #c.plot_classes()
-    fig, axarr = c.plot(n_extra_ax=0)
+    fig, axarr = c.plot(n_extra_ax=0, cmap='viridis')
     if save:
         fig.savefig(path.join(results_dir, c.name()+'.png'))
         plt.close(fig)
