@@ -162,6 +162,15 @@ def handle_ax(ax):
     return ax_out, update, axkws
 
 
+def load_pluvio(start=None, end=None, kind='400'):
+    import baecc.instruments.pluvio as pl
+    name = 'pluvio{}'.format(str(kind))
+    hdfpath = path.join(home(), 'DATA', 'pluvio14-16.h5')
+    data = pd.read_hdf(hdfpath, key=name)[start:end]
+    pluv = pl.Pluvio(data=data, name=name)
+    return pluv
+
+
 class Case:
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
                  classes=None, class_scheme=None, temperature=None,
@@ -172,6 +181,7 @@ class Case:
         self.classes = classes
         self.class_scheme = class_scheme
         self.temperature = temperature
+        self.pluvio = None
         self._cl_ax = None
         self._dt_ax = None
 
@@ -252,12 +262,20 @@ class Case:
             else:
                 params = ['ZH', 'zdr', 'kdp']
         plot_t = 'temp_mean' in self.class_scheme.params_extra
+        plot_lwe = self.pluvio is not None
         if plot_t:
             n_extra_ax += 1
+        if plot_lwe:
+            n_extra_ax += 1
+        next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, **kws)
+        if plot_lwe:
+            self.plot_lwe(ax=axarr[next_free_ax])
+            next_free_ax += 1
         if plot_t:
-            self.plot_t(ax=axarr[-1])
+            self.plot_t(ax=axarr[next_free_ax])
+            next_free_ax += 1
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 plotting.class_colors(self.classes, ax=axarr[iax])
@@ -266,13 +284,26 @@ class Case:
                 # TODO: cursor not showing
                 mpl.widgets.Cursor(ax, horizOn=False, color='red', linewidth=2)
             fig.canvas.mpl_connect('button_press_event', self._on_click_plot_dt_cs)
+        for ax in axarr:
+            ax.xaxis.grid(True)
         return fig, axarr
 
     def plot_t(self, ax, tmin=-20, tmax=10):
-        plotting.plot_data(self.ground_temperature(), ax=ax)
-        ax.set_ylabel('Temperature, $^{\circ}$C')
-        ax.set_ylim([tmin, tmax])
+        half_dt = self.mean_delta()/2
+        t = self.ground_temperature().shift(freq=half_dt)
+        plotting.plot_data(t, ax=ax)
+        ax.set_ylabel(plotting.LABELS['temp_mean'])
         ax.yaxis.grid(True)
+        ax.set_ylim([tmin, tmax])
+
+    def plot_lwe(self, ax, rmax=4):
+        half_dt = self.mean_delta()/2
+        i = self.lwe().shift(freq=half_dt)
+        plotting.plot_data(i, ax=ax, label=self.pluvio.name)
+        ax.set_ylim(bottom=0, top=rmax)
+        ax.set_ylabel(plotting.LABELS['intensity'])
+        ax.yaxis.grid(True)
+        self.set_xlim(ax)
 
     def train(self, use_temperature, **kws):
         if use_temperature:
@@ -402,6 +433,16 @@ class Case:
         if save:
             self.temperature = tre
         return tre
+
+    def load_pluvio(self, **kws):
+        self.pluvio = load_pluvio(start=self.t_start(), end=self.t_end(), **kws)
+
+    def lwe(self):
+        """liquid water equivalent precipitation rate"""
+        if self.pluvio is None:
+            self.load_pluvio()
+        i = self.pluvio.intensity()
+        return self.time_weighted_mean(i)
 
     def lwp(self):
         t_end = self.t_end()+pd.Timedelta(minutes=15)
