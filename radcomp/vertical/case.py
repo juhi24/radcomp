@@ -355,22 +355,25 @@ class Case:
         out.columns = ['fig', 'axarr']
         return out
 
-    def clus_centroids(self):
+    def clus_centroids(self, sortby='temp_mean'):
         clus_centroids, extra = self.class_scheme.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
         decoded = scale_data(clus_centroids, reverse=True)
+        if sortby=='temp_mean':
+            order = extra.sort_values(by=sortby).index
+            return decoded.loc[:,:,order], extra.loc[order]
         return decoded, extra
 
     def plot_cluster_centroids(self, **kws):
         scheme = self.class_scheme
-        pn_decoded, extra = self.clus_centroids()
+        pn, extra = self.clus_centroids()
         n_extra = extra.shape[1]
-        pn_plt = pn_decoded.copy()
-        pn_plt.minor_axis = pn_decoded.minor_axis-0.5
+        pn_plt = pn.copy()
+        pn_plt.minor_axis = pn.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+1, **kws)
         for iax in range(len(axarr)-1):
-            plotting.class_colors(pd.Series(pn_decoded.minor_axis), ax=axarr[iax])
+            plotting.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
         ax_last=axarr[-1]
         ax_extra = axarr[-2]
         if n_extra>0:
@@ -380,13 +383,13 @@ class Case:
             ax_extra.set_ylabel('Temperature, $^{\circ}$C')
             ax_extra.yaxis.grid(True)
         n_comp = scheme.km.n_clusters
-        ax_last.set_xticks(range(n_comp))
+        ax_last.set_xticks(extra.index.values)
         ax_last.set_xlim(-0.5,n_comp-0.5)
-        ax_last.set_xlabel('Class')
+        ax_last.set_xlabel('Class id')
         fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
         # plot counts
-        count = self.class_counts()
+        count = self.class_counts().loc[extra.index]
         count.plot.bar(ax=ax_last)
         ax_last.set_ylabel('Occurrence')
         ax_last.yaxis.grid(True)
@@ -437,12 +440,12 @@ class Case:
     def load_pluvio(self, **kws):
         self.pluvio = load_pluvio(start=self.t_start(), end=self.t_end(), **kws)
 
-    def lwe(self):
+    def lwe(self, **kws):
         """liquid water equivalent precipitation rate"""
         if self.pluvio is None:
             self.load_pluvio()
         i = self.pluvio.intensity()
-        return self.time_weighted_mean(i)
+        return self.time_weighted_mean(i, offset_half_delta=False)
 
     def lwp(self):
         t_end = self.t_end()+pd.Timedelta(minutes=15)

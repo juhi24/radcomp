@@ -1,9 +1,7 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
-"""
-@author: Jussi Tiira
-"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from os import path
@@ -24,8 +22,19 @@ save = True
 cases = case.read_cases(case_set)
 name = classification.scheme_name(basename='14-16_t', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
-results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))
-#c = cases.case['140303']
+results_dir = ensure_dir(path.join(RESULTS_DIR, 'z-lwe_comparison2', name, case_set))
+
+def plot_ze_lwe_comparison(c):
+    z=c.cl_data.ZH.iloc[:,1]
+    i=c.lwe(offset_half_delta=False)
+    iz=10*i**1.2
+    ioz = 10*c.pluvio.intensity()**1.2
+    fig = plt.figure()
+    z.plot(drawstyle='steps')
+    iz.plot(drawstyle='steps')
+    #ioz.plot(drawstyle='steps')
+    return fig
+
 for i, c in cases.case.iteritems():
     print(i)
     try:
@@ -34,9 +43,7 @@ for i, c in cases.case.iteritems():
     except ValueError as e:
         warn(str(e))
         continue
-    #c.plot_classes()
-    fig, axarr = c.plot(n_extra_ax=0, cmap='viridis')
-    if save:
-        fig.savefig(path.join(results_dir, c.name()+'.png'))
-        plt.close(fig)
+    fig = plot_ze_lwe_comparison(c)
+    fig.savefig(path.join(results_dir, c.name()+'.png'))
+    plt.close(fig)
 

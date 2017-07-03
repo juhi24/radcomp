@@ -21,8 +21,8 @@ n_eigens = 25
 n_clusters = 20
 use_temperature = True
 
-cases = case.read_cases('training_baecc')
-basename = 'baecc'
+cases = case.read_cases('14-16by_hand')
+basename = '14-16'
 
 if plot:
     for name, c in cases.case.iteritems():

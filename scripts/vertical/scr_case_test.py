@@ -11,7 +11,7 @@ n_eigens = 25
 n_clusters = 20
 reduced = True
 
-NAME = classification.scheme_name(basename='baecc_t', n_eigens=n_eigens,
+NAME = classification.scheme_name(basename='14-16_t', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced)
 
 if __name__ == '__main__':

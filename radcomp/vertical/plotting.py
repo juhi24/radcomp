@@ -57,9 +57,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         if x_is_date:
             t = pn[field].columns
             x = t - mean_delta(t)*DISPLACEMENT_FACTOR
-            x
         else:
-            x = pn[field].columns
+            x = pn[field].columns.sort_values()
         dx = mean_delta(x)
         x_last = x[-1:]+dx
         x = x.append(x_last)
