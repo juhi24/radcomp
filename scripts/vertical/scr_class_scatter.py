@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import timedelta
 from os import path
 from radcomp.vertical import case, insitu, classification, plotting, RESULTS_DIR
 from j24 import ensure_dir
@@ -11,8 +10,8 @@ from j24 import ensure_dir
 plt.ion()
 plt.close('all')
 np.random.seed(0)
-n_eigens = 25
-n_clusters = 20
+n_eigens = 24
+n_clusters = 24
 reduced = True
 param = 'intensity'
 

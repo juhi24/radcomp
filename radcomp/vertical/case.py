@@ -359,42 +359,65 @@ class Case:
         clus_centroids, extra = self.class_scheme.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
         decoded = scale_data(clus_centroids, reverse=True)
-        if sortby=='temp_mean':
-            order = extra.sort_values(by=sortby).index
-            return decoded.loc[:,:,order], extra.loc[order]
+        if sortby:
+            if isinstance(sortby, str):
+                order = extra.sort_values(by=sortby).index
+            elif isinstance(sortby, pd.Series):
+                order = sortby.sort_values().index
+            else:
+                raise ValueError('sortby must be series or extra column name.')
+            return decoded.loc[:, :, order], extra.loc[order]
         return decoded, extra
 
-    def plot_cluster_centroids(self, **kws):
-        scheme = self.class_scheme
+    def plot_cluster_centroids(self, drop_colorless=False, colorful_bars=True,
+                               **kws):
         pn, extra = self.clus_centroids()
         n_extra = extra.shape[1]
-        pn_plt = pn.copy()
+        if drop_colorless: # not implemented
+            selection = self.class_color_mapping().index
+        #pn = pn.loc[:, :, selection]
+        #extra = extra.loc[selection]
+        pn_plt = pn.copy() # with shifted axis, only for plotting
         pn_plt.minor_axis = pn.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+1, **kws)
-        for iax in range(len(axarr)-1):
+        if colorful_bars:
+            n_omit_coloring = 2
+        else:
+            n_omit_coloring = 1
+        for iax in range(len(axarr)-n_omit_coloring):
             self.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
-        ax_last=axarr[-1]
+        ax_last = axarr[-1]
         ax_extra = axarr[-2]
         if n_extra>0:
             extra.plot.bar(ax=ax_extra)
             ax_extra.get_legend().set_visible(False)
             ax_extra.set_ylim([-15, 6])
-            ax_extra.set_ylabel('Temperature, $^{\circ}$C')
+            ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
             ax_extra.yaxis.grid(True)
-        n_comp = scheme.km.n_clusters
+        n_comp = self.class_scheme.km.n_clusters
         ax_last.set_xticks(extra.index.values)
         ax_last.set_xlim(-0.5,n_comp-0.5)
-        ax_last.set_xlabel('Class id')
+        ax_last.set_xlabel('Class ID')
         fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
         # plot counts
         count = self.class_counts().loc[extra.index]
         count.plot.bar(ax=ax_last)
         ax_last.set_ylabel('Occurrence')
-        ax_last.yaxis.grid(True)
+        ax_last.yaxis.grid(False)
+        if colorful_bars:
+            for ax in (ax_extra, ax_last):
+                pa = ax.patches
+                pa = np.array(pa)[list(map(lambda p: isinstance(p, mpl.patches.Rectangle), pa))]
+                for i, p in enumerate(pa):
+                    p.set_color(self.class_color(extra.index[i], default=(.9, .9, .9)))
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr
+
+    def class_color(self, *args, **kws):
+        mapping = self.class_color_mapping()
+        return plotting.class_color(*args, mapping=mapping, **kws)
 
     def class_colors(self, *args, **kws):
         mapping = self.class_color_mapping()
@@ -405,7 +428,7 @@ class Case:
         zmean = pn.loc['ZH'].mean()
         selection = zmean[zmean>-9].index
         mapping = pd.Series(index=selection, data=range(selection.size))
-        return mapping.sort_index()
+        return mapping
 
     def set_xlim(self, ax):
         start = self.t_start()-self.mean_delta()/2

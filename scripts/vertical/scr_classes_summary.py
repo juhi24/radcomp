@@ -11,8 +11,8 @@ from j24 import ensure_dir
 plt.ion()
 #plt.close('all')
 np.random.seed(0)
-n_eigens = 25
-n_clusters = 20
+n_eigens = 24
+n_clusters = 24
 reduced = True
 plot_by_class = False
 scheme = classification.scheme_name(basename='14-16_t', n_eigens=n_eigens,
@@ -27,7 +27,7 @@ c.load_classification(scheme)
 
 if plot_by_class:
     df = c.pcolor_classes(cmap='viridis')
-f_cen, axarr_cen = c.plot_cluster_centroids(cmap='viridis')
+f_cen, axarr_cen = c.plot_cluster_centroids(cmap='viridis', drop_colorless=True)
 
 if save:
     if plot_by_class:

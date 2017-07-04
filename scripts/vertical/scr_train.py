@@ -17,8 +17,8 @@ reduced = True
 
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
-n_eigens = 25
-n_clusters = 20
+n_eigens = 24
+n_clusters = 24
 use_temperature = True
 
 cases = case.read_cases('14-16by_hand')

@@ -11,6 +11,7 @@ LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               intensity='LWE, mm$\,$h$^{-1}$',
               liq='LWP, cm',
               temp_mean='Temperature, $^{\circ}C$')
+DEFAULT_DISCRETE_CMAP = 'tab20'
 
 def plot_data(data, ax, **kws):
     return ax.plot(data.index, data.values, drawstyle='steps', **kws)
@@ -83,15 +84,19 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
 
-def class_color(cid, cm, mapping=None, default=(1, 1, 1)):
+def class_color(cid, cm=None, mapping=None, default=(1, 1, 1)):
+    """pick a color for cid using optional mapping"""
+    if cm is None:
+        cm = plt.get_cmap(DEFAULT_DISCRETE_CMAP)
     if mapping is not None:
         if cid in mapping.index:
             return cm.colors[mapping[cid]]
         return default
     return cm.colors[cid]
 
-def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='tab20', alpha=1,
-                 mapping=None, **kws):
+def class_colors(classes, ymin=-0.2, ymax=0, ax=None, alpha=1,
+                 mapping=None, cmap=DEFAULT_DISCRETE_CMAP, **kws):
+    """plot time series of color coding"""
     if isinstance(classes.index, pd.DatetimeIndex):
         t = classes.index
         dt = mean_delta(t)*DISPLACEMENT_FACTOR
@@ -134,7 +139,7 @@ def pcolor_class(g, **kws):
     fig, axarr = plotpn(gt, x_is_date=False, **kws)
     return axarr
 
-def hists_by_class(data, classes, cmap='tab20', **kws):
+def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     """histograms of data grouping by class"""
     cm = plt.get_cmap(cmap)
     xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15)
