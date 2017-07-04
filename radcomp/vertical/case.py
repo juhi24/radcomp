@@ -369,14 +369,9 @@ class Case:
             return decoded.loc[:, :, order], extra.loc[order]
         return decoded, extra
 
-    def plot_cluster_centroids(self, drop_colorless=False, colorful_bars=True,
-                               **kws):
+    def plot_cluster_centroids(self, colorful_bars=True, **kws):
         pn, extra = self.clus_centroids()
         n_extra = extra.shape[1]
-        if drop_colorless: # not implemented
-            selection = self.class_color_mapping().index
-        #pn = pn.loc[:, :, selection]
-        #extra = extra.loc[selection]
         pn_plt = pn.copy() # with shifted axis, only for plotting
         pn_plt.minor_axis = pn.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
