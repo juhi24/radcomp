@@ -83,8 +83,15 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
 
+def class_color(cid, cm, mapping=None, default=(1, 1, 1)):
+    if mapping is not None:
+        if cid in mapping.index:
+            return cm.colors[mapping[cid]]
+        return default
+    return cm.colors[cid]
+
 def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='tab20', alpha=1,
-                 **kws):
+                 mapping=None, **kws):
     if isinstance(classes.index, pd.DatetimeIndex):
         t = classes.index
         dt = mean_delta(t)*DISPLACEMENT_FACTOR
@@ -97,10 +104,9 @@ def class_colors(classes, ymin=-0.2, ymax=0, ax=None, cmap='tab20', alpha=1,
         ax = plt.gca()
     cm = plt.get_cmap(cmap)
     t0 = clss.index[0]-2*dt
-    for t1, icolor in clss.iteritems():
-        if t1<=t0:
-            print('HALP')
-        ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=cm.colors[icolor],
+    for t1, cid in clss.iteritems():
+        color = class_color(cid, cm, mapping=mapping)
+        ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=color,
                    alpha=alpha, clip_on=False, **kws)
         t0 = t1
 
@@ -128,9 +134,9 @@ def pcolor_class(g, **kws):
     fig, axarr = plotpn(gt, x_is_date=False, **kws)
     return axarr
 
-def hists_by_class(data, classes):
+def hists_by_class(data, classes, cmap='tab20', **kws):
     """histograms of data grouping by class"""
-    cm = mpl.cm.get_cmap('tab20')
+    cm = plt.get_cmap(cmap)
     xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15)
     xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5)
     incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2)
@@ -152,6 +158,6 @@ def hists_by_class(data, classes):
             continue
         ax.set_title('class {}'.format(iclass))
         for p in ax.patches:
-            p.set_color(cm.colors[iclass])
+            p.set_color(class_color(iclass, cm, **kws))
     #plt.tight_layout()
     return fig

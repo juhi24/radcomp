@@ -1,7 +1,6 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from datetime import timedelta
 from os import path
@@ -22,8 +21,6 @@ scheme = classification.scheme_name(basename='14-16_t', n_eigens=n_eigens,
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'class_scatter', scheme))
 
 table = dict(density=insitu.TABLE_FILTERED_PKL, intensity=insitu.TABLE_PKL)
-
-cm=mpl.cm.get_cmap('tab20')
 
 cases = case.read_cases('14-16by_hand')
 #g = pd.read_pickle(table[param])
@@ -49,9 +46,13 @@ rate_all = pd.concat(rate_list)
 rate_all[rate_all==np.inf] = 0
 #lwp_all = pd.concat(lwp_list)
 t_all = pd.concat(t_list)
-fig_rate = plotting.hists_by_class(rate_all, classes_all)
+mapping = c.class_color_mapping()
+default_color = (0, 0, 0)
+fig_rate = plotting.hists_by_class(rate_all, classes_all, mapping=mapping,
+                                   default=default_color)
 #fig_lwp = plotting.hists_by_class(lwp_all, classes_all)
-fig_t = plotting.hists_by_class(t_all, classes_all)
+fig_t = plotting.hists_by_class(t_all, classes_all, mapping=mapping,
+                                default=default_color)
 fig_rate.savefig(path.join(results_dir, rate_all.name + '.png'))
 #fig_lwp.savefig(path.join(results_dir, lwp_all.name + '.png'))
 fig_t.savefig(path.join(results_dir, t_all.name + '.png'))

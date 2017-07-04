@@ -278,7 +278,7 @@ class Case:
             next_free_ax += 1
         if self.classes is not None:
             for iax in range(len(axarr)-1):
-                plotting.class_colors(self.classes, ax=axarr[iax])
+                self.class_colors(self.classes, ax=axarr[iax])
         if interactive:
             for ax in axarr:
                 # TODO: cursor not showing
@@ -373,7 +373,7 @@ class Case:
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+1, **kws)
         for iax in range(len(axarr)-1):
-            plotting.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
+            self.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
         ax_last=axarr[-1]
         ax_extra = axarr[-2]
         if n_extra>0:
@@ -395,6 +395,17 @@ class Case:
         ax_last.yaxis.grid(True)
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr
+
+    def class_colors(self, *args, **kws):
+        mapping = self.class_color_mapping()
+        return plotting.class_colors(*args, mapping=mapping, **kws)
+
+    def class_color_mapping(self):
+        pn = self.clus_centroids()[0]
+        zmean = pn.loc['ZH'].mean()
+        selection = zmean[zmean>-9].index
+        mapping = pd.Series(index=selection, data=range(selection.size))
+        return mapping.sort_index()
 
     def set_xlim(self, ax):
         start = self.t_start()-self.mean_delta()/2
