@@ -369,7 +369,7 @@ class Case:
             return decoded.loc[:, :, order], extra.loc[order]
         return decoded, extra
 
-    def plot_cluster_centroids(self, colorful_bars=True, **kws):
+    def plot_cluster_centroids(self, colorful_bars=False, **kws):
         pn, extra = self.clus_centroids()
         n_extra = extra.shape[1]
         pn_plt = pn.copy() # with shifted axis, only for plotting
@@ -400,13 +400,17 @@ class Case:
         count = self.class_counts().loc[extra.index]
         count.plot.bar(ax=ax_last)
         ax_last.set_ylabel('Occurrence')
-        ax_last.yaxis.grid(False)
+        ax_last.yaxis.grid(True)
         if colorful_bars:
+            cmkw = {}
+            if colorful_bars=='blue':
+                blue = (0.29803921568627451, 0.44705882352941179, 0.69019607843137254, 1.0)
+                cmkw['cm'] = mpl.colors.ListedColormap([blue]*50)
             for ax in (ax_extra, ax_last):
                 pa = ax.patches
                 pa = np.array(pa)[list(map(lambda p: isinstance(p, mpl.patches.Rectangle), pa))]
                 for i, p in enumerate(pa):
-                    p.set_color(self.class_color(extra.index[i], default=(.9, .9, .9)))
+                    p.set_color(self.class_color(extra.index[i], default=(1, 1, 1, 0), **cmkw))
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr
 

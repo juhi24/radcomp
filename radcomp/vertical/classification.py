@@ -15,11 +15,15 @@ META_SUFFIX = '_metadata'
 MODEL_DIR = ensure_dir(path.join(USER_DIR, 'class_schemes'))
 
 def scheme_name(basename='baecc+1415', n_eigens=30, n_clusters=20,
-                reduced=True):
+                reduced=True, use_temperature=False, t_weight_factor=1):
     if reduced:
-        qualifier = '_reduced'
+        qualifier = '_pca'
     else:
         qualifier = ''
+    if use_temperature:
+        basename += '_t'
+        if t_weight_factor != 1:
+            basename += str(t_weight_factor).replace('.', '')
     schemefmt = '{base}_{neig}eig{nclus}clus{qualifier}'
     return schemefmt.format(base=basename, neig=n_eigens, nclus=n_clusters,
                             qualifier=qualifier)
@@ -55,7 +59,7 @@ def plot_reduced(data, n_clusters):
     # http://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_digits.html
     reduced_data = decomposition.PCA(n_components=2).fit_transform(data)
     kmeans = KMeans(init='k-means++', n_clusters=n_clusters, n_init=10)
-    kmeans.fit(reduced_data) 
+    kmeans.fit(reduced_data)
     # Step size of the mesh. Decrease to increase the quality of the VQ.
     h = .02     # point in the mesh [x_min, x_max]x[y_min, y_max].
     # Plot the decision boundary. For that, we will assign a color to each
@@ -87,9 +91,9 @@ def plot_reduced(data, n_clusters):
 
 class VPC:
     """vertical profile classification scheme"""
-    
+
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
-                 reduced=False, n_eigens=None):
+                 reduced=False, n_eigens=None, t_weight_factor=1):
         self.pca = pca
         self.km = km # k means
         self.hlimits = hlimits
@@ -98,6 +102,7 @@ class VPC:
         self.reduced = reduced
         self.kdpmax = None
         self.data = None # training or classification data
+        self.extra_weight_factor = t_weight_factor
         self._n_eigens = n_eigens
 
     @classmethod
@@ -138,7 +143,7 @@ class VPC:
             extra = []
         else:
             components = centroids[:, :-n_extra]
-            extra = centroids[:, -n_extra:]
+            extra = centroids[:, -n_extra:]/self.extra_weight_factor
         if self.reduced:
             centroids = self.pca.inverse_transform(components)
         return pd.DataFrame(centroids.T), pd.DataFrame(extra, columns=self.params_extra)
@@ -160,7 +165,7 @@ class VPC:
     def prepare_data(self, data_scaled, extra_df=None, n_components=0, save=True):
         metadata = dict(fields=data_scaled.items.values,
                         hlimits=(data_scaled.minor_axis.min(),
-                                 data_scaled.minor_axis.max()))   
+                                 data_scaled.minor_axis.max()))
         data_df = learn.pn2df(data_scaled)
         if self.pca is None:
             self.pca = pca_fit(data_df, n_components=n_components)
@@ -170,7 +175,7 @@ class VPC:
             data = data_df
         data.index = data.index.round('1min')
         if extra_df is not None:
-            data = pd.concat([data, extra_df], axis=1)
+            data = pd.concat([data, extra_df*self.extra_weight_factor], axis=1)
         if save:
             self.data = data
             self.params = metadata['fields']
