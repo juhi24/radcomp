@@ -12,7 +12,7 @@ LABELS = {'ZH': '$Z$, dBZ', 'ZDR': '$Z_{dr}$, dB', 'KDP': '$K_{dp}$, deg/km',
           'DP': 'deg', 'PHIDP': 'deg', 'R': 'rainrate, mm$\,$h$^{-1}$'}
 
 
-def _plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,
+def plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,
                mask=None, cblabel='rain rate (mm/h)', cmap='jet',
                transform=None, **cbkws):
     """base function for pcolormesh plotting"""
@@ -28,6 +28,8 @@ def _plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,
     pc_kws = dict(vmin=vmin, vmax=vmax, cmap=cmap)
     if lon is not None and lat is not None and transform is not None:
         im = ax.pcolormesh(lon, lat, r_, transform=transform, **pc_kws)
+        ax.set_ymargin(0)
+        ax.set_xmargin(0)
     else:
         im = ax.pcolormesh(r_, **pc_kws)
         ax.set_xticks([])
@@ -47,14 +49,14 @@ def _plotmeta(key):
 def plot_r(r, **kws):
     meta = _plotmeta('R')
     mask = np.bitwise_or(np.isnan(r), r<0.05)
-    return _plot_base(r, vmin=meta['vmin'], vmax=meta['vmax'], mask=mask,
+    return plot_base(r, vmin=meta['vmin'], vmax=meta['vmax'], mask=mask,
                      cblabel=meta['label'], cmap='jet', **kws)
 
 
 def plot_kdp(kdp, **kws):
     meta = _plotmeta('KDP')
     mask = np.bitwise_or(kdp==128, np.isnan(kdp))
-    return _plot_base(kdp, vmin=0.1, vmax=0.5,
+    return plot_base(kdp, vmin=0.1, vmax=0.5,
                      cblabel=meta['label'], mask=mask,
                      cmap='viridis', **kws)
 
@@ -62,5 +64,5 @@ def plot_kdp(kdp, **kws):
 def plot_dbz(dbz, **kws):
     meta = _plotmeta('ZH')
     mask = np.isnan(dbz)
-    return _plot_base(dbz, vmin=meta['vmin'], vmax=40, mask=mask,
+    return plot_base(dbz, vmin=meta['vmin'], vmax=40, mask=mask,
                      cblabel=meta['label'], cmap='gist_ncar', **kws)

@@ -18,11 +18,12 @@ cases = case.read_cases('14-16by_hand')
 basename = '14-16'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
-n_eigens = 24
-n_clusters = 24
+n_eigens = 20
+n_clusters = 20
 reduced = True
 use_temperature = True
-t_weight_factor = 0.3
+t_weight_factor = 0.8
+radar_weight_factors = dict(zdr=0.5)
 
 if plot:
     for name, c in cases.case.iteritems():
@@ -31,19 +32,19 @@ if plot:
         fig.savefig(savepath)
 
 scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
-                            reduced=reduced, t_weight_factor=t_weight_factor)
+                            reduced=reduced, t_weight_factor=t_weight_factor,
+                            radar_weight_factors=radar_weight_factors,
+                            basename=basename)
 c = case.Case.by_combining(cases, class_scheme=scheme)
 trainkws = {}
 if reduced:
     trainkws['n_clusters'] = n_clusters
     trainkws['use_temperature'] = use_temperature
 c.train(**trainkws)
-name = classification.scheme_name(basename=basename, n_eigens=n_eigens,
-                                  n_clusters=n_clusters, reduced=reduced,
-                                  use_temperature=use_temperature,
-                                  t_weight_factor=t_weight_factor)
-scheme.save(name)
+scheme.save(use_temperature=use_temperature)
 # Load classification and plot centroids
+name = c.class_scheme.name(use_temperature=use_temperature)
+print(name)
 c.load_classification(name)
 c.plot_cluster_centroids(cmap='viridis')
 

@@ -14,16 +14,26 @@ from j24 import ensure_dir, limitslist
 META_SUFFIX = '_metadata'
 MODEL_DIR = ensure_dir(path.join(USER_DIR, 'class_schemes'))
 
+def weight_factor_str(param, value):
+    out = '_' + param
+    if value != 1:
+        out += str(value).replace('.', '')
+    return out
+
 def scheme_name(basename='baecc+1415', n_eigens=30, n_clusters=20,
-                reduced=True, use_temperature=False, t_weight_factor=1):
+                reduced=True, use_temperature=False, t_weight_factor=1,
+                radar_weight_factors=None):
     if reduced:
         qualifier = '_pca'
     else:
         qualifier = ''
     if use_temperature:
-        basename += '_t'
-        if t_weight_factor != 1:
-            basename += str(t_weight_factor).replace('.', '')
+        basename += weight_factor_str('t', t_weight_factor)
+    if radar_weight_factors:
+        for field, factor in radar_weight_factors.items():
+            if factor==1:
+                continue
+            basename += weight_factor_str(field, factor)
     schemefmt = '{base}_{neig}eig{nclus}clus{qualifier}'
     return schemefmt.format(base=basename, neig=n_eigens, nclus=n_clusters,
                             qualifier=qualifier)
@@ -37,7 +47,7 @@ def train(data_df, pca, quiet=False, reduced=False, n_clusters=20):
     if not quiet:
         learn.pca_stats(pca)
     if reduced:
-        km = KMeans(init='k-means++', n_clusters=n_clusters, n_init=10)
+        km = KMeans(init='k-means++', n_clusters=n_clusters, n_init=40, n_jobs=-1)
     else:
         km = KMeans(init=pca.components_, n_clusters=pca.n_components, n_init=1)
     km.fit(data_df)
@@ -93,7 +103,8 @@ class VPC:
     """vertical profile classification scheme"""
 
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
-                 reduced=False, n_eigens=None, t_weight_factor=1):
+                 reduced=False, n_eigens=None, t_weight_factor=1,
+                 radar_weight_factors=None, basename=None):
         self.pca = pca
         self.km = km # k means
         self.hlimits = hlimits
@@ -103,6 +114,8 @@ class VPC:
         self.kdpmax = None
         self.data = None # training or classification data
         self.extra_weight_factor = t_weight_factor
+        self.radar_weight_factors = radar_weight_factors
+        self.basename = basename
         self._n_eigens = n_eigens
 
     @classmethod
@@ -116,8 +129,18 @@ class VPC:
             return obj
         raise Exception('Not a {} object.'.format(cls))
 
-    def save(self, name):
-        with open(model_path(name), 'wb') as f:
+    def name(self, use_temperature=False):
+        if self.basename is None:
+            raise TypeError('basename is not set')
+        return scheme_name(basename=self.basename, n_eigens=self._n_eigens,
+                           n_clusters=self.km.n_clusters,
+                           reduced=self.reduced,
+                           use_temperature=use_temperature,
+                           t_weight_factor=self.extra_weight_factor,
+                           radar_weight_factors=self.radar_weight_factors)
+
+    def save(self, **kws):
+        with open(model_path(self.name(**kws)), 'wb') as f:
             pickle.dump(self, f)
 
     def train(self, data=None, n_eigens=None, extra_df=None, **kws):
@@ -160,12 +183,20 @@ class VPC:
             df.index = pd.RangeIndex(stop=df.index.size)
             dfs[param] = df
         pn = pd.Panel(dfs)
+        rw = self.radar_weight_factors
+        if rw is not None:
+            for field, weight_factor in rw.items():
+                pn[field] = pn[field]/weight_factor
         return pn, extra
 
     def prepare_data(self, data_scaled, extra_df=None, n_components=0, save=True):
         metadata = dict(fields=data_scaled.items.values,
                         hlimits=(data_scaled.minor_axis.min(),
                                  data_scaled.minor_axis.max()))
+        rw = self.radar_weight_factors
+        if rw is not None:
+            for field, weight_factor in rw.items():
+                data_scaled[field] = data_scaled[field]*weight_factor
         data_df = learn.pn2df(data_scaled)
         if self.pca is None:
             self.pca = pca_fit(data_df, n_components=n_components)

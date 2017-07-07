@@ -16,18 +16,21 @@ plt.close('all')
 np.random.seed(0)
 
 case_set = '14-16by_hand'
-n_eigens = 25
+n_eigens = 20
 n_clusters = 20
 reduced = True
 use_temperature = True
-t_weight_factor = 0.3
+t_weight_factor = 0.8
+radar_weight_factors = dict(zdr=0.5)
+
 save = True
 
 cases = case.read_cases(case_set)
 name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced,
                                   use_temperature=use_temperature,
-                                  t_weight_factor=t_weight_factor)
+                                  t_weight_factor=t_weight_factor,
+                                  radar_weight_factors=radar_weight_factors)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))
 #c = cases.case['140303']
 for i, c in cases.case.iteritems():
