@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 #import matplotlib.pyplot as plt
-import scipy.io
 import radcomp.visualization as vis
+from scipy.io import loadmat
 from os import path
 from functools import partial
 from radcomp.vertical import (filtering, classification, plotting, insitu,
@@ -46,7 +46,7 @@ def dt2path(dt, datadir):
 
 def vprhimat2pn(datapath):
     """Read vertical profile mat files to Panel."""
-    data = scipy.io.loadmat(datapath)['VP_RHI']
+    data = loadmat(datapath)['VP_RHI']
     fields = list(data.dtype.fields)
     fields.remove('ObsTime')
     fields.remove('height')
