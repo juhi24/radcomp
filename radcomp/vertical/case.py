@@ -251,7 +251,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             **kws):
+             plot_fr=True, **kws):
         if raw:
             data = self.data
         else:
@@ -263,15 +263,17 @@ class Case:
                 params = ['ZH', 'zdr', 'kdp']
         plot_t = 'temp_mean' in self.class_scheme.params_extra
         plot_lwe = self.pluvio is not None
-        if plot_t:
-            n_extra_ax += 1
-        if plot_lwe:
-            n_extra_ax += 1
+        for plot_enabled in [plot_t, plot_lwe, plot_fr]:
+            if plot_enabled:
+                n_extra_ax += 1
         next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, **kws)
         if plot_lwe:
             self.plot_lwe(ax=axarr[next_free_ax])
+            next_free_ax += 1
+        if plot_fr:
+            self.plot_fr(ax=axarr[next_free_ax])
             next_free_ax += 1
         if plot_t:
             self.plot_t(ax=axarr[next_free_ax])
@@ -302,6 +304,15 @@ class Case:
         plotting.plot_data(i, ax=ax, label=self.pluvio.name)
         ax.set_ylim(bottom=0, top=rmax)
         ax.set_ylabel(plotting.LABELS['intensity'])
+        ax.yaxis.grid(True)
+        self.set_xlim(ax)
+
+    def plot_fr(self, ax, frmin=-0.1, frmax=1):
+        half_dt = self.mean_delta()/2
+        fr = self.fr().shift(freq=half_dt)
+        plotting.plot_data(fr, ax=ax, label='FR')
+        ax.set_ylim(bottom=frmin, top=frmax)
+        ax.set_ylabel(plotting.LABELS[fr.name])
         ax.yaxis.grid(True)
         self.set_xlim(ax)
 
@@ -473,12 +484,19 @@ class Case:
     def load_pluvio(self, **kws):
         self.pluvio = load_pluvio(start=self.t_start(), end=self.t_end(), **kws)
 
-    def lwe(self, **kws):
+    def lwe(self):
         """liquid water equivalent precipitation rate"""
         if self.pluvio is None:
             self.load_pluvio()
         i = self.pluvio.intensity()
         return self.time_weighted_mean(i, offset_half_delta=False)
+
+    def fr(self):
+        """rime mass fraction"""
+        t_end = self.t_end()+pd.Timedelta(minutes=15)
+        hdfpath = path.join(home(), 'DATA', 'FR_haoran.h5')
+        fr = pd.read_hdf(hdfpath, 'data')[self.t_start():t_end]
+        return self.time_weighted_mean(fr, offset_half_delta=False)
 
     def lwp(self):
         t_end = self.t_end()+pd.Timedelta(minutes=15)

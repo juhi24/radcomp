@@ -10,6 +10,7 @@ DISPLACEMENT_FACTOR = 0.5
 LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               intensity='LWE, mm$\,$h$^{-1}$',
               liq='LWP, cm',
+              FR='rime mass fraction',
               temp_mean='Temperature, $^{\circ}C$')
 DEFAULT_DISCRETE_CMAP = 'tab20'
 
@@ -142,9 +143,9 @@ def pcolor_class(g, **kws):
 def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     """histograms of data grouping by class"""
     cm = plt.get_cmap(cmap)
-    xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15)
-    xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5)
-    incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2)
+    xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15, FR=-0.1)
+    xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5, FR=1)
+    incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2, FR=0.1)
     param = data.name
     axarr = data.hist(by=classes, sharex=True, sharey=True, normed=True,
                       bins=np.arange(xmin[param], xmax[param], incr[param]))
@@ -152,7 +153,8 @@ def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     axflat[0].set_xlim(xmin[param], xmax[param])
     fig = axflat[0].get_figure()
     frameax = fig.add_subplot(111, frameon=False)
-    frameax.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+    frameax.tick_params(labelcolor='none', top='off', bottom='off', left='off',
+                        right='off')
     frameax.set_xlabel(LABELS[param])
     frameax.set_ylabel('probability density')
     for i, ax in enumerate(axflat):
