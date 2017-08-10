@@ -15,7 +15,7 @@ n_clusters = 25
 reduced = True
 use_temperature = True
 t_weight_factor = 0.8
-radar_weight_factors = dict(zdr=0.1)
+radar_weight_factors = dict(zdr=0.5)
 
 param = 'intensity'
 
@@ -66,3 +66,4 @@ fig_rate.savefig(path.join(results_dir, rate_all.name + '.png'))
 fig_fr.savefig(path.join(results_dir, fr_all.name + '.png'))
 #fig_lwp.savefig(path.join(results_dir, lwp_all.name + '.png'))
 fig_t.savefig(path.join(results_dir, t_all.name + '.png'))
+

@@ -16,8 +16,8 @@ plt.close('all')
 np.random.seed(0)
 
 case_set = '14-16by_hand'
-n_eigens = 20
-n_clusters = 20
+n_eigens = 25
+n_clusters = 25
 reduced = True
 use_temperature = True
 t_weight_factor = 0.8
