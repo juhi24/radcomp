@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import absolute_import, division, print_function, unicode_literals
+__metaclass__ = type
 #import pandas as pd
 import numpy as np
 import pandas as pd
@@ -143,7 +145,7 @@ def pcolor_class(g, **kws):
 def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     """histograms of data grouping by class"""
     cm = plt.get_cmap(cmap)
-    xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15, FR=-0.1)
+    xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15, FR=0)
     xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5, FR=1)
     incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2, FR=0.1)
     param = data.name
@@ -163,7 +165,10 @@ def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
             iclass = int(float(ax.get_title()))
         except ValueError:
             continue
-        ax.set_title('class {}'.format(iclass))
+        titletext = '{}'.format(iclass)
+        ax.set_title('')
+        ax.text(0.88, 0.82, titletext, horizontalalignment='center',
+                verticalalignment='center', transform=ax.transAxes)
         for p in ax.patches:
             p.set_color(class_color(iclass, cm, **kws))
     #plt.tight_layout()
