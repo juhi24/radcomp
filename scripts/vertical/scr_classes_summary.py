@@ -16,7 +16,7 @@ plot_by_class = False
 plt.ion()
 #plt.close('all')
 np.random.seed(0)
-cmap = 'viridis'
+cmap = 'gist_ncar'
 colorful_bars = 'blue'
 
 n_eigens = 25
@@ -76,10 +76,14 @@ fr_med = fr_med.reindex(index=range(n_classes))
 
 if plot_by_class:
     df = c.pcolor_classes(cmap=cmap)
-f_cen, axarr_cen = c.plot_cluster_centroids(cmap=cmap, sortby='temp_mean',
+f_cen, axarr_cen, order = c.plot_cluster_centroids(cmap=cmap, sortby='temp_mean',
                                             colorful_bars=colorful_bars)
 c.plot_cluster_centroids(cmap=cmap, sortby=toph, colorful_bars=colorful_bars)
-c.plot_cluster_centroids(cmap=cmap, sortby=fr_med, colorful_bars=colorful_bars)
+f, axfr, order = c.plot_cluster_centroids(cmap=cmap, sortby=fr_med,
+                                        colorful_bars=colorful_bars,
+                                        n_extra_ax=1)
+ax=axfr[3]
+fr_med.reindex(index=order).plot.bar(ax=ax)
 
 if save:
     if plot_by_class:

@@ -42,7 +42,7 @@ for i, c in cases.case.iteritems():
         warn(str(e))
         continue
     #c.plot_classes()
-    fig, axarr = c.plot(n_extra_ax=0, cmap='viridis')
+    fig, axarr = c.plot(n_extra_ax=0, cmap='gist_ncar')
     if save:
         fig.savefig(path.join(results_dir, c.name()+'.png'))
         plt.close(fig)

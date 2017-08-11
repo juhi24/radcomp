@@ -382,13 +382,14 @@ class Case:
         return decoded, extra
 
     def plot_cluster_centroids(self, colorful_bars=False, order=None,
-                               sortby='temp_mean', **kws):
+                               sortby='temp_mean', n_extra_ax=0, **kws):
         pn, extra = self.clus_centroids(order=order, sortby=sortby)
+        order_out = pn.minor_axis
         n_extra = extra.shape[1]
         pn_plt = pn.copy() # with shifted axis, only for plotting
         pn_plt.minor_axis = pn.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
-                                     n_extra_ax=n_extra+1, **kws)
+                                     n_extra_ax=n_extra+n_extra_ax+1, **kws)
         if colorful_bars==True: # Might be str, so check for True.
             n_omit_coloring = 2
         else:
@@ -425,7 +426,7 @@ class Case:
                 for i, p in enumerate(pa):
                     p.set_color(self.class_color(extra.index[i], default=(1, 1, 1, 0), **cmkw))
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
-        return fig, axarr
+        return fig, axarr, order_out
 
     def class_color(self, *args, **kws):
         mapping = self.class_color_mapping()
