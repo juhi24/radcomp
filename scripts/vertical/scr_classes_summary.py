@@ -16,6 +16,8 @@ plot_by_class = False
 plt.ion()
 #plt.close('all')
 np.random.seed(0)
+cmap = 'viridis'
+colorful_bars = 'blue'
 
 n_eigens = 25
 n_clusters = 25
@@ -23,6 +25,30 @@ reduced = True
 use_temperature = True
 t_weight_factor = 0.8
 radar_weight_factors = dict(zdr=0.5)
+
+def fr_comb(cases):
+    # TODO: duplicate in scr_class_scatter
+    fr_list = []
+    for cname in cases.index:
+        #data_g = g.loc[name]
+        fr_list.append(cases.case[cname].fr())
+    return pd.concat(fr_list)
+
+def classes_comb(cases):
+    classes_list = []
+    for cname in cases.index:
+        c = cases.case[cname]
+        c.load_classification(name)
+        classes = c.classes
+        classes.index = classes.index.round('1min')
+        classes.name = 'class'
+        classes_list.append(classes)
+    return pd.concat(classes_list)
+
+def fr_grouped(cases):
+    fr = fr_comb(cases)
+    classes = classes_comb(cases)
+    return fr.groupby(by=classes)
 
 def consec_occ_group(classes):
     consec_count_g = classes.groupby((classes != classes.shift()).cumsum())
@@ -44,10 +70,16 @@ c.load_classification(name)
 print(consec_occ_group(c.classes).mean())
 z = c.clus_centroids()[0].loc['ZH']
 toph = cloud_top_h(z)
+fr_med = fr_grouped(cases).median()
+n_classes = c.classes.unique().size
+fr_med = fr_med.reindex(index=range(n_classes))
 
 if plot_by_class:
-    df = c.pcolor_classes(cmap='viridis')
-f_cen, axarr_cen = c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue')
+    df = c.pcolor_classes(cmap=cmap)
+f_cen, axarr_cen = c.plot_cluster_centroids(cmap=cmap, sortby='temp_mean',
+                                            colorful_bars=colorful_bars)
+c.plot_cluster_centroids(cmap=cmap, sortby=toph, colorful_bars=colorful_bars)
+c.plot_cluster_centroids(cmap=cmap, sortby=fr_med, colorful_bars=colorful_bars)
 
 if save:
     if plot_by_class:
