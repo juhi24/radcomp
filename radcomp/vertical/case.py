@@ -366,28 +366,30 @@ class Case:
         out.columns = ['fig', 'axarr']
         return out
 
-    def clus_centroids(self, sortby='temp_mean'):
+    def clus_centroids(self, order=None, sortby=None):
         clus_centroids, extra = self.class_scheme.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
         decoded = scale_data(clus_centroids, reverse=True)
-        if sortby:
+        if not sortby is None and not order:
             if isinstance(sortby, str):
                 order = extra.sort_values(by=sortby).index
             elif isinstance(sortby, pd.Series):
                 order = sortby.sort_values().index
             else:
                 raise ValueError('sortby must be series or extra column name.')
+        if order is not None:
             return decoded.loc[:, :, order], extra.loc[order]
         return decoded, extra
 
-    def plot_cluster_centroids(self, colorful_bars=False, **kws):
-        pn, extra = self.clus_centroids()
+    def plot_cluster_centroids(self, colorful_bars=False, order=None,
+                               sortby='temp_mean', **kws):
+        pn, extra = self.clus_centroids(order=order, sortby=sortby)
         n_extra = extra.shape[1]
         pn_plt = pn.copy() # with shifted axis, only for plotting
         pn_plt.minor_axis = pn.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+1, **kws)
-        if colorful_bars:
+        if colorful_bars==True: # Might be str, so check for True.
             n_omit_coloring = 2
         else:
             n_omit_coloring = 1
