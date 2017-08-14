@@ -92,6 +92,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')
         axarr[0].set_title(str(pn[field].columns[0].date()))
+    # Hide xticks for all but last.
     for ax in axarr[:-1]:
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
@@ -155,7 +156,7 @@ def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     """histograms of data grouping by class"""
     cm = plt.get_cmap(cmap)
     xmin = dict(density=0, intensity=0, liq=0, temp_mean=-15, FR=0)
-    xmax = dict(density=500, intensity=2, liq=0.08, temp_mean=5, FR=1)
+    xmax = dict(density=500, intensity=4, liq=0.08, temp_mean=5, FR=1)
     incr = dict(density=50, intensity=0.25, liq=0.01, temp_mean=2, FR=0.1)
     param = data.name
     axarr = data.hist(by=classes, sharex=True, sharey=True, normed=True,

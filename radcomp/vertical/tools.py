@@ -13,7 +13,7 @@ def m2km(m, pos):
     return '{:.0f}'.format(m*1e-3)
 
 
-def cloud_top_h(z, zmin=0):
+def echo_top_h(z, zmin=-8):
     top = (z>zmin).loc[::-1].idxmax()
     top[top==z.index[-1]] = np.nan
     return top

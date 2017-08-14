@@ -10,7 +10,7 @@ from radcomp.vertical import case, classification
 
 plt.ion()
 plt.close('all')
-np.random.seed(0)
+np.random.seed(1)
 
 plot = False
 
@@ -18,8 +18,8 @@ cases = case.read_cases('14-16by_hand')
 basename = '14-16'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
-n_eigens = 17
-n_clusters = 17
+n_eigens = 19
+n_clusters = 19
 reduced = True
 use_temperature = True
 t_weight_factor = 0.8
@@ -46,5 +46,5 @@ scheme.save(use_temperature=use_temperature)
 name = c.class_scheme.name(use_temperature=use_temperature)
 print(name)
 c.load_classification(name)
-c.plot_cluster_centroids(cmap='viridis')
+c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue')
 

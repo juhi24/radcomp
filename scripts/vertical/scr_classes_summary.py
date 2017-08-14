@@ -7,16 +7,16 @@ import pandas as pd
 #import matplotlib as mpl
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import case, classification, RESULTS_DIR, cloud_top_h
+from radcomp.vertical import case, classification, RESULTS_DIR, echo_top_h
 from j24 import ensure_dir
 
 save = True
 plot_by_class = False
 
 plt.ion()
-#plt.close('all')
+plt.close('all')
 np.random.seed(0)
-cmap = 'viridis'
+cmap = 'gist_ncar'
 colorful_bars = 'blue'
 
 n_eigens = 25
@@ -69,7 +69,7 @@ c = case.Case.by_combining(cases)
 c.load_classification(name)
 print(consec_occ_group(c.classes).mean())
 z = c.clus_centroids()[0].loc['ZH']
-toph = cloud_top_h(z)
+toph = echo_top_h(z)
 fr_med = fr_grouped(cases).median()
 n_classes = c.classes.unique().size
 fr_med = fr_med.reindex(index=range(n_classes))

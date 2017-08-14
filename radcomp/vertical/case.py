@@ -26,7 +26,8 @@ def case_id_fmt(t_start, t_end=None, fmt='{year}{month}{day}', hour_fmt='%H',
 def read_case_times(name):
     """Read case starting and ending times from cases directory."""
     filepath = path.join(USER_DIR, 'cases', name + '.csv')
-    dts = pd.read_csv(filepath, parse_dates=[COL_START, COL_END])
+    dts = pd.read_csv(filepath, parse_dates=[COL_START, COL_END], comment='#',
+                      skip_blank_lines=True)
     indexing_func = lambda row: case_id_fmt(row[COL_START], row[COL_END])
     dts.index = dts.apply(indexing_func, axis=1)
     dts.index.name = 'id'
@@ -288,6 +289,7 @@ class Case:
             fig.canvas.mpl_connect('button_press_event', self._on_click_plot_dt_cs)
         for ax in axarr:
             ax.xaxis.grid(True)
+            ax.yaxis.grid(True)
         return fig, axarr
 
     def plot_t(self, ax, tmin=-20, tmax=10):

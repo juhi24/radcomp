@@ -16,8 +16,8 @@ plt.close('all')
 np.random.seed(0)
 
 case_set = '14-16by_hand'
-n_eigens = 25
-n_clusters = 25
+n_eigens = 19
+n_clusters = 19
 reduced = True
 use_temperature = True
 t_weight_factor = 0.8
@@ -42,7 +42,7 @@ for i, c in cases.case.iteritems():
         warn(str(e))
         continue
     #c.plot_classes()
-    fig, axarr = c.plot(n_extra_ax=0, cmap='gist_ncar')
+    fig, axarr = c.plot(n_extra_ax=0, cmap='viridis')
     if save:
         fig.savefig(path.join(results_dir, c.name()+'.png'))
         plt.close(fig)
