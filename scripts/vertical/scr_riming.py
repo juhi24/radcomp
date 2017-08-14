@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from os import path
 from scipy.io import loadmat
 from j24 import home
-from radcomp.vertical.insitu import time_weighted_mean
 
 DATAPATH = path.join(home(), 'DATA')
 

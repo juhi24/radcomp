@@ -5,19 +5,12 @@ __metaclass__ = type
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import baecc.instruments.pluvio as pl
-from os import path
-from glob import glob
-from warnings import warn
-from datetime import datetime, timedelta
-from radcomp import CACHE_TMP_DIR
-from radcomp.vertical import insitu, case, classification, plotting, RESULTS_DIR
-from j24 import home, ensure_join
-from scr_find_case import plot_case, STORE_FILE, NAME, store
+from datetime import datetime
+from radcomp.vertical import plotting
+from scr_find_case import plot_case, STORE_FILE
 
 plt.ion()
 plt.close('all')
-np.random.seed(0)
 
 
 def nextval(df, time):

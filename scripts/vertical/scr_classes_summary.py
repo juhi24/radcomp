@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import numpy as np
 import pandas as pd
 #import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -15,7 +14,6 @@ plot_by_class = False
 
 plt.ion()
 plt.close('all')
-np.random.seed(0)
 cmap = 'gist_ncar'
 colorful_bars = 'blue'
 

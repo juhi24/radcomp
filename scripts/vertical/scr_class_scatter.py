@@ -8,7 +8,6 @@ from j24 import ensure_dir
 
 plt.ion()
 #plt.close('all')
-np.random.seed(0)
 
 n_eigens = 19
 n_clusters = 19

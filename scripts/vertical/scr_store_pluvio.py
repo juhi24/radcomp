@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import baecc.instruments.pluvio as pl
@@ -11,12 +10,11 @@ from glob import glob
 from warnings import warn
 from datetime import datetime, timedelta
 from radcomp import CACHE_TMP_DIR
-from radcomp.vertical import insitu, case, classification, plotting, RESULTS_DIR
+from radcomp.vertical import case, classification, plotting, RESULTS_DIR
 from j24 import home, ensure_join
 
 plt.ioff()
 plt.close('all')
-np.random.seed(0)
 
 CASE_SET = 'everything'
 n_eigens = 25

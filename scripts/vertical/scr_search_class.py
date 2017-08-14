@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import numpy as np
 #import matplotlib as mpl
 import matplotlib.pyplot as plt
 from os import path
@@ -14,7 +13,6 @@ plot_by_class = False
 
 plt.ion()
 #plt.close('all')
-np.random.seed(0)
 
 n_eigens = 25
 n_clusters = 25

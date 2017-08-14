@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import numpy as np
 import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import case, classification, RESULTS_DIR
@@ -11,7 +10,6 @@ from warnings import warn
 
 plt.ioff()
 plt.close('all')
-np.random.seed(0)
 
 case_set = '14-16by_hand'
 n_eigens = 25
