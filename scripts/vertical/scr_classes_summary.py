@@ -16,7 +16,7 @@ plot_by_class = False
 plt.ion()
 #plt.close('all')
 np.random.seed(0)
-cmap = 'gist_ncar'
+cmap = 'viridis'
 colorful_bars = 'blue'
 
 n_eigens = 25

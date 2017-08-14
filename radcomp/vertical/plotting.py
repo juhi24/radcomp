@@ -51,8 +51,17 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
             scalekws = {'vmin': 0, 'vmax': 1}
             label = 'scaled'
         elif fieldup in visualization.LABELS:
-            scalekws = {'vmin': visualization.VMINS_CB[fieldup],
-                        'vmax': visualization.VMAXS[fieldup]}
+            # custom limits
+            vmins = visualization.VMINS
+            vmaxs = visualization.VMAXS
+            vmins['ZDR'] = -0.5
+            if cmap=='gist_ncar':
+                vmins['ZH'] = -15 # have 0 with nicer color
+            if not x_is_date: # if not a time series
+                vmaxs['ZDR'] = 2.5
+            ##
+            scalekws = {'vmin': vmins[fieldup],
+                        'vmax': vmaxs[fieldup]}
             label = visualization.LABELS[fieldup]
         else:
             scalekws = {}
