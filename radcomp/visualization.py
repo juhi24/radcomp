@@ -6,7 +6,7 @@ VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
          'R': 0.05}
 VMAXS = {'ZH': 30, 'ZDR': 4, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360,
          'R': 16}
-LABELS = {'ZH': '$Z$, dBZ', 'ZDR': '$Z_{dr}$, dB', 'KDP': '$K_{dp}$, deg/km',
+LABELS = {'ZH': '$Z_{e}$, dBZ', 'ZDR': '$Z_{dr}$, dB', 'KDP': '$K_{dp}$, deg/km',
           'DP': 'deg', 'PHIDP': 'deg', 'R': 'rainrate, mm$\,$h$^{-1}$'}
 
 

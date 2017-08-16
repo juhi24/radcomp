@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from radcomp import vertical, learn, visualization
+from radcomp import vertical, learn
+from radcomp import visualization as vis
 
 DISPLACEMENT_FACTOR = 0.5
 LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
@@ -16,8 +17,34 @@ LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               temp_mean='Temperature, $^{\circ}C$')
 DEFAULT_DISCRETE_CMAP = 'tab20'
 
-def plot_data(data, ax, **kws):
+def plot_data(data, ax=None, **kws):
+    """plot Series"""
+    if ax is None:
+        ax = plt.gca()
     return ax.plot(data.index, data.values, drawstyle='steps', **kws)
+
+def plot_vp(data, ax=None, **kws):
+    """plot vertical profile"""
+    if ax is None:
+        ax = plt.gca()
+    return ax.plot(data.values, data.index, **kws)
+
+def plot_vps(df, axarr=None, **kws):
+    """plot DataFrame of vertical profile parameters"""
+    ncols = df.shape[1]
+    if axarr is None:
+        fig, axarr = plt.subplots(nrows=1, ncols=ncols, sharey=True)
+    for i, (name, data) in enumerate(df.T.iterrows()):
+        ax = axarr[i]
+        plot_vp(data, ax=ax, **kws)
+        search_name = name.upper()
+        if search_name in vis.LABELS:
+            ax.set_xlabel(vis.LABELS[search_name])
+            ax.set_xlim(left=vis.VMINS[search_name], right=vis.VMAXS[search_name])
+        else:
+            ax.set_xlabel(name)
+    set_h_ax(axarr[0])
+    return axarr
 
 def rotate_tick_labels(rot, ax=None):
     if ax is None:
@@ -28,6 +55,11 @@ def rotate_tick_labels(rot, ax=None):
 def mean_delta(t):
     dt = t[-1]-t[0]
     return dt/(len(t)-1)
+
+def set_h_ax(ax, hlims=(0, 10000)):
+    ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
+    ax.set_ylim(*hlims)
+    ax.set_ylabel('Height, km')
 
 def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
            x_is_date=True, **kws):
@@ -50,10 +82,10 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         if scaled:
             scalekws = {'vmin': 0, 'vmax': 1}
             label = 'scaled'
-        elif fieldup in visualization.LABELS:
+        elif fieldup in vis.LABELS:
             # custom limits
-            vmins = visualization.VMINS
-            vmaxs = visualization.VMAXS
+            vmins = vis.VMINS
+            vmaxs = vis.VMAXS
             vmins['ZDR'] = -0.5
             if cmap=='gist_ncar':
                 vmins['ZH'] = -15 # have 0 with nicer color
@@ -62,7 +94,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
             ##
             scalekws = {'vmin': vmins[fieldup],
                         'vmax': vmaxs[fieldup]}
-            label = visualization.LABELS[fieldup]
+            label = vis.LABELS[fieldup]
         else:
             scalekws = {}
             label = field
@@ -81,9 +113,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
         #fig.autofmt_xdate()
         if x_is_date:
             ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
-        ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
-        ax.set_ylim(0,10000)
-        ax.set_ylabel('Height, km')
+        set_h_ax(ax)
         #fig.colorbar(im, ax=ax, label=label)
         fig.colorbar(im, cax=ax_cb, label=label)
     for j in range(n_extra_ax):

@@ -2,14 +2,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
-#import matplotlib.pyplot as plt
-import radcomp.visualization as vis
 from scipy.io import loadmat
 from os import path
 from functools import partial
 from radcomp.vertical import (filtering, classification, plotting, insitu,
                               NAN_REPLACEMENT)
-from radcomp import vertical, arm, HOME, USER_DIR
+from radcomp import arm, HOME, USER_DIR
 from j24 import home, daterange2str
 
 DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
@@ -134,16 +132,6 @@ def scale_data(pn, reverse=False):
         scaled[field] = data
     return scaled
 
-def finish_cl_data_plot(axarr):
-    for ax in axarr:
-        param=ax.get_lines()[0].get_label().upper()
-        ax.set_ylim(vis.VMINS[param], vis.VMAXS[param])
-        ax.set_ylabel(vis.LABELS[param])
-    ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
-    ax.set_xlabel('height, km')
-    plotting.rotate_tick_labels(0, ax=ax)
-    return axarr
-
 
 def handle_ax(ax):
     if ax is None:
@@ -158,7 +146,7 @@ def handle_ax(ax):
         else:
             ax_out = cl_ax
             ax_out.clear()
-        axkws = dict(ax=cl_ax)
+        axkws = dict(axarr=cl_ax)
         update = True
     return ax_out, update, axkws
 
@@ -330,33 +318,42 @@ class Case:
 
     def _on_click_plot_dt_cs(self, event):
         """on click plot cross section"""
-        dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
+        try:
+            dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
+        except TypeError: # clicked outside axes
+            return
         ax, update, axkws = handle_ax(self._dt_ax)
         self._dt_ax = self.plot_cl_data_at(dt, **axkws)
         if update:
             ax.get_figure().canvas.draw()
 
     def _on_click_plot_cl_cs(self, event):
-        n = round(event.xdata)
+        try:
+            i = int(round(event.xdata))
+        except TypeError: # clicked outside axes
+            return
         ax, update, axkws = handle_ax(self._cl_ax)
-        self._cl_ax = self.plot_centroid(n, **axkws)
+        ticklabels = event.inaxes.axes.get_xaxis().get_majorticklabels()
+        classes = list(map(lambda la: int(la.get_text()), ticklabels))
+        classn = classes[i]
+        self._cl_ax = self.plot_centroid(classn, **axkws)
         if update:
             ax.get_figure().canvas.draw()
 
     def plot_cl_data_at(self, dt, **kws):
         data = self.cl_data
         i = data.major_axis.get_loc(dt, method='nearest')
-        axarr = data.iloc[:, i, :].plot(subplots=True, **kws)
-        axarr[0].set_title(str(dt))
-        return finish_cl_data_plot(axarr)
+        axarr = plotting.plot_vps(data.iloc[:, i, :], **kws)
+        axarr[1].set_title(str(dt))
+        return axarr
 
     def plot_centroid(self, n, **kws):
         cen, t = self.clus_centroids()
         data = cen.minor_xs(n)
-        axarr = data.plot(subplots=True, legend=False, **kws)
+        axarr = plotting.plot_vps(data, **kws)
         titlestr = 'Class {n}, $T={t:.1f}^{{\circ}}$C'
-        axarr[0].set_title(titlestr.format(n=int(n), t=t.temp_mean[n]))
-        return finish_cl_data_plot(axarr)
+        axarr[1].set_title(titlestr.format(n=int(n), t=t.temp_mean[n]))
+        return axarr
 
     def pcolor_classes(self, **kws):
         groups = self.cl_data.groupby(self.classes)

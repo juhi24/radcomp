@@ -13,12 +13,12 @@ save = True
 plot_by_class = False
 
 plt.ion()
-plt.close('all')
-cmap = 'gist_ncar'
+#plt.close('all')
+cmap = 'pyart_RefDiff'
 colorful_bars = 'blue'
 
-n_eigens = 25
-n_clusters = 25
+n_eigens = 19
+n_clusters = 19
 reduced = True
 use_temperature = True
 t_weight_factor = 0.8
