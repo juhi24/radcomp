@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from os import path
 from functools import partial
@@ -158,6 +159,14 @@ def load_pluvio(start=None, end=None, kind='400'):
     data = pd.read_hdf(hdfpath, key=name)[start:end]
     pluv = pl.Pluvio(data=data, name=name)
     return pluv
+
+
+def plot_occurrence_counts(count, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    count.plot.bar(ax=ax)
+    ax.set_ylabel('Occurrence')
+    ax.yaxis.grid(True)
 
 
 class Case:
@@ -381,7 +390,9 @@ class Case:
         return decoded, extra
 
     def plot_cluster_centroids(self, colorful_bars=False, order=None,
-                               sortby='temp_mean', n_extra_ax=0, **kws):
+                               sortby='temp_mean', n_extra_ax=0,
+                               plot_counts=True, **kws):
+        # TODO: split massive func
         pn, extra = self.clus_centroids(order=order, sortby=sortby)
         order_out = pn.minor_axis
         n_extra = extra.shape[1]
@@ -409,11 +420,8 @@ class Case:
         ax_last.set_xlabel('Class ID')
         fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
-        # plot counts
-        count = self.class_counts().loc[extra.index]
-        count.plot.bar(ax=ax_last)
-        ax_last.set_ylabel('Occurrence')
-        ax_last.yaxis.grid(True)
+        if plot_counts:
+            plot_occurrence_counts(self.class_counts().loc[extra.index], ax=ax_last)
         if colorful_bars:
             cmkw = {}
             if colorful_bars=='blue':
