@@ -6,7 +6,7 @@ import pandas as pd
 #import matplotlib as mpl
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import case, classification, RESULTS_DIR, echo_top_h
+from radcomp.vertical import case, casedf, classification, RESULTS_DIR, echo_top_h
 from j24 import ensure_dir
 
 save = True
@@ -24,28 +24,9 @@ use_temperature = True
 t_weight_factor = 0.8
 radar_weight_factors = dict(zdr=0.5)
 
-def fr_comb(cases):
-    # TODO: duplicate in scr_class_scatter
-    fr_list = []
-    for cname in cases.index:
-        #data_g = g.loc[name]
-        fr_list.append(cases.case[cname].fr())
-    return pd.concat(fr_list)
-
-def classes_comb(cases):
-    classes_list = []
-    for cname in cases.index:
-        c = cases.case[cname]
-        c.load_classification(name)
-        classes = c.classes
-        classes.index = classes.index.round('1min')
-        classes.name = 'class'
-        classes_list.append(classes)
-    return pd.concat(classes_list)
-
 def fr_grouped(cases):
-    fr = fr_comb(cases)
-    classes = classes_comb(cases)
+    fr = casedf.fr_comb(cases)
+    classes = casedf.classes_comb(cases, name)
     return fr.groupby(by=classes)
 
 def consec_occ_group(classes):
