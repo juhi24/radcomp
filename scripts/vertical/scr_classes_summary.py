@@ -5,10 +5,11 @@ __metaclass__ = type
 import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import case, casedf, classification, RESULTS_DIR, echo_top_h
+from radcomp.vertical import (case, casedf, classification, plotting,
+                              RESULTS_DIR, echo_top_h)
 from j24 import ensure_dir
 
-save = False
+save = True
 plot_by_class = False
 
 plt.ion()
@@ -22,6 +23,9 @@ reduced = True
 use_temperature = True
 t_weight_factor = 0.8
 radar_weight_factors = dict(zdr=0.5)
+
+def var2order(var):
+    return var.sort_values().index.values
 
 def order2pos(order):
     return pd.Series(order).sort_values().index.values
@@ -42,6 +46,20 @@ def consec_occ_group(classes):
     consec_count.index.name = 'id'
     return consec_count.groupby(by='class')
 
+def boxplot(varcl, ax=None, sortby=None, **kws):
+    """pandas boxplot wrapper"""
+    if ax is None:
+        ax = plt.gca()
+    if sortby is None:
+        positions = range(1, varcl.shape[0])
+    else:
+        positions = order2pos(var2order(sortby))
+    varcl.boxplot(by='class', positions=positions, ax=ax, **kws)
+    ax.set_title('')
+    ax.figure.suptitle('')
+    ax.set_xlabel('class ID')
+    ax.xaxis.grid(False)
+
 cases = case.read_cases('14-16by_hand')
 name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
                                   n_clusters=n_clusters, reduced=reduced,
@@ -60,26 +78,41 @@ fr_med = fr_med.reindex(index=range(n_classes))
 
 if plot_by_class:
     df = c.pcolor_classes(cmap=cmap)
-f_t, ax_t, order_t = c.plot_cluster_centroids(cmap=cmap, sortby='temp_mean',
+f_t, ax_t, order_t = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
                                               colorful_bars=colorful_bars,
-                                              n_extra_ax=1)
+                                              n_extra_ax=0, plot_counts=True)
+f_lwe, ax_lwe, order_lwe = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
+                                                    colorful_bars=colorful_bars,
+                                                    n_extra_ax=1, plot_counts=False)
 f_fr, ax_fr, order_fr = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
                                                  colorful_bars=colorful_bars,
-                                                 n_extra_ax=1)
-f_fr, ax_fr, order_fr = c.plot_cluster_centroids(cmap=cmap, sortby=fr_med,
-                                                 colorful_bars=colorful_bars,
-                                                 n_extra_ax=1)
-ax=ax_t[3]
+                                                 n_extra_ax=1, plot_counts=False)
+f_n, ax_n, order_n = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
+                                              colorful_bars=colorful_bars,
+                                              plot_counts=True)
 #fr_med.reindex(index=order).plot.bar(ax=ax)
+ib = -1
+axb_t = ax_t[-2]
+axb_lwe = ax_lwe[ib]
+axb_fr = ax_fr[ib]
 t_cla = var_cla(cases, name, casedf.t_comb)
-t_cla.boxplot(by='class', positions=order2pos(order_t), ax=ax)
-ax.set_title('')
-f_t.suptitle('')
+lwe_cla = var_cla(cases, name, casedf.lwe_comb)
+fr_cla = var_cla(cases, name, casedf.fr_comb)
+boxplot(t_cla, ax=axb_t, sortby=toph)
+boxplot(lwe_cla, ax=axb_lwe, sortby=toph)
+boxplot(fr_cla, ax=axb_fr, sortby=toph)
+ax_t[-2].set_ylabel('$T_{cen}$, $^{\circ}C$')
+axb_t.set_ylabel(plotting.LABELS['temp_mean'])
+axb_lwe.set_ylabel(plotting.LABELS['intensity'])
+axb_fr.set_ylabel(plotting.LABELS['FR'])
 
 if save:
     if plot_by_class:
         for i, fig in df.fig.iteritems():
             fig.savefig(path.join(results_dir, 'class{:02d}.png'.format(i)))
-    f_t.savefig(path.join(results_dir, 'centroids.png'))
+    f_t.savefig(path.join(results_dir, 't.png'))
+    f_lwe.savefig(path.join(results_dir, 'lwe.png'))
+    f_fr.savefig(path.join(results_dir, 'fr.png'))
+    f_n.savefig(path.join(results_dir, 'counts.png'))
 
 

@@ -13,8 +13,8 @@ DISPLACEMENT_FACTOR = 0.5
 LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               intensity='LWE, mm$\,$h$^{-1}$',
               liq='LWP, cm',
-              FR='rime mass fraction',
-              temp_mean='Temperature, $^{\circ}C$')
+              FR='FR',
+              temp_mean='$T$, $^{\circ}C$')
 DEFAULT_DISCRETE_CMAP = 'tab20'
 
 def plot_data(data, ax=None, **kws):

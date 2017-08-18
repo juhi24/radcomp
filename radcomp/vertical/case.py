@@ -399,7 +399,8 @@ class Case:
         pn_plt = pn.copy() # with shifted axis, only for plotting
         pn_plt.minor_axis = pn.minor_axis-0.5
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
-                                     n_extra_ax=n_extra+n_extra_ax+1, **kws)
+                                     n_extra_ax=n_extra+n_extra_ax+plot_counts,
+                                     **kws)
         if colorful_bars==True: # Might be str, so check for True.
             n_omit_coloring = 2
         else:
@@ -425,11 +426,13 @@ class Case:
         if colorful_bars:
             cmkw = {}
             if colorful_bars=='blue':
-                blue = (0.29803921568627451, 0.44705882352941179, 0.69019607843137254, 1.0)
+                blue = (0.29803921568627451, 0.44705882352941179,
+                        0.69019607843137254, 1.0)
                 cmkw['cm'] = mpl.colors.ListedColormap([blue]*50)
             for ax in (ax_extra, ax_last):
                 pa = ax.patches
-                pa = np.array(pa)[list(map(lambda p: isinstance(p, mpl.patches.Rectangle), pa))]
+                check_rect = lambda p: isinstance(p, mpl.patches.Rectangle)
+                pa = np.array(pa)[list(map(check_rect, pa))]
                 for i, p in enumerate(pa):
                     p.set_color(self.class_color(extra.index[i], default=(1, 1, 1, 0), **cmkw))
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
