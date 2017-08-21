@@ -61,7 +61,7 @@ def set_h_ax(ax, hlims=(0, 10000)):
     ax.set_ylim(*hlims)
     ax.set_ylabel('Height, km')
 
-def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
+def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, **kws):
     if fields is None:
         fields = pn.items
@@ -87,8 +87,6 @@ def plotpn(pn, fields=None, scaled=False, cmap='gist_ncar', n_extra_ax=0,
             vmins = vis.VMINS
             vmaxs = vis.VMAXS
             vmins['ZDR'] = -0.5
-            if cmap=='gist_ncar':
-                vmins['ZH'] = -15 # have 0 with nicer color
             if not x_is_date: # if not a time series
                 vmaxs['ZDR'] = 2.5
             ##

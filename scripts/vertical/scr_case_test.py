@@ -23,9 +23,10 @@ if __name__ == '__main__':
     plt.ion()
     #plt.close('all')
     cases = case.read_cases(case_set)
-    c = cases.case.loc['141217']
-    c.load_classification(name)
-    c.load_pluvio()
-    c.plot(cmap='viridis')
+    c = cases.case.loc['140221-22']
+    #c.load_classification(name)
+    #c.load_pluvio()
+    #c.plot(cmap='viridis')
+    c.plot(plot_fr=False, plot_t=False)
 
 

@@ -17,10 +17,17 @@ COL_END = 'end'
 SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 
-def case_id_fmt(t_start, t_end=None, fmt='{year}{month}{day}', hour_fmt='%H',
+def case_id_fmt(t_start, t_end=None, dtformat='{year}{month}{day}', hour_fmt='%H',
                 day_fmt='%d', month_fmt='%m', year_fmt='%y'):
-    return daterange2str(t_start, t_end, dtformat=fmt, day_fmt=day_fmt,
+    """daterange2str wrapper for date range based IDs"""
+    return daterange2str(t_start, t_end, dtformat=dtformat, day_fmt=day_fmt,
                          month_fmt=month_fmt, year_fmt=year_fmt).lower()
+
+def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
+                   day_fmt='%d', month_fmt='%b', year_fmt='%Y'):
+    """daterange2str wrapper for US human readable date range format"""
+    return daterange2str(t_start, t_end, dtformat=dtformat, day_fmt=day_fmt,
+                         month_fmt=month_fmt, year_fmt=year_fmt)
 
 def read_case_times(name):
     """Read case starting and ending times from cases directory."""
@@ -249,7 +256,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, **kws):
+             plot_fr=True, plot_t=True, **kws):
         if raw:
             data = self.data
         else:
@@ -259,7 +266,6 @@ class Case:
                 params = self.class_scheme.params
             else:
                 params = ['ZH', 'zdr', 'kdp']
-        plot_t = 'temp_mean' in self.class_scheme.params_extra
         plot_lwe = self.pluvio is not None
         for plot_enabled in [plot_t, plot_lwe, plot_fr]:
             if plot_enabled:
@@ -287,6 +293,8 @@ class Case:
         for ax in axarr:
             ax.xaxis.grid(True)
             ax.yaxis.grid(True)
+        self.set_xlim(ax)
+        axarr[0].set_title(date_us_fmt(self.t_start(), self.t_end()))
         return fig, axarr
 
     def plot_t(self, ax, tmin=-20, tmax=10):
