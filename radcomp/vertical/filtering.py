@@ -51,15 +51,17 @@ def fltr_median(pn):
         pn_out[field] = df
     return pn_out
 
+
 def reject_outliers(df, m=2):
     d = df.subtract(df.median(axis=1), axis=0).abs()
     mdev = d.median(axis=1)
     s = d.divide(mdev, axis=0).replace(np.inf, np.nan).fillna(0)
     return df[s<m].copy()
 
+
 def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
     '''simple threshold based gc filter'''
-    #return pn_orig
+    # deprecated?
     pn = pn_orig.copy()
     threshold = dict(ZDR=4, KDP=0.28)
     keys = list(map(str.lower, threshold.keys()))
@@ -86,6 +88,7 @@ def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
                     view[view>threshold[field.upper()]] = NAN_REPLACEMENT[field.upper()]
                     break
     return pn
+
 
 def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
     '''median_filter wrapper for DataFrames'''
