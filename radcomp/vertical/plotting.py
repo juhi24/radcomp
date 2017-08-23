@@ -61,6 +61,12 @@ def set_h_ax(ax, hlims=(0, 10000)):
     ax.set_ylim(*hlims)
     ax.set_ylabel('Height, km')
 
+def nice_cb_ticks(cb, nbins=5, steps=(1, 5, 10), **kws):
+    # TODO: general for plotting, to be moved
+    cb_tick_locator = mpl.ticker.MaxNLocator(nbins=nbins, steps=steps, **kws)
+    cb.locator = cb_tick_locator
+    cb.update_ticks()
+
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, **kws):
     if fields is None:
@@ -113,7 +119,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
             ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         set_h_ax(ax)
         #fig.colorbar(im, ax=ax, label=label)
-        fig.colorbar(im, cax=ax_cb, label=label)
+        cb = fig.colorbar(im, cax=ax_cb, label=label)
+        nice_cb_ticks(cb)
     for j in range(n_extra_ax):
         ax = fig.add_subplot(gs[i+1+j, 0], sharex=axarr[0])
         axarr.append(ax)
