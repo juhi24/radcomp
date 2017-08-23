@@ -42,6 +42,6 @@ for i, c in cases.case.iteritems():
     #c.plot_classes()
     fig, axarr = c.plot(n_extra_ax=0, plot_fr=False)#, cmap='viridis')
     if save:
-        fig.savefig(path.join(results_dir, c.name()+'.png'))
+        fig.savefig(path.join(results_dir, c.name()+'.png'), bbox_inches='tight')
         plt.close(fig)
 

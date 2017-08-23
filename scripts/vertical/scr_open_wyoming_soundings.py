@@ -28,7 +28,7 @@ def round_hours(tm, hres=12):
                               seconds=tt.second)
 
 if __name__ == '__main__':
-    search_class = 9
+    search_class = 12
     cases = case.read_cases(case_set)
     c = case.Case.by_combining(cases)
     c.load_classification(name)
