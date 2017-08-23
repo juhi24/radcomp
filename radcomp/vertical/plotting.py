@@ -29,11 +29,13 @@ def plot_vp(data, ax=None, **kws):
         ax = plt.gca()
     return ax.plot(data.values, data.index, **kws)
 
-def plot_vps(df, axarr=None, **kws):
+def plot_vps(df, axarr=None, fig_kws={'dpi': 150, 'figsize': (4, 3)}, **kws):
     """plot DataFrame of vertical profile parameters"""
     ncols = df.shape[1]
     if axarr is None:
-        fig, axarr = plt.subplots(nrows=1, ncols=ncols, sharey=True)
+        fig, axarr = plt.subplots(nrows=1, ncols=ncols, sharey=True, **fig_kws)
+    else:
+        fig = axarr[0].figure
     for i, (name, data) in enumerate(df.T.iterrows()):
         ax = axarr[i]
         plot_vp(data, ax=ax, **kws)
@@ -44,6 +46,9 @@ def plot_vps(df, axarr=None, **kws):
         else:
             ax.set_xlabel(name)
     set_h_ax(axarr[0])
+    fig.subplots_adjust(left=0.13, right=0.95, bottom=0.15, top=0.9, wspace=0.1)
+    for ax in axarr[1:]:
+        plt.setp(ax.get_yticklabels(), visible=False)
     return axarr
 
 def rotate_tick_labels(rot, ax=None):
@@ -68,14 +73,19 @@ def nice_cb_ticks(cb, nbins=5, steps=(1, 5, 10), **kws):
     cb.update_ticks()
 
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
-           x_is_date=True, **kws):
+           x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150}, **kws):
+    # TODO: split
     if fields is None:
         fields = pn.items
     n_rows = len(fields) + n_extra_ax
-    fig = plt.figure(figsize=(8,3+1.1*n_rows))
+    fw = fig_scale_factor*8
+    fh = fig_scale_factor*(3+1.1*n_rows)
+    fig = plt.figure(figsize=(fw,fh), **fig_kws)
+    left = 0.1*(11/(10+fig_scale_factor))
+    right = 0.905*(10+fig_scale_factor)/11
     gs = mpl.gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
-                               top=1-0.22/n_rows, bottom=0.35/n_rows, left=0.1,
-                               right=0.905)
+                               top=1-0.22/n_rows, bottom=0.35/n_rows, left=left,
+                               right=right)
     axarr = []
     for i, field in enumerate(fields):
         subplot_kws = {}

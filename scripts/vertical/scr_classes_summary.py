@@ -13,7 +13,7 @@ save = True
 plot_by_class = False
 
 plt.ion()
-#plt.close('all')
+plt.close('all')
 cmap = 'pyart_RefDiff'
 colorful_bars = 'blue'
 
@@ -107,12 +107,13 @@ axb_lwe.set_ylabel(plotting.LABELS['intensity'])
 axb_fr.set_ylabel(plotting.LABELS['FR'])
 
 if save:
+    savekws = dict(bbox_inches='tight')
     if plot_by_class:
         for i, fig in df.fig.iteritems():
             fig.savefig(path.join(results_dir, 'class{:02d}.png'.format(i)))
-    f_t.savefig(path.join(results_dir, 't.png'))
-    f_lwe.savefig(path.join(results_dir, 'lwe.png'))
-    f_fr.savefig(path.join(results_dir, 'fr.png'))
-    f_n.savefig(path.join(results_dir, 'counts.png'))
+    f_t.savefig(path.join(results_dir, 't.png'), **savekws)
+    f_lwe.savefig(path.join(results_dir, 'lwe.png'), **savekws)
+    f_fr.savefig(path.join(results_dir, 'fr.png'), **savekws)
+    f_n.savefig(path.join(results_dir, 'counts.png'), **savekws)
 
 

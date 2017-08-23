@@ -139,6 +139,9 @@ class VPC:
                            t_weight_factor=self.extra_weight_factor,
                            radar_weight_factors=self.radar_weight_factors)
 
+    def get_class_list(self):
+        return range(self.km.n_clusters)
+
     def save(self, **kws):
         with open(model_path(self.name(**kws)), 'wb') as f:
             pickle.dump(self, f)
