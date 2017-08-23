@@ -27,6 +27,6 @@ if __name__ == '__main__':
     #c.load_classification(name)
     #c.load_pluvio()
     #c.plot(cmap='viridis')
-    c.plot(plot_fr=False, plot_t=False)
+    fig, axarr = c.plot(plot_fr=False, plot_t=False)
 
 

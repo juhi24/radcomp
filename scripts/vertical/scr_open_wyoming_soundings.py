@@ -28,18 +28,19 @@ def round_hours(tm, hres=12):
                               seconds=tt.second)
 
 if __name__ == '__main__':
+    search_class = 9
     cases = case.read_cases(case_set)
     c = case.Case.by_combining(cases)
     c.load_classification(name)
     baseurl = 'http://weather.uwyo.edu/cgi-bin/sounding'
     query = '?region=europe&TYPE=PDF%3ASTUVE&YEAR={year}&MONTH={month:02d}&FROM={day:02d}{hour:02d}&TO={day:02d}{hour:02d}&STNM=02963'
     urlformat = baseurl+query
-    matchi = c.classes[c.classes==12].index
+    matchi = c.classes[c.classes==search_class].index
     matcha = pd.Series(data=matchi, index=matchi)
     match = pd.concat([matcha.iloc[0:1], matcha[matcha.diff()>timedelta(hours=2)]])
     for d, cla in match.iteritems():
         t = round_hours(d, hres=12)
-        url = urlformat.format(year=t.year, month=t.month, day=d.day, hour=t.hour)
+        url = urlformat.format(year=t.year, month=t.month, day=t.day, hour=t.hour)
         webbrowser.open(url)
         time.sleep(1)
 
