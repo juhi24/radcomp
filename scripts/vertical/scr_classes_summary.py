@@ -105,6 +105,8 @@ ax_t[-2].set_ylabel('$T_{cen}$, $^{\circ}C$')
 axb_t.set_ylabel(plotting.LABELS['temp_mean'])
 axb_lwe.set_ylabel(plotting.LABELS['intensity'])
 axb_fr.set_ylabel(plotting.LABELS['FR'])
+for ax in (ax_t[0], ax_lwe[0], ax_fr[0], ax_n[0]):
+    ax.set_title('Cluster centroids by cloud top height')
 
 if save:
     savekws = dict(bbox_inches='tight')
