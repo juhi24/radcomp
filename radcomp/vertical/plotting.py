@@ -14,7 +14,8 @@ LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               intensity='LWE, mm$\,$h$^{-1}$',
               liq='LWP, cm',
               FR='FR',
-              temp_mean='$T$, $^{\circ}C$')
+              temp_mean='$T$, $^{\circ}C$',
+              azs='$\\alpha_{ZS}$')
 DEFAULT_DISCRETE_CMAP = 'tab20'
 
 def plot_data(data, ax=None, **kws):

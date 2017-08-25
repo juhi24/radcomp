@@ -256,7 +256,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, plot_t=True, **kws):
+             plot_fr=True, plot_t=True, plot_azs=True, **kws):
         if raw:
             data = self.data
         else:
@@ -267,14 +267,15 @@ class Case:
             else:
                 params = ['ZH', 'zdr', 'kdp']
         plot_lwe = self.pluvio is not None
-        for plot_enabled in [plot_t, plot_lwe, plot_fr]:
-            if plot_enabled:
-                n_extra_ax += 1
+        n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs
         next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, **kws)
         if plot_lwe:
             self.plot_lwe(ax=axarr[next_free_ax])
+            next_free_ax += 1
+        if plot_azs:
+            self.plot_azs(ax=axarr[next_free_ax])
             next_free_ax += 1
         if plot_fr:
             self.plot_fr(ax=axarr[next_free_ax])
@@ -298,6 +299,7 @@ class Case:
         return fig, axarr
 
     def plot_t(self, ax, tmin=-20, tmax=10):
+        # TODO: remove copy-pasta
         half_dt = self.mean_delta()/2
         t = self.ground_temperature().shift(freq=half_dt)
         plotting.plot_data(t, ax=ax)
@@ -321,6 +323,18 @@ class Case:
         ax.set_ylim(bottom=frmin, top=frmax)
         ax.set_ylabel(plotting.LABELS[fr.name])
         ax.yaxis.grid(True)
+        self.set_xlim(ax)
+
+    def plot_azs(self, ax, amin=10, amax=4000):
+        half_dt = self.mean_delta()/2
+        azs = self.azs().shift(freq=half_dt)
+        label = plotting.LABELS[azs.name]
+        plotting.plot_data(azs, ax=ax, label=label)
+        ax.set_ylabel(plotting.LABELS[azs.name])
+        ax.yaxis.grid(True)
+        ax.set_yscale('log')
+        ax.set_ylim(bottom=amin, top=amax)
+        ax.set_yticks([10, 100, 1000])
         self.set_xlim(ax)
 
     def train(self, use_temperature, **kws):
