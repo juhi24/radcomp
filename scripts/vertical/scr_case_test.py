@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 import matplotlib.pyplot as plt
-from radcomp.vertical import case, classification
+from radcomp.vertical import case, classification, plotting
 
 case_set = '14-16by_hand'
 n_eigens = 19
@@ -21,13 +21,12 @@ name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
 
 if __name__ == '__main__':
     plt.ion()
-    #plt.close('all')
+    plt.close('all')
     cases = case.read_cases(case_set)
     c = cases.case.loc['140221-22']
-    #c.load_classification(name)
-    #c.load_pluvio()
-    #c.plot(cmap='viridis')
-    fig_kws = dict(dpi=150)
-    fig, axarr = c.plot(plot_fr=False, plot_t=False, fig_kws=fig_kws, fig_scale_factor=0.65)
-
+    c.load_classification(name)
+    c.load_pluvio()
+    fig, axarr = c.plot(cmap='viridis', n_extra_ax=1)
+    #fig, axarr = c.plot(plot_fr=False, plot_t=False)
+    plotting.plot_data(c.azs(), ax=axarr[-1])
 

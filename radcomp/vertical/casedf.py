@@ -37,6 +37,11 @@ def lwp_comb(cases):
     return var_comb(cases, func)
 
 
+def azs_comb(cases):
+    func = lambda case: case.azs()
+    return var_comb(cases, func)
+
+
 def classes_comb(cases, name):
     def func(case):
         case.load_classification(name)

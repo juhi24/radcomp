@@ -4,6 +4,7 @@ __metaclass__ = type
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import pyart # to register colormaps
 from os import path
 from radcomp.vertical import (case, casedf, classification, plotting,
                               RESULTS_DIR, echo_top_h)
@@ -69,6 +70,7 @@ name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary', name))
 c = case.Case.by_combining(cases)
 c.load_classification(name)
+# TODO: below this line needs cleaning
 print(consec_occ_group(c.classes).mean())
 z = c.clus_centroids()[0].loc['ZH']
 toph = echo_top_h(z)
@@ -87,6 +89,9 @@ f_lwe, ax_lwe, order_lwe = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
 f_fr, ax_fr, order_fr = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
                                                  colorful_bars=colorful_bars,
                                                  n_extra_ax=1, plot_counts=False)
+f_azs, ax_azs, order_azs = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
+                                                 colorful_bars=colorful_bars,
+                                                 n_extra_ax=1, plot_counts=False)
 f_n, ax_n, order_n = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
                                               colorful_bars=colorful_bars,
                                               plot_counts=True)
@@ -95,17 +100,22 @@ ib = -1
 axb_t = ax_t[-2]
 axb_lwe = ax_lwe[ib]
 axb_fr = ax_fr[ib]
+axb_azs = ax_azs[ib]
 t_cla = var_cla(cases, name, casedf.t_comb)
 lwe_cla = var_cla(cases, name, casedf.lwe_comb)
 fr_cla = var_cla(cases, name, casedf.fr_comb)
+azs_cla = var_cla(cases, name, casedf.azs_comb)
 boxplot(t_cla, ax=axb_t, sortby=toph)
 boxplot(lwe_cla, ax=axb_lwe, sortby=toph)
 boxplot(fr_cla, ax=axb_fr, sortby=toph)
+boxplot(azs_cla, ax=axb_azs, sortby=toph)
 ax_t[-2].set_ylabel('$T_{cen}$, $^{\circ}C$')
 axb_t.set_ylabel(plotting.LABELS['temp_mean'])
 axb_lwe.set_ylabel(plotting.LABELS['intensity'])
 axb_fr.set_ylabel(plotting.LABELS['FR'])
-for ax in (ax_t[0], ax_lwe[0], ax_fr[0], ax_n[0]):
+axb_azs.set_ylabel('$\\alpha_{ZS}$')
+axb_azs.set_yscale('log')
+for ax in (ax_t[0], ax_lwe[0], ax_fr[0], ax_n[0], ax_azs[0]):
     ax.set_title('Cluster centroids by cloud top height')
 
 if save:
@@ -117,5 +127,6 @@ if save:
     f_lwe.savefig(path.join(results_dir, 'lwe.png'), **savekws)
     f_fr.savefig(path.join(results_dir, 'fr.png'), **savekws)
     f_n.savefig(path.join(results_dir, 'counts.png'), **savekws)
+    f_azs.savefig(path.join(results_dir, 'azs.png'), **savekws)
 
 

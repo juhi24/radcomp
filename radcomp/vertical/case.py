@@ -8,7 +8,7 @@ from os import path
 from functools import partial
 from radcomp.vertical import (filtering, classification, plotting, insitu,
                               NAN_REPLACEMENT)
-from radcomp import arm, HOME, USER_DIR
+from radcomp import arm, azs, HOME, USER_DIR
 from j24 import home, daterange2str
 
 DATA_DIR = path.join(HOME, 'DATA', 'vprhi')
@@ -501,6 +501,11 @@ class Case:
         if save:
             self.temperature = tre
         return tre
+
+    def azs(self, **kws):
+        t_end = self.t_end()+pd.Timedelta(minutes=15)
+        data = azs.load_series()[self.t_start(): t_end]
+        return data.resample('15min', base=self.base_minute()).mean()
 
     def load_pluvio(self, **kws):
         self.pluvio = load_pluvio(start=self.t_start(), end=self.t_end(), **kws)
