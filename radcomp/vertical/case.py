@@ -176,6 +176,13 @@ def plot_occurrence_counts(count, ax=None):
     ax.yaxis.grid(True)
 
 
+def round_time_index(data, resolution='1min'):
+    dat = data.copy()
+    ind = data.index.round(resolution)
+    dat.index = ind
+    return dat
+
+
 class Case:
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
                  classes=None, class_scheme=None, temperature=None,
@@ -451,7 +458,7 @@ class Case:
                 blue = (0.29803921568627451, 0.44705882352941179,
                         0.69019607843137254, 1.0)
                 cmkw['cm'] = mpl.colors.ListedColormap([blue]*50)
-            for ax in (ax_extra, ax_last):
+            for ax in [ax_last]:
                 pa = ax.patches
                 check_rect = lambda p: isinstance(p, mpl.patches.Rectangle)
                 pa = np.array(pa)[list(map(check_rect, pa))]
@@ -515,6 +522,10 @@ class Case:
         if save:
             self.temperature = tre
         return tre
+
+    def cl(self):
+        """Classes rounded to 1min"""
+        return round_time_index(self.classes)
 
     def azs(self, **kws):
         t_end = self.t_end()+pd.Timedelta(minutes=15)

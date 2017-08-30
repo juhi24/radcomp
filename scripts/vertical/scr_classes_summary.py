@@ -58,7 +58,8 @@ def boxplot(varcl, ax=None, sortby=None, **kws):
     varcl.boxplot(by='class', positions=positions, ax=ax, **kws)
     ax.set_title('')
     ax.figure.suptitle('')
-    ax.set_xlabel('class ID')
+    ax.set_xlabel('Class ID')
+    plt.xticks(rotation=0)
     ax.xaxis.grid(False)
 
 cases = case.read_cases('14-16by_hand')
@@ -117,6 +118,8 @@ axb_azs.set_ylabel('$\\alpha_{ZS}$')
 axb_azs.set_yscale('log')
 for ax in (ax_t[0], ax_lwe[0], ax_fr[0], ax_n[0], ax_azs[0]):
     ax.set_title('Cluster centroids by cloud top height')
+ax_t[-1].set_ylim(bottom=0, top=450)
+plt.xticks(rotation=0)
 
 if save:
     savekws = dict(bbox_inches='tight')
