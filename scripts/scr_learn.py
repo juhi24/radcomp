@@ -13,6 +13,7 @@ import radx
 from os import path
 import sounding
 import learn
+from j24.stats import pca_stats
 
 #import rpy2.robjects as ro
 #from rpy2.robjects import r
@@ -58,7 +59,7 @@ pca.fit(dat_df)
 fig_comps, axarr_comps = learn.plot_pca_components(pca, dat_pn)
 axarr_comps[0].set_xticks((100,500,900))
 axarr_comps[0].invert_xaxis() # invert shared xaxis only once
-learn.pca_stats(pca)
+pca_stats(pca)
 
 km = KMeans(init=pca.components_, n_clusters=n_eigens, n_init=1)
 km.fit(dat_df)

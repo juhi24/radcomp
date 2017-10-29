@@ -9,6 +9,7 @@ from sklearn import decomposition
 from sklearn.cluster import KMeans
 from radcomp import learn, USER_DIR
 from j24 import ensure_dir, limitslist
+from j24.stats import pca_stats
 
 
 META_SUFFIX = '_metadata'
@@ -45,7 +46,7 @@ def model_path(name):
 
 def train(data_df, pca, quiet=False, reduced=False, n_clusters=20):
     if not quiet:
-        learn.pca_stats(pca)
+        pca_stats(pca)
     if reduced:
         km = KMeans(init='k-means++', n_clusters=n_clusters, n_init=40, n_jobs=-1)
     else:

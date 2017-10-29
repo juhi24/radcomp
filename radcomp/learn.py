@@ -1,12 +1,9 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""
-@author: Jussi Tiira
-"""
+# coding: utf-8
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
+
 
 def ncols_subplots(n_axes, n_cols=3, sharex=False, sharey=False):
     n_rows = int(np.ceil(float(n_axes)/n_cols))
@@ -22,11 +19,13 @@ def ncols_subplots(n_axes, n_cols=3, sharex=False, sharey=False):
         axarr.append(fig.add_subplot(gs[i], **subplot_kws))
     return fig, np.array(axarr), gs
 
+
 def sq_subplots(n_axes, use_gs=True, **kws):
     n_rows_cols = int(np.ceil(np.sqrt(n_axes)))
     if use_gs:
         return ncols_subplots(n_axes, n_cols=n_rows_cols, **kws)
     return plt.subplot(n_rows_cols, n_rows_cols, **kws)
+
 
 def plot_class(pn_class, n_cols=5, **kws):
     fig, axarr, gs = ncols_subplots(pn_class.shape[1], n_cols=n_cols, sharey=True)
@@ -44,16 +43,6 @@ def plot_class(pn_class, n_cols=5, **kws):
     gs.update(hspace=0.1, wspace=0.08)
     return fig, axarr
 
-def pca_stats(pca):
-    with plt.style.context('fivethirtyeight'):
-        plt.figure();
-        plt.title('Explained variance ratio over component');
-        plt.plot(pca.explained_variance_ratio_);
-    with plt.style.context('fivethirtyeight'):
-        plt.figure();
-        plt.title('Cumulative explained variance over component');
-        plt.plot(pca.explained_variance_ratio_.cumsum());
-    print('PCA captures {:.2f}% of the variance in the dataset.'.format(pca.explained_variance_ratio_.sum() * 100))
 
 def plot_pca_components(pca, pn):
     fig, axarr, gs = sq_subplots(pca.n_components, sharex=True, sharey=True)
@@ -66,6 +55,7 @@ def plot_pca_components(pca, pn):
             ax.plot(x, comp, label=pn.items[i])
     axarr_flat[0].legend()
     return fig, axarr
+
 
 def pn2df(pn, axis=1, **kws):
     return pd.concat([pn[item] for item in pn.items], axis=axis, **kws)
