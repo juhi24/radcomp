@@ -1,13 +1,15 @@
 # coding: utf-8
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
+
 #import pandas as pd
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import radcomp.visualization as vis
+import j24.visualization as jvis
 from radcomp import vertical, learn
-from radcomp import visualization as vis
+
 
 DISPLACEMENT_FACTOR = 0.5
 LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
@@ -18,17 +20,20 @@ LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               azs='$\\alpha_{ZS}$')
 DEFAULT_DISCRETE_CMAP = 'tab20'
 
+
 def plot_data(data, ax=None, **kws):
     """plot Series"""
     if ax is None:
         ax = plt.gca()
     return ax.plot(data.index, data.values, drawstyle='steps', **kws)
 
+
 def plot_vp(data, ax=None, **kws):
     """plot vertical profile"""
     if ax is None:
         ax = plt.gca()
     return ax.plot(data.values, data.index, **kws)
+
 
 def plot_vps(df, axarr=None, fig_kws={'dpi': 150, 'figsize': (4, 3)}, **kws):
     """plot DataFrame of vertical profile parameters"""
@@ -52,26 +57,31 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 150, 'figsize': (4, 3)}, **kws):
         plt.setp(ax.get_yticklabels(), visible=False)
     return axarr
 
+
 def rotate_tick_labels(rot, ax=None):
     if ax is None:
         ax = plt.gca()
     for tick in ax.get_xticklabels():
         tick.set_rotation(rot)
 
+
 def mean_delta(t):
     dt = t[-1]-t[0]
     return dt/(len(t)-1)
+
 
 def set_h_ax(ax, hlims=(0, 10000)):
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     ax.set_ylim(*hlims)
     ax.set_ylabel('Height, km')
 
+
 def nice_cb_ticks(cb, nbins=5, steps=(1, 5, 10), **kws):
     # TODO: general for plotting, to be moved
     cb_tick_locator = mpl.ticker.MaxNLocator(nbins=nbins, steps=steps, **kws)
     cb.locator = cb_tick_locator
     cb.update_ticks()
+
 
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150}, **kws):
@@ -143,36 +153,16 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
 
-def class_color(cid, cm=None, mapping=None, default=(1, 1, 1)):
-    """pick a color for cid using optional mapping"""
-    if cm is None:
-        cm = plt.get_cmap(DEFAULT_DISCRETE_CMAP)
-    if mapping is not None:
-        if cid in mapping.index:
-            return cm.colors[mapping[cid]]
-        return default
-    return cm.colors[cid]
 
-def class_colors(classes, ymin=-0.2, ymax=0, ax=None, alpha=1,
-                 mapping=None, cmap=DEFAULT_DISCRETE_CMAP, **kws):
-    """plot time series of color coding"""
-    if isinstance(classes.index, pd.DatetimeIndex):
-        t = classes.index
-        dt = mean_delta(t)*DISPLACEMENT_FACTOR
-        clss = classes.shift(freq=dt).dropna().astype(int)
-    else:
-        clss = classes
-        dt = DISPLACEMENT_FACTOR
-        clss.index = clss.index+dt
-    if ax is None:
-        ax = plt.gca()
-    cm = plt.get_cmap(cmap)
-    t0 = clss.index[0]-2*dt
-    for t1, cid in clss.iteritems():
-        color = class_color(cid, cm, mapping=mapping)
-        ax.axvspan(t0, t1, ymin=ymin, ymax=ymax, facecolor=color,
-                   alpha=alpha, clip_on=False, **kws)
-        t0 = t1
+def class_color(cid, cmap=DEFAULT_DISCRETE_CMAP, **kws):
+    """j24.visualization.class_color wrapper"""
+    jvis.class_color(cid, cmap=cmap, **kws)
+
+
+def class_colors(classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
+    """j24.visualization.class_colors wrapper"""
+    jvis.class_colors(classes, cmap=cmap, **kws)
+
 
 def plot_classes(data, classes):
     figs = []
@@ -192,11 +182,13 @@ def plot_classes(data, classes):
                 ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     return figs, axarrs
 
+
 def pcolor_class(g, **kws):
     gt = g.transpose(0, 2, 1)
     gt.minor_axis = list(range(gt.shape[2]))
     fig, axarr = plotpn(gt, x_is_date=False, **kws)
     return axarr
+
 
 def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     """histograms of data grouping by class"""
