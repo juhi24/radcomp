@@ -13,7 +13,7 @@ import radx
 from os import path
 import sounding
 import learn
-from j24.stats import pca_stats
+from j24.learn import pca_stats
 
 #import rpy2.robjects as ro
 #from rpy2.robjects import r

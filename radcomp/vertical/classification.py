@@ -9,7 +9,7 @@ from sklearn import decomposition
 from sklearn.cluster import KMeans
 from radcomp import learn, USER_DIR
 from j24 import ensure_dir, limitslist
-from j24.stats import pca_stats
+from j24.learn import pca_stats
 
 
 META_SUFFIX = '_metadata'
