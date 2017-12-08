@@ -1,4 +1,6 @@
 # coding: utf-8
+"""This is radcomp"""
+
 import locale
 from os import path
 from j24 import home, ensure_join
