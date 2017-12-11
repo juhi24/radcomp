@@ -10,6 +10,10 @@ radcomp documentation
    :maxdepth: 2
    :caption: Contents:
 
+   radcomp.rst
+   radcomp.qpe.rst
+   radcomp.vertical.rst
+
 
 Indices and tables
 ==================
