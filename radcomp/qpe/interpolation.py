@@ -13,7 +13,7 @@ from j24 import ensure_dir
 
 
 def interp(I1, I2, n=1):
-    """Interpolate n frames."""
+    """Interpolate n frames between input frames."""
     VF,VB = motion(I1, I2)
     # Interpolate n frames between the input images.
     return interpolate(I1, I2, VF, n, VB=VB)
@@ -33,10 +33,6 @@ def motion(I1, I2):
 
 def batch_interpolate(filepaths_good, outpath, data_site=None,
                             save_png=False, interval_s=10.):
-    #elev = []
-    #l_dt = []
-    #l_t0_str = []
-    #l_t1_str = []
     interval_dt = datetime.timedelta(seconds=interval_s)
     for f0, f1 in itertools.izip(filepaths_good, filepaths_good[1:]):
         if data_site is None:
@@ -47,18 +43,14 @@ def batch_interpolate(filepaths_good, outpath, data_site=None,
         nc1 = radx.RADXgrid(f1)
         if data_site == 'KER':
             nc0, nc1 = radx.equalize_ker_zmin(nc0, nc1)
-        #elev.append(nc0.variables['z0'][0])
         r0 = nc0.rainrate()
         r1 = nc1.rainrate()
         t0 = nc0.elevation_end_time()
         t1 = nc1.elevation_end_time()
         dt = t1-t0
-        #l_t0_str.append(str(t0))
-        #l_t1_str.append(str(t1))
         n = int(round(dt.total_seconds()/interval_s))
         intrp_timestamps = [t0+i*interval_dt for i in range(1, n+1, 1)]
         selection = [t.second<10 for t in intrp_timestamps]
-        #l_dt.append(dt)
         print(dt.total_seconds())
         intrp = np.array(interp(r0, r1, n))
         for i in np.where(selection)[0]:

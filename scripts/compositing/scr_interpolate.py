@@ -61,68 +61,9 @@ def filepaths_sep3(fromlist=True, gridpath=GRIDPATH):
     return fpaths_good
 
 
-if debug:
-    testpath = os.path.join(basepath, 'test')
-    testfilepaths = glob(os.path.join(testpath, 'KER', '03', '*.nc'))
-    #testfilepaths = glob.glob(os.path.join(testpath, 'KUM', '*.nc'))
-    testfilepaths.sort()
-    testfilepaths_good = radxpaths.filter_filepaths(testfilepaths)
-    testncs=[radx.RADXgrid(f) for f in testfilepaths_good]
-    test_interp = False
-    if test_interp:
-        test_intrp_path = os.path.join(testpath, 'interpolated')
-        interpolation.batch_interpolate(testfilepaths_good, test_intrp_path,
-                                        save_png=True)
-    kumfilepath = os.path.join(testpath, 'ncf_20160904_033827.nc')
-    kerfilepath = os.path.join(testpath, 'ncf_20160904_033918.nc')
-    kerVOL_Afilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130208.nc')
-    kerFMIBfilepath = os.path.join(testpath, 'KER', '03', 'ncf_20160903_130417.nc')
-    vanfilepath = os.path.join(testpath, 'ncf_20160904_034033.nc')
-    irmafilepath = os.path.join(testpath, 'ncf_20160903_130933.nc')
-    irma = radx.RADXgrid(irmafilepath)
-    kumnc = radx.RADXgrid(kumfilepath)
-    kernc = radx.RADXgrid(kerfilepath)
-    vannc = radx.RADXgrid(vanfilepath)
-    vol_a = radx.RADXgrid(kerVOL_Afilepath, 'r')
-    fmib = radx.RADXgrid(kerFMIBfilepath)
-    vol_a.z_min = fmib.z_min
-    for task in (vol_a, fmib):
-        plt.figure()
-        plt.imshow(task.dbz(), vmin=-20, vmax=60)
-        plt.title('corrected DBZ for ' + task.task_name)
-        plt.colorbar()
 if False:
     for site in radx.SITES:
         filepaths_good = filepaths_sep3()
         interpolation.batch_interpolate(filepaths_good, intrp_path,
                                         data_site=site, save_png=True)
 
-
-def testcase():
-    #filename0 = 'ncf_20160904_033827.nc' # KUM
-    #filename1 = 'ncf_20160904_033958.nc' # KUM, dt=91s
-    #filename0 = 'ncf_20160904_033918.nc' # KER
-    #filename1 = 'ncf_20160904_034208.nc' # KER, dt=170s
-    filename0 = 'ncf_20160904_034033.nc' # VAN
-    filename1 = 'ncf_20160904_034056.nc' # VAN, dt=23s
-    filepath0 = os.path.join(testpath, filename0)
-    filepath1 = os.path.join(testpath, filename1)
-    nc0 =  radx.RADXgrid(filepath0)
-    nc1 =  radx.RADXgrid(filepath1)
-    
-    #datafilepath = os.path.join(gridpath, 'KUM', '20160903', filename0)
-    #ncdata = nc.Dataset(datafilepath, 'r')
-    I1 = nc0.rainrate()
-    I2 = nc1.rainrate()
-    
-    interpd = interpolation.interp(I1, I2)
-    radx.plot_rainmap(I1)
-    for rmap in interpd:
-        radx.plot_rainmap(rmap)
-    radx.plot_rainmap(I2)
-    
-    t0 = nc0.datetime()[0]
-    t1 = nc1.datetime()[0]
-    dt = t1-t0 
-    
-    #gdata = gio.read_radx_grid(datafilepath)
