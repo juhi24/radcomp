@@ -20,6 +20,7 @@ def interp(I1, I2, n=1):
 
 
 def motion(I1, I2):
+    """Extract motion from two rainrate fields."""
     # Convert the rainfall maps to unsigned byte, as required by the Optflow 
     # motion detection algorithms. Gaussian filter with std. dev. 3 is applied.
     Iu = []

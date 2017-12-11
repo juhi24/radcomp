@@ -1,6 +1,7 @@
 # coding: utf-8
 import numpy as np
 import matplotlib.pyplot as plt
+"""Radar plotting functions and common variables."""
 
 VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
          'R': 0.05}

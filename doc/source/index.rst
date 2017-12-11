@@ -10,10 +10,6 @@ radcomp documentation
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: radcomp
-   :members:
-   :undoc-members:
-
 
 Indices and tables
 ==================
