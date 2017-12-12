@@ -26,6 +26,6 @@ if __name__ == '__main__':
     c = cases.case.loc['140221-22']
     c.load_classification(name)
     c.load_pluvio()
-    fig, axarr = c.plot(cmap='viridis')
+    #fig, axarr = c.plot(cmap='viridis')
     #fig, axarr = c.plot(plot_fr=False, plot_t=False)
 

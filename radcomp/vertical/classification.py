@@ -101,7 +101,34 @@ def plot_reduced(data, n_clusters):
 
 
 class VPC:
-    """vertical profile classification scheme"""
+    """
+    vertical profile classification scheme
+
+    Attributes
+    ----------
+    pca : sklearn.decomposition.PCA
+        for VP dimension reduction
+    km : sklearn.cluster.KMeans
+        for clustering
+    hlimits : (float, float)
+        (hmin, hmax)
+    params : array_like
+        identifier names of polarimetric radar variables
+    params_extra : array_like
+        identifier names of additional clustering variables
+    reduced : bool
+        if True, dimension reduction is used
+    kdpmax : UNDOCUMENTED
+        UNDOCUMENTED
+    data : UNDOCUMENTED
+        UNDOCUMENTED
+    extra_weight_factor : float, optional
+        temperature weight factor in clustering, 1 if unspecified
+    radar_weight_factors : dict of {str: float} pairs, optional
+        radar variable relative weight factors in clustering, 1 if unspecified
+    basename : str
+        base name for the scheme id
+    """
 
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None, t_weight_factor=1,
