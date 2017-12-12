@@ -20,6 +20,7 @@ def equalize_ker_zmin(nc0, nc1):
 
 
 def db2lin(db):
+    """Decibels to linear scale."""
     return 10.**(db/10.)
 
 

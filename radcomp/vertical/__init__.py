@@ -1,4 +1,5 @@
 # coding: utf-8
+"""tools for clustering vertical profiles of polarimetric radar variables"""
 from os import path
 
 home = path.expanduser('~')

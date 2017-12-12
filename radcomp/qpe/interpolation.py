@@ -31,8 +31,8 @@ def motion(I1, I2):
     return extract_motion_proesmans(Iu[0], Iu[1], lam=25.0, num_iter=250, num_levels=6)
 
 
-def batch_interpolate(filepaths_good, outpath, data_site=None,
-                            save_png=False, interval_s=10.):
+def batch_interpolate(filepaths_good, outpath, data_site=None, save_png=False, 
+                      interval_s=10.):
     interval_dt = datetime.timedelta(seconds=interval_s)
     for f0, f1 in itertools.izip(filepaths_good, filepaths_good[1:]):
         if data_site is None:

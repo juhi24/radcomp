@@ -7,6 +7,16 @@ import matplotlib.pyplot as plt
 
 
 class Radar:
+    """
+    A simple radar marker class.
+    
+    Attributes
+    ----------
+    lat : float
+    lon : float
+    name : str
+    """
+
     def __init__(self, lat=None, lon=None, name=None):
         self.lat = lat
         self.lon = lon

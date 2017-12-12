@@ -1,4 +1,5 @@
 # coding: utf-8
+"""tools for analyzing VPs in an individual precipitation event"""
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -160,6 +161,7 @@ def handle_ax(ax):
 
 
 def load_pluvio(start=None, end=None, kind='400'):
+    """Load Pluvio data from hdf5 database."""
     import baecc.instruments.pluvio as pl
     name = 'pluvio{}'.format(str(kind))
     hdfpath = path.join(home(), 'DATA', 'pluvio14-16.h5')
@@ -184,12 +186,28 @@ def round_time_index(data, resolution='1min'):
 
 
 class Case:
+    """
+    Precipitation event class for VP studies.
+    
+    Attributes
+    ----------
+    data : Panel
+    cl_data
+        non-scaled classifiable data
+    cl_data_scaled
+        scaled classifiable data
+    classes : Series
+    class_scheme : radcomp.vertical.VPC
+    temperature
+    pluvio : baecc.instruments.Pluvio
+    """
+
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
                  classes=None, class_scheme=None, temperature=None,
                  use_temperature=False):
         self.data = data
-        self.cl_data = cl_data # non-scaled classifiable data
-        self.cl_data_scaled = cl_data_scaled # scaled classifiable data
+        self.cl_data = cl_data
+        self.cl_data_scaled = cl_data_scaled
         self.classes = classes
         self.class_scheme = class_scheme
         self.temperature = temperature
@@ -210,6 +228,7 @@ class Case:
         return cls(data=data, temperature=t, **kws)
 
     def name(self, **kws):
+        """date range based id"""
         return case_id_fmt(self.t_start(), self.t_end(), **kws)
 
     def t_start(self):
@@ -421,6 +440,7 @@ class Case:
     def plot_cluster_centroids(self, colorful_bars=False, order=None,
                                sortby='temp_mean', n_extra_ax=0,
                                plot_counts=True, **kws):
+        """class centroids pcolormesh"""
         # TODO: split massive func
         pn, extra = self.clus_centroids(order=order, sortby=sortby)
         order_out = pn.minor_axis
@@ -509,6 +529,12 @@ class Case:
         return insitu.time_weighted_mean(data, rule=dt, base=base, offset=offset)
 
     def ground_temperature(self, save=False, use_arm=False):
+        """resampled ground temperature
+        
+        Returns
+        -------
+        tre : Series
+        """
         if self.temperature is not None:
             return self.temperature
         t_end = self.t_end()+pd.Timedelta(minutes=15)
@@ -533,6 +559,7 @@ class Case:
         return data.resample('15min', base=self.base_minute()).mean()
 
     def load_pluvio(self, **kws):
+        """load_pluvio wrapper"""
         self.pluvio = load_pluvio(start=self.t_start(), end=self.t_end(), **kws)
 
     def lwe(self):
@@ -550,12 +577,14 @@ class Case:
         return self.time_weighted_mean(fr, offset_half_delta=False)
 
     def lwp(self):
+        """liquid water path"""
         t_end = self.t_end()+pd.Timedelta(minutes=15)
         lwp = arm.var_in_timerange(self.t_start(), t_end, var='liq',
                                    globfmt=arm.MWR_GLOB)
         return lwp.resample('15min', base=self.base_minute()).mean()
 
     def class_counts(self):
+        """occurrences of each class"""
         count = self.classes.groupby(self.classes).count()
         count.name = 'count'
         return count
