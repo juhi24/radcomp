@@ -534,6 +534,7 @@ class Case:
         Returns
         -------
         tre : Series
+            resampled temperature
         """
         if self.temperature is not None:
             return self.temperature

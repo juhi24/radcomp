@@ -1,2 +1,2 @@
 #!/bin/sh
-sphinx-apidoc -o source/ ../radcomp/
+sphinx-apidoc -f -o source/ ../radcomp/
