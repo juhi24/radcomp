@@ -192,14 +192,19 @@ class Case:
     Attributes
     ----------
     data : Panel
-    cl_data
+        ?
+    cl_data : ?
         non-scaled classifiable data
-    cl_data_scaled
+    cl_data_scaled : ?
         scaled classifiable data
     classes : Series
+        stored classification results
     class_scheme : radcomp.vertical.VPC
-    temperature
+        classification scheme
+    temperature : ?
+        ?
     pluvio : baecc.instruments.Pluvio
+        ?
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
@@ -208,7 +213,7 @@ class Case:
         self.data = data
         self.cl_data = cl_data
         self.cl_data_scaled = cl_data_scaled
-        self.classes = classes
+        self.classes = classes # is this needed?
         self.class_scheme = class_scheme
         self.temperature = temperature
         self.pluvio = None
