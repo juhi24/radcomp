@@ -92,7 +92,7 @@ def prepare_pn(pn, kdpmax=0.5):
     pn_new['KDP'][pn_new['KDP']<0] = np.nan
     pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
     kdp = pn_new['KDP'] # a view
-    kdp[kdp>kdpmax] = 0
+    kdp[kdp > kdpmax] = 0
     kdp[kdp<0] = 0
     pn_new = filtering.fltr_median(pn_new)
     pn_new = filtering.fltr_ground_clutter_median(pn_new)
@@ -208,8 +208,7 @@ class Case:
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, class_scheme=None, temperature=None,
-                 use_temperature=False):
+                 classes=None, class_scheme=None, temperature=None):
         self.data = data
         self.cl_data = cl_data
         self.cl_data_scaled = cl_data_scaled
