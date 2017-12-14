@@ -104,43 +104,33 @@ class VPC:
     """
     vertical profile classification scheme
 
-    Attributes
-    ----------
-    pca : sklearn.decomposition.PCA
-        for VP dimension reduction
-    km : sklearn.cluster.KMeans
-        for clustering
-    hlimits : (float, float)
-        (hmin, hmax)
-    params : array_like
-        identifier names of polarimetric radar variables
-    params_extra : array_like
-        identifier names of additional clustering variables
-    reduced : bool
-        if True, dimension reduction is used
-    kdpmax : UNDOCUMENTED
-        UNDOCUMENTED
-    data : UNDOCUMENTED
-        UNDOCUMENTED
-    extra_weight_factor : float, optional
-        temperature weight factor in clustering, 1 if unspecified
-    radar_weight_factors : dict of {str: float} pairs, optional
-        radar variable relative weight factors in clustering, 1 if unspecified
-    basename : str
-        base name for the scheme id
+    Attributes:
+        pca (sklearn.decomposition.PCA): for VP dimension reduction
+        km (sklearn.cluster.KMeans): for clustering
+        hlimits (float, float): (hmin, hmax)
+        params (array_like): identifier names of polarimetric radar variables
+        params_extra (array_like): identifier names of additional clustering variables
+        reduced (bool): if True, dimension reduction is used
+        kdpmax
+        data
+        extra_weight_factor (float, optional): temperature weight factor
+            in clustering, 1 if unspecified
+        radar_weight_factors (dict of {str: float} pairs, optional):
+            radar variable relative weight factors in clustering, 1 if unspecified
+        basename (str): base name for the scheme id
     """
 
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None, t_weight_factor=1,
                  radar_weight_factors=None, basename=None):
         self.pca = pca
-        self.km = km # k means
+        self.km = km  # k means
         self.hlimits = hlimits
         self.params = params
         self.params_extra = []
         self.reduced = reduced
         self.kdpmax = None
-        self.data = None # training or classification data
+        self.data = None  # training or classification data
         self.extra_weight_factor = t_weight_factor
         self.radar_weight_factors = radar_weight_factors
         self.basename = basename

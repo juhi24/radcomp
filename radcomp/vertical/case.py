@@ -18,17 +18,20 @@ COL_END = 'end'
 SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 
-def case_id_fmt(t_start, t_end=None, dtformat='{year}{month}{day}', hour_fmt='%H',
+
+def case_id_fmt(t_start, t_end=None, dtformat='{year}{month}{day}',
                 day_fmt='%d', month_fmt='%m', year_fmt='%y'):
     """daterange2str wrapper for date range based IDs"""
     return daterange2str(t_start, t_end, dtformat=dtformat, day_fmt=day_fmt,
                          month_fmt=month_fmt, year_fmt=year_fmt).lower()
+
 
 def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
                    day_fmt='%d', month_fmt='%b', year_fmt='%Y'):
     """daterange2str wrapper for US human readable date range format"""
     return daterange2str(t_start, t_end, dtformat=dtformat, day_fmt=day_fmt,
                          month_fmt=month_fmt, year_fmt=year_fmt)
+
 
 def read_case_times(name):
     """Read case starting and ending times from cases directory."""
@@ -58,7 +61,7 @@ def vprhimat2pn(datapath):
     fields = list(data.dtype.fields)
     fields.remove('ObsTime')
     fields.remove('height')
-    str2dt = lambda tstr: pd.datetime.strptime(tstr,'%Y-%m-%dT%H:%M:%S')
+    str2dt = lambda tstr: pd.datetime.strptime(tstr, '%Y-%m-%dT%H:%M:%S')
     t = list(map(str2dt, data['ObsTime'][0][0]))
     h = data['height'][0][0][0]
     data_dict = {}
@@ -189,22 +192,14 @@ class Case:
     """
     Precipitation event class for VP studies.
     
-    Attributes
-    ----------
-    data : Panel
-        ?
-    cl_data : ?
-        non-scaled classifiable data
-    cl_data_scaled : ?
-        scaled classifiable data
-    classes : Series
-        stored classification results
-    class_scheme : radcomp.vertical.VPC
-        classification scheme
-    temperature : ?
-        ?
-    pluvio : baecc.instruments.Pluvio
-        ?
+    Attributes:
+        data (Panel)
+        cl_data (Panel): non-scaled classifiable data
+        cl_data_scaled (Panel): scaled classifiable data
+        classes (Series): stored classification results
+        class_scheme (radcomp.vertical.VPC): classification scheme
+        temperature (Series): stored temperature
+        pluvio (baecc.instruments.Pluvio)
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
@@ -254,8 +249,10 @@ class Case:
         return None
 
     def scale_cl_data(self, save=True):
-        """scaled version of classification data,
-        time rounded to the nearest minute"""
+        """scaled version of classification data
+
+        time rounded to the nearest minute
+        """
         if self.cl_data is None:
             self.prepare_cl_data()
         if self.cl_data is not None:
@@ -535,10 +532,8 @@ class Case:
     def ground_temperature(self, save=False, use_arm=False):
         """resampled ground temperature
         
-        Returns
-        -------
-        tre : Series
-            resampled temperature
+        Returns:
+            Series: resampled temperature
         """
         if self.temperature is not None:
             return self.temperature
