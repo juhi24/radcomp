@@ -199,7 +199,7 @@ class VPC:
         lims = limitslist(np.arange(0, n_levels+1, int(n_levels/n_radarparams)))
         dfs = OrderedDict()
         for lim, param in zip(lims, self.params):
-            df = clus_centroids.iloc[lim[0]:lim[1],:]
+            df = clus_centroids.iloc[lim[0]:lim[1], :]
             # we don't know row names here
             df.index = pd.RangeIndex(stop=df.index.size)
             dfs[param] = df

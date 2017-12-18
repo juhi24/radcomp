@@ -174,6 +174,11 @@ def load_pluvio(start=None, end=None, kind='400'):
 
 
 def plot_occurrence_counts(count, ax=None):
+    """Bar plot occurrence counts.
+
+    Args:
+        count (Series)
+    """
     if ax is None:
         ax = plt.gca()
     count.plot.bar(ax=ax)
