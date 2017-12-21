@@ -100,9 +100,43 @@ def _pn_gs(fig_scale_factor, n_rows):
                                  left=left, right=right)
 
 
+def _pn_scalekws(field, scaled, x_is_date):
+    """plotpn helper function for setting scaling arguments and cb label"""
+    fieldup = field.upper()
+    if scaled:
+        scalekws = {'vmin': 0, 'vmax': 1}
+        cb_label = 'scaled'
+    elif fieldup in vis.LABELS:
+        # custom limits
+        vmins = vis.VMINS
+        vmaxs = vis.VMAXS
+        vmins['ZDR'] = -0.5
+        if not x_is_date: # if not a time series
+            vmaxs['ZDR'] = 2.5
+        ##
+        scalekws = {'vmin': vmins[fieldup],
+                    'vmax': vmaxs[fieldup]}
+        cb_label = vis.LABELS[fieldup]
+    else:
+        scalekws = {}
+        cb_label = field
+    return scalekws, cb_label
+
+
+def _pn_x(df, x_is_date):
+    """plotpn helper fucntion for setting x values"""
+    if x_is_date:
+        t = df.columns
+        x = t - mean_delta(t)*DISPLACEMENT_FACTOR
+    else:
+        x = df.columns.sort_values()
+    dx = mean_delta(x)
+    x_last = x[-1:]+dx
+    return x.append(x_last)
+
+
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150}, **kws):
-    # TODO: split
     if fields is None:
         fields = pn.items
     n_rows = len(fields) + n_extra_ax
@@ -111,47 +145,21 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
     axarr = []
     for i, field in enumerate(fields):
         subplot_kws = {}
-        if i>0:
+        if i > 0:
             subplot_kws['sharex'] = axarr[0]
         ax = fig.add_subplot(gs[i, 0], **subplot_kws)
         ax_cb = fig.add_subplot(gs[i, 1])
         axarr.append(ax)
-        fieldup = field.upper()
-        if scaled:
-            scalekws = {'vmin': 0, 'vmax': 1}
-            label = 'scaled'
-        elif fieldup in vis.LABELS:
-            # custom limits
-            vmins = vis.VMINS
-            vmaxs = vis.VMAXS
-            vmins['ZDR'] = -0.5
-            if not x_is_date: # if not a time series
-                vmaxs['ZDR'] = 2.5
-            ##
-            scalekws = {'vmin': vmins[fieldup],
-                        'vmax': vmaxs[fieldup]}
-            label = vis.LABELS[fieldup]
-        else:
-            scalekws = {}
-            label = field
+        scalekws, cb_label = _pn_scalekws(field, scaled, x_is_date)
         kws.update(scalekws)
-        if x_is_date:
-            t = pn[field].columns
-            x = t - mean_delta(t)*DISPLACEMENT_FACTOR
-        else:
-            x = pn[field].columns.sort_values()
-        dx = mean_delta(x)
-        x_last = x[-1:]+dx
-        x = x.append(x_last)
+        x = _pn_x(pn[field], x_is_date)
         im = ax.pcolormesh(x, pn[field].index,
                            np.ma.masked_invalid(pn[field].values), cmap=cmap,
                            label=field, **kws)
-        #fig.autofmt_xdate()
         if x_is_date:
             ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         set_h_ax(ax)
-        #fig.colorbar(im, ax=ax, label=label)
-        cb = fig.colorbar(im, cax=ax_cb, label=label)
+        cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
     for j in range(n_extra_ax):
         ax = fig.add_subplot(gs[i+1+j, 0], sharex=axarr[0])
