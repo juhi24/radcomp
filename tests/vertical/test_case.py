@@ -8,7 +8,6 @@ import pandas as pd
 from radcomp.vertical import case, classification
 
 
-@pytest.fixture
 def class_scheme_name():
     return classification.scheme_name(
             basename='14-16',
@@ -20,20 +19,25 @@ def class_scheme_name():
             radar_weight_factors=dict(zdr=0.5))
 
 
-@pytest.fixture
 def cases_from_cases_set():
-    case_set = '14-16by_hand'
-    return case.read_cases(case_set)
+    return case.read_cases('debug')
+
+
+def case_post(c):
+    """finalize case setup"""
+    scheme_name = class_scheme_name()
+    c.load_classification(scheme_name)
+    c.load_pluvio()
 
 
 @pytest.fixture
 def case_full_setup():
-    scheme_name = class_scheme_name()
-    c = cases_from_cases_set().case.loc['140221-22']
-    c.load_classification(scheme_name)
-    c.load_pluvio()
+    c = cases_from_cases_set().case.iloc[0]
+    case_post(c)
     return c
 
+
+###### TESTS
 
 def test_mean_delta(case_full_setup):
     assert case_full_setup.mean_delta() == pd.Timedelta(minutes=15)

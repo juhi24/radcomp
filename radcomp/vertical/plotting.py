@@ -9,6 +9,7 @@ import matplotlib as mpl
 import radcomp.visualization as vis
 import j24.visualization as jvis
 from radcomp import vertical, learn
+import pyart # for colormaps
 
 
 DISPLACEMENT_FACTOR = 0.5
@@ -83,20 +84,30 @@ def nice_cb_ticks(cb, nbins=5, steps=(1, 5, 10), **kws):
     cb.update_ticks()
 
 
+def _pn_fig(fig_scale_factor, n_rows, **fig_kws):
+    """Initialize figure for plotpn."""
+    fw = fig_scale_factor*8
+    fh = fig_scale_factor*(3+1.1*n_rows)
+    return plt.figure(figsize=(fw,fh), **fig_kws)
+
+
+def _pn_gs(fig_scale_factor, n_rows):
+    """Initialize gridspec for plotpn."""
+    left = 0.1*(11/(10+fig_scale_factor))
+    right = 0.905*(10+fig_scale_factor)/11
+    return mpl.gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
+                                 top=1-0.22/n_rows, bottom=0.35/n_rows,
+                                 left=left, right=right)
+
+
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150}, **kws):
     # TODO: split
     if fields is None:
         fields = pn.items
     n_rows = len(fields) + n_extra_ax
-    fw = fig_scale_factor*8
-    fh = fig_scale_factor*(3+1.1*n_rows)
-    fig = plt.figure(figsize=(fw,fh), **fig_kws)
-    left = 0.1*(11/(10+fig_scale_factor))
-    right = 0.905*(10+fig_scale_factor)/11
-    gs = mpl.gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
-                               top=1-0.22/n_rows, bottom=0.35/n_rows, left=left,
-                               right=right)
+    fig = _pn_fig(fig_scale_factor, n_rows, **fig_kws)
+    gs = _pn_gs(fig_scale_factor, n_rows)
     axarr = []
     for i, field in enumerate(fields):
         subplot_kws = {}
@@ -133,8 +144,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         x_last = x[-1:]+dx
         x = x.append(x_last)
         im = ax.pcolormesh(x, pn[field].index,
-                      np.ma.masked_invalid(pn[field].values), cmap=cmap,
-                      label=field, **kws)
+                           np.ma.masked_invalid(pn[field].values), cmap=cmap,
+                           label=field, **kws)
         #fig.autofmt_xdate()
         if x_is_date:
             ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))

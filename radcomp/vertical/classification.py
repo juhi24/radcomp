@@ -182,7 +182,7 @@ class VPC:
     def clus_centroids_df(self):
         centroids = self.km.cluster_centers_
         n_extra = len(self.params_extra)
-        if n_extra<1:
+        if n_extra < 1:
             components = centroids
             extra = []
         else:
