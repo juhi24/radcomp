@@ -196,7 +196,7 @@ def round_time_index(data, resolution='1min'):
 class Case:
     """
     Precipitation event class for VP studies.
-    
+
     Attributes:
         data (Panel)
         cl_data (Panel): non-scaled classifiable data
@@ -299,6 +299,8 @@ class Case:
             else:
                 params = ['ZH', 'zdr', 'kdp']
         plot_lwe = self.pluvio is not None
+        plot_azs = plot_azs and self.azs().size
+        plot_fr = plot_fr and self.fr().size
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs
         next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
@@ -536,7 +538,7 @@ class Case:
 
     def ground_temperature(self, save=False, use_arm=False):
         """resampled ground temperature
-        
+
         Returns:
             Series: resampled temperature
         """
