@@ -156,8 +156,6 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         im = ax.pcolormesh(x, pn[field].index,
                            np.ma.masked_invalid(pn[field].values), cmap=cmap,
                            label=field, **kws)
-        if x_is_date:
-            ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         set_h_ax(ax)
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
@@ -166,6 +164,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         axarr.append(ax)
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')
+        axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         axarr[0].set_title(str(pn[field].columns[0].date()))
     # Hide xticks for all but last.
     for ax in axarr[:-1]:

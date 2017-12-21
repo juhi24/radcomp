@@ -330,6 +330,7 @@ class Case:
             ax.yaxis.grid(True)
         self.set_xlim(ax)
         axarr[0].set_title(date_us_fmt(self.t_start(), self.t_end()))
+        axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         return fig, axarr
 
     def plot_t(self, ax, tmin=-20, tmax=10):
@@ -338,7 +339,6 @@ class Case:
         t = self.ground_temperature().shift(freq=half_dt)
         plotting.plot_data(t, ax=ax)
         ax.set_ylabel(plotting.LABELS['temp_mean'])
-        ax.yaxis.grid(True)
         ax.set_ylim([tmin, tmax])
 
     def plot_lwe(self, ax, rmax=4):
@@ -347,7 +347,6 @@ class Case:
         plotting.plot_data(i, ax=ax, label=self.pluvio.name)
         ax.set_ylim(bottom=0, top=rmax)
         ax.set_ylabel(plotting.LABELS['intensity'])
-        ax.yaxis.grid(True)
         self.set_xlim(ax)
 
     def plot_fr(self, ax, frmin=-0.1, frmax=1):
@@ -356,7 +355,6 @@ class Case:
         plotting.plot_data(fr, ax=ax, label='FR')
         ax.set_ylim(bottom=frmin, top=frmax)
         ax.set_ylabel(plotting.LABELS[fr.name])
-        ax.yaxis.grid(True)
         self.set_xlim(ax)
 
     def plot_azs(self, ax, amin=10, amax=4000):
@@ -365,7 +363,6 @@ class Case:
         label = plotting.LABELS[azs.name]
         plotting.plot_data(azs, ax=ax, label=label)
         ax.set_ylabel(plotting.LABELS[azs.name])
-        ax.yaxis.grid(True)
         ax.set_yscale('log')
         ax.set_ylim(bottom=amin, top=amax)
         ax.set_yticks([10, 100, 1000])
