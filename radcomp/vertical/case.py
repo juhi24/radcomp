@@ -82,12 +82,14 @@ def kdp2phidp(kdp, dr_km):
 
 
 def data_range(dt_start, dt_end):
+    """read raw VP data between datetimes"""
     fnames = fname_range(dt_start, dt_end)
     pns = map(vprhimat2pn, fnames)
     return pd.concat(pns, axis=2).loc[:, :, dt_start:dt_end]
 
 
 def prepare_pn(pn, kdpmax=0.5):
+    """Filter data and calculate extra parameters."""
     dr = pd.Series(pn.major_axis.values, index=pn.major_axis).diff().bfill()
     dr_km = dr/1000
     pn_new = pn.copy()
@@ -95,6 +97,7 @@ def prepare_pn(pn, kdpmax=0.5):
     pn_new['KDP'][pn_new['KDP']<0] = np.nan
     pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
     kdp = pn_new['KDP'] # a view
+    # remove extreme KDP values in the panel using a view
     kdp[kdp > kdpmax] = 0
     kdp[kdp<0] = 0
     pn_new = filtering.fltr_median(pn_new)
@@ -103,6 +106,7 @@ def prepare_pn(pn, kdpmax=0.5):
 
 
 def dt2pn(dt0, dt1):
+    """Read and preprocess VP data between datetimes."""
     pn_raw = data_range(dt0, dt1)
     return prepare_pn(pn_raw)
 
@@ -301,6 +305,7 @@ class Case:
         plot_lwe = self.pluvio is not None
         plot_azs = plot_azs and self.azs().size
         plot_fr = plot_fr and self.fr().size
+        plot_t = plot_t and self.ground_temperature().size
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs
         next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
@@ -324,7 +329,8 @@ class Case:
             for ax in axarr:
                 # TODO: cursor not showing
                 mpl.widgets.Cursor(ax, horizOn=False, color='red', linewidth=2)
-            fig.canvas.mpl_connect('button_press_event', self._on_click_plot_dt_cs)
+            on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params)
+            fig.canvas.mpl_connect('button_press_event', on_click_fun)
         for ax in axarr:
             ax.xaxis.grid(True)
             ax.yaxis.grid(True)
@@ -378,14 +384,14 @@ class Case:
         return self.class_scheme.train(data=self.cl_data_scaled,
                                        extra_df=extra_df, **kws)
 
-    def _on_click_plot_dt_cs(self, event):
+    def _on_click_plot_dt_cs(self, event, params=None):
         """on click plot cross section"""
         try:
             dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
         except TypeError: # clicked outside axes
             return
         ax, update, axkws = handle_ax(self._dt_ax)
-        self._dt_ax = self.plot_cl_data_at(dt, **axkws)
+        self._dt_ax = self.plot_data_at(dt, params=params, **axkws)
         if update:
             ax.get_figure().canvas.draw()
 
@@ -402,11 +408,15 @@ class Case:
         if update:
             ax.get_figure().canvas.draw()
 
-    def plot_cl_data_at(self, dt, **kws):
-        data = self.cl_data
-        i = data.major_axis.get_loc(dt, method='nearest')
-        axarr = plotting.plot_vps(data.iloc[:, i, :], **kws)
-        axarr[1].set_title(str(dt))
+    def plot_data_at(self, dt, params=None, **kws):
+        data_orig = self.data
+        i = data_orig.minor_axis.get_loc(dt, method='nearest')
+        data = data_orig.iloc[:, :, i]
+        if params:
+            data = data[params]
+        axarr = plotting.plot_vps(data, **kws)
+        t = data_orig.minor_axis[i]
+        axarr[1].set_title(str(t))
         return axarr
 
     def plot_centroid(self, n, **kws):
