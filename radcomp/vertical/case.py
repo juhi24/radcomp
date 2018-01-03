@@ -303,9 +303,9 @@ class Case:
             else:
                 params = ['ZH', 'zdr', 'kdp']
         plot_lwe = self.pluvio is not None
-        plot_azs = plot_azs and self.azs().size
-        plot_fr = plot_fr and self.fr().size
-        plot_t = plot_t and self.ground_temperature().size
+        plot_azs = plot_azs and (self.azs().size > 0)
+        plot_fr = plot_fr and (self.fr().size > 0)
+        plot_t = plot_t and (self.ground_temperature().size > 0)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs
         next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
