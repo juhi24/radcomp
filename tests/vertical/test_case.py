@@ -9,6 +9,7 @@ from radcomp.vertical import case, classification
 
 
 def class_scheme_name():
+    """generate test class scheme name"""
     return classification.scheme_name(
             basename='14-16',
             n_eigens=19,
@@ -20,6 +21,7 @@ def class_scheme_name():
 
 
 def cases_from_cases_set():
+    """setup cases based on a cases list"""
     return case.read_cases('debug')
 
 
@@ -32,6 +34,7 @@ def case_post(c):
 
 @pytest.fixture
 def case_full_setup():
+    """case setup with classification"""
     c = cases_from_cases_set().case.iloc[0]
     case_post(c)
     return c
@@ -40,6 +43,7 @@ def case_full_setup():
 ###### TESTS
 
 def test_mean_delta(case_full_setup):
+    """mean delta should be 15 minutes by default"""
     assert case_full_setup.mean_delta() == pd.Timedelta(minutes=15)
 
 
