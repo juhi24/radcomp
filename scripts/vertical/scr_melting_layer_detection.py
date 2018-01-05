@@ -2,10 +2,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
+import os
 import matplotlib.pyplot as plt
 import peakutils
 from peakutils.plot import plot as pplot
 from radcomp.vertical import case
+from j24 import home
 
 
 def dbz_is_low(dbz):
@@ -21,6 +23,17 @@ def drop_short_bool_sequence(df_bool, limit=5):
     return df_bool.rolling(limit, center=True).sum() > (limit-0.5)
 
 
+def find_dips(s, thres=0.04, **kws):
+    """find lows
+
+    optimized for finding melting layer signal in rhohv
+
+    Returns:
+        array: indices corresponding the dip bottoms"""
+    y = (-s.fillna(0)).values
+    return list(peakutils.peak.indexes(y, thres=thres, **kws))
+
+
 def melting_px_candidate(pn):
     low_rhohv = rhohv_is_low(pn['RHO'])
     low_dbz = dbz_is_low(pn['ZH'])
@@ -31,6 +44,7 @@ def melting_px_candidate(pn):
 
 if __name__ == '__main__':
     plt.close('all')
+    plt.ion()
     cases = case.read_cases('melting')
     c = cases.case.iloc[0]
     c_snow = cases.case.iloc[1] # no melting
@@ -41,6 +55,13 @@ if __name__ == '__main__':
     c.data['MLT'] = melting_px_candidate(c.data)
     c_snow.data['MLT'] = melting_px_candidate(c_snow.data)
     fig, axarr = c.plot(params=['ZH', 'zdr', 'kdp', 'RHO', 'MLT'], cmap='viridis')
-    c_snow.plot(params=['ZH', 'zdr', 'kdp', 'RHO', 'MLT'], cmap='viridis')
-
+    #c_snow.plot(params=['ZH', 'zdr', 'kdp', 'RHO', 'MLT'], cmap='viridis')
+    indices = find_dips(rho_sample)
+    #plt.figure()
+    #pplot(rho_sample.index, rho_sample.values, indices)
+    dipsi = rhohv.apply(find_dips)
+    dips = dipsi.apply(lambda i: list(rhohv.iloc[i].index))
+    x = rhohv.columns[20]
+    y = rhohv.iloc[dipsi.iloc[20], 20].index[0]
+    axarr[-2].scatter(x, y, marker='+', zorder=1, color='red')
 
