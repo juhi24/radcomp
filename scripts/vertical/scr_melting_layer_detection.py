@@ -1,8 +1,10 @@
 # coding: utf-8
+"""melting layer detection sandbox"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
 import os
+import numpy as np
 import matplotlib.pyplot as plt
 import peakutils
 from peakutils.plot import plot as pplot
@@ -42,6 +44,13 @@ def melting_px_candidate(pn):
     return melting
 
 
+def dips_xy(dips, i):
+    """x y pairs from dataframe"""
+    x = np.full(len(dips[i]), dips.index[i])
+    y = dips[i]
+    return x, y
+
+
 if __name__ == '__main__':
     plt.close('all')
     plt.ion()
@@ -63,5 +72,7 @@ if __name__ == '__main__':
     dips = dipsi.apply(lambda i: list(rhohv.iloc[i].index))
     x = rhohv.columns[20]
     y = rhohv.iloc[dipsi.iloc[20], 20].index[0]
-    axarr[-2].scatter(x, y, marker='+', zorder=1, color='red')
+    for ts, vals in dips.iteritems():
+        x = np.full(len(vals), ts)
+        axarr[-2].scatter(x, vals, marker='+', zorder=1, color='red')
 
