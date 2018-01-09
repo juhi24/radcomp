@@ -100,6 +100,7 @@ def prepare_pn(pn, kdpmax=0.5):
     # remove extreme KDP values in the panel using a view
     kdp[kdp > kdpmax] = 0
     kdp[kdp<0] = 0
+    pn_new = filtering.fltr_zdr_using_rhohv(pn_new)
     pn_new = filtering.fltr_median(pn_new)
     pn_new = filtering.fltr_ground_clutter_median(pn_new)
     return pn_new

@@ -5,6 +5,11 @@ from scipy.ndimage.filters import median_filter
 from radcomp.vertical import NAN_REPLACEMENT
 
 
+def dict_keys_lower(d):
+    """list of dictionary keys in lower case"""
+    return list(map(str.lower, d.keys()))
+
+
 def create_filtered_fields_if_missing(pn, keys):
     '''copy original fields as new fields for processing'''
     pn_new = pn.copy()
@@ -23,7 +28,7 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
     '''gc filter using a combination of threshold and median filter'''
     pn_new = pn.copy()
     ground_threshold = dict(ZDR=3.5, KDP=0.22)
-    keys = list(map(str.lower, ground_threshold.keys()))
+    keys = dict_keys_lower(ground_threshold)
     pn_new = create_filtered_fields_if_missing(pn_new, keys)
     for field in keys:
         view = pn_new[field].iloc[:heigth_px]
@@ -41,14 +46,26 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
 
 
 def fltr_median(pn):
+    """apply median filter on ZDR and KDP"""
     pn_out = pn.copy()
-    sizes = {'ZDR': (5, 1), 'KDP': (20, 1)}
-    keys = list(map(str.lower, sizes.keys()))
+    sizes = {'ZDR': (5, 1), 'KDP': (20, 1)} # filter window sizes
+    # filtered field names are same as originals but in lower case
+    keys = dict_keys_lower(sizes)
     new = create_filtered_fields_if_missing(pn, sizes.keys())[keys]
     nullmask = pn['ZH'].isnull()
     for field, data in new.iteritems():
         df = median_filter_df(data, param=field, nullmask=nullmask, size=sizes[field.upper()])
         pn_out[field] = df
+    return pn_out
+
+
+def fltr_zdr_using_rhohv(pn):
+    """Filter high ZDR values where rhohv is low."""
+    pn_out = create_filtered_fields_if_missing(pn, ['ZDR'])
+    high_zdr = pn['ZDR'] > 3
+    low_rhohv = pn['RHO'] < 0.8
+    cond = high_zdr & low_rhohv
+    pn_out['zdr'][cond] = 0
     return pn_out
 
 
@@ -64,7 +81,7 @@ def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
     # deprecated?
     pn = pn_orig.copy()
     threshold = dict(ZDR=4, KDP=0.28)
-    keys = list(map(str.lower, threshold.keys()))
+    keys = dict_keys_lower(threshold)
     pn = create_filtered_fields_if_missing(pn, keys)
     for field, data in pn.iteritems():
         if field not in keys:
