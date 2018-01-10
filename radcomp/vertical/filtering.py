@@ -11,21 +11,22 @@ def dict_keys_lower(d):
 
 
 def create_filtered_fields_if_missing(pn, keys):
-    '''copy original fields as new fields for processing'''
+    """Check that lower case key versions of the fields exist."""
     pn_new = pn.copy()
-    filtered_fields_exist = True
+    #filtered_fields_exist = True
     keys = list(map(str.upper, keys))
     for key in keys:
         if key.lower() not in pn_new.items:
-            filtered_fields_exist = False
-    if not filtered_fields_exist:
-        for key in keys:
+            #filtered_fields_exist = False
             pn_new[key.lower()] = pn_new[key]
+    #if not filtered_fields_exist:
+        #for key in keys:
+            #pn_new[key.lower()] = pn_new[key]
     return pn_new
 
 
 def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
-    '''gc filter using a combination of threshold and median filter'''
+    """gc filter using a combination of threshold and median filter"""
     pn_new = pn.copy()
     ground_threshold = dict(ZDR=3.5, KDP=0.22)
     keys = dict_keys_lower(ground_threshold)
@@ -35,7 +36,7 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
         fltrd = median_filter_df(view, param=field, fill=True,
                                      nullmask=pn.ZH.isnull(), size=size)
         new_values = fltrd.iloc[:crop_px]
-        selection = pn[field]>ground_threshold[field.upper()]
+        selection = pn_new[field]>ground_threshold[field.upper()]
         selection.loc[:, selection.iloc[crop_px]] = False # not clutter
         selection.loc[:, selection.iloc[0]] = True
         selection.iloc[crop_px:] = False
@@ -51,7 +52,7 @@ def fltr_median(pn):
     sizes = {'ZDR': (5, 1), 'KDP': (20, 1)} # filter window sizes
     # filtered field names are same as originals but in lower case
     keys = dict_keys_lower(sizes)
-    new = create_filtered_fields_if_missing(pn, sizes.keys())[keys]
+    new = create_filtered_fields_if_missing(pn_out, sizes.keys())[keys]
     nullmask = pn['ZH'].isnull()
     for field, data in new.iteritems():
         df = median_filter_df(data, param=field, nullmask=nullmask, size=sizes[field.upper()])
@@ -64,8 +65,10 @@ def fltr_zdr_using_rhohv(pn):
     pn_out = create_filtered_fields_if_missing(pn, ['ZDR'])
     high_zdr = pn['ZDR'] > 3
     low_rhohv = pn['RHO'] < 0.8
-    cond = high_zdr & low_rhohv
-    pn_out['zdr'][cond] = 0
+    #high_zdr2 = pn['ZDR'] > 2
+    #low_rhohv2 = pn['RHO'] < 0.7
+    cond = (high_zdr & low_rhohv)# | (high_zdr2 & low_rhohv2)
+    pn_out['zdr'][cond] = np.nan
     return pn_out
 
 
@@ -77,7 +80,7 @@ def reject_outliers(df, m=2):
 
 
 def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
-    '''simple threshold based gc filter'''
+    """simple threshold based gc filter"""
     # deprecated?
     pn = pn_orig.copy()
     threshold = dict(ZDR=4, KDP=0.28)
@@ -108,7 +111,7 @@ def fltr_ground_clutter(pn_orig, window=18, ratio_limit=8):
 
 
 def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
-    '''median_filter wrapper for DataFrames'''
+    """median_filter wrapper for DataFrames"""
     if nullmask is None:
         nullmask = df.isnull()
     if fill and param is not None:
