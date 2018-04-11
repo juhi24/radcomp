@@ -121,8 +121,9 @@ class VPC:
     """
 
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
-                 reduced=False, n_eigens=None, t_weight_factor=1,
-                 radar_weight_factors=None, basename=None):
+                 reduced=False, n_eigens=None, n_clusters=None,
+                 t_weight_factor=1, radar_weight_factors=None, basename=None,
+                 use_temperature=False):
         self.pca = pca
         self.km = km  # k means
         self.hlimits = hlimits
@@ -134,7 +135,24 @@ class VPC:
         self.extra_weight_factor = t_weight_factor
         self.radar_weight_factors = radar_weight_factors
         self.basename = basename
+        self.use_temperature = use_temperature
         self._n_eigens = n_eigens
+        self._n_clusters = n_clusters
+
+    def __repr__(self):
+        return self.name()
+
+    @property
+    def n_clusters(self):
+        return self._n_clusters or self.km.n_clusters
+
+    @n_clusters.setter
+    def n_clusters(self, n_clusters):
+        self._n_clusters = n_clusters
+        try:
+            self.km.n_clusters = n_clusters
+        except AttributeError:
+            pass
 
     @classmethod
     def using_metadict(cls, metadata, **kws):
@@ -147,13 +165,13 @@ class VPC:
             return obj
         raise Exception('Not a {} object.'.format(cls))
 
-    def name(self, use_temperature=False):
+    def name(self):
         if self.basename is None:
             raise TypeError('basename is not set')
         return scheme_name(basename=self.basename, n_eigens=self._n_eigens,
-                           n_clusters=self.km.n_clusters,
+                           n_clusters=self.n_clusters,
                            reduced=self.reduced,
-                           use_temperature=use_temperature,
+                           use_temperature=self.use_temperature,
                            t_weight_factor=self.extra_weight_factor,
                            radar_weight_factors=self.radar_weight_factors)
 

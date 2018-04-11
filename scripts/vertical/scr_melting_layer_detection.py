@@ -54,7 +54,7 @@ def dips_xy(dips, i):
 if __name__ == '__main__':
     plt.close('all')
     plt.ion()
-    cases = case.read_cases('melting')
+    cases = case.read_cases('melting-test')
     c = cases.case.iloc[0]
     c_snow = cases.case.iloc[1] # no melting
     rhohv = c.data['RHO']

@@ -375,8 +375,8 @@ class Case:
         ax.set_yticks([10, 100, 1000])
         self.set_xlim(ax)
 
-    def train(self, use_temperature, **kws):
-        if use_temperature:
+    def train(self, **kws):
+        if self.class_scheme.use_temperature:
             extra_df = self.ground_temperature()
         else:
             extra_df = None

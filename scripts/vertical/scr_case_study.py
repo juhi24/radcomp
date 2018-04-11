@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # coding: utf-8
 """
 @author: Jussi Tiira
@@ -10,8 +10,6 @@ from os import path
 from radcomp.vertical import case, insitu, classification, plotting, RESULTS_DIR
 from j24 import ensure_dir
 
-plt.ion()
-plt.close('all')
 np.random.seed(0)
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'case_study'))
 name = '140303'
@@ -46,9 +44,13 @@ def plot_cases(cases, g, save=True, **kws):
         fig, axarr = plot_case(name, cases, g, **kws)
         fig.savefig(path.join(results_dir, name + '.png'))
 
-cases = case.read_cases('analysis')
-g = pd.read_pickle(insitu.TABLE_FILTERED_PKL)
-data_g = g.loc[name]
-c = cases.case[name]
-c.load_classification(scheme)
-fig, axarr = plot_case(c, data_g)
+
+if __name__ == '__main__':
+    plt.ion()
+    plt.close('all')
+    cases = case.read_cases('analysis')
+    g = pd.read_pickle(insitu.TABLE_FILTERED_PKL)
+    data_g = g.loc[name]
+    c = cases.case[name]
+    c.load_classification(scheme)
+    fig, axarr = plot_case(c, data_g)

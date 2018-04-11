@@ -36,7 +36,7 @@ def plot_vp(data, ax=None, **kws):
     return ax.plot(data.values, data.index, **kws)
 
 
-def plot_vps(df, axarr=None, fig_kws={'dpi': 150, 'figsize': (4, 3)}, **kws):
+def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5, 3)}, **kws):
     """plot DataFrame of vertical profile parameters"""
     ncols = df.shape[1]
     if axarr is None:

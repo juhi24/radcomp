@@ -36,14 +36,10 @@ scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
                             radar_weight_factors=radar_weight_factors,
                             basename=basename)
 c = case.Case.by_combining(cases, class_scheme=scheme)
-trainkws = {}
-if reduced:
-    trainkws['n_clusters'] = n_clusters
-    trainkws['use_temperature'] = use_temperature
-c.train(**trainkws)
-scheme.save(use_temperature=use_temperature)
+c.train()
+scheme.save()
 # Load classification and plot centroids
-name = c.class_scheme.name(use_temperature=use_temperature)
+name = c.class_scheme.name()
 print(name)
 c.load_classification(name)
 c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue')
