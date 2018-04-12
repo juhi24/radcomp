@@ -55,8 +55,8 @@ if __name__ == '__main__':
     plt.close('all')
     plt.ion()
     cases = case.read_cases('melting-test')
-    c = cases.case.iloc[0]
-    c_snow = cases.case.iloc[1] # no melting
+    c = cases.case.iloc[1]
+    c_snow = cases.case.iloc[0] # no melting
     rhohv = c.data['RHO']
     rhohv_snow = c_snow.data['RHO']
     rho_sample = rhohv.iloc[:,20]

@@ -140,6 +140,9 @@ class VPC:
         self._n_clusters = n_clusters
 
     def __repr__(self):
+        return '<VPC {}>'.format(self.name())
+
+    def __str__(self):
         return self.name()
 
     @property

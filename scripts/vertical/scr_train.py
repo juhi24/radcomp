@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-@author: Jussi Tiira
+A script for using the VP classification training method
 """
 import numpy as np
 import matplotlib.pyplot as plt
