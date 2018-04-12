@@ -4,8 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from radcomp.vertical import case, classification
+from scipy import ndimage
+from radcomp.vertical import case, classification, filtering
 
 
 basename = 'melting-test'
@@ -28,4 +30,18 @@ if __name__ == '__main__':
     cases = case.read_cases('melting-test')
     c = cases.case.iloc[1]
     c.class_scheme = scheme
+    c.train()
     fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO'], cmap='viridis')
+    i = 29
+    zdrcol = c.cl_data_scaled.zdr.T.iloc[:, i]
+    rhocol = c.data.RHO.iloc[:, i]
+    f, ax = plt.subplots()
+    zdrcol.plot(ax=ax)
+    rhocol.plot(ax=ax)
+    indicator = (1-rhocol)*zdrcol
+    (indicator*10).plot(ax=ax)
+    dz = pd.DataFrame(index=indicator.index, data=ndimage.sobel(indicator))
+    a=filtering.median_filter_df(indicator, size=4)
+    (a*10).plot(ax=ax)
+    # maybe rather filter dz?
+

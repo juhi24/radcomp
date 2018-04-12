@@ -119,7 +119,10 @@ def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
     else:
         df_new = df.copy()
     result = median_filter(df_new, **kws)
-    result = pd.DataFrame(result, index=df_new.index, columns=df_new.columns)
+    try:
+        result = pd.DataFrame(result, index=df_new.index, columns=df_new.columns)
+    except AttributeError: # input was Series
+        result = pd.DataFrame(result, index=df_new.index)
     if param is not None:
         result[result.isnull()] = NAN_REPLACEMENT[param.upper()]
     result[nullmask] = np.nan
