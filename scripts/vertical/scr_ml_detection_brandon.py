@@ -6,8 +6,39 @@ __metaclass__ = type
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy import ndimage
+import peakutils
+from peakutils.plot import plot as pplot
+from scipy import ndimage, signal
 from radcomp.vertical import case, classification, filtering
+
+
+def savgol_series(data, *args, **kws):
+    """savgol filter for Series"""
+    result_arr = signal.savgol_filter(data.values.flatten(), *args, **kws)
+    return pd.Series(index=data.index, data=result_arr)
+
+
+def consecutive_grouper(s):
+    return (s != s.shift()).cumsum()
+
+
+def first_consecutive(s):
+    """only first consecutive group of trues is kept"""
+    grouper = consecutive_grouper(s)
+    g = s.groupby(grouper)
+    true_groups = g.mean()[g.mean()]
+    if true_groups.empty:
+        return grouper==-1
+    return grouper==[true_groups.index[0]]
+
+
+def expand_ml(ml, rho, rholim=0.975):
+    """expand detected ml using rhohv"""
+    grouper = consecutive_grouper(rho<rholim)
+    selected = grouper[ml]
+    if selected.empty:
+        return ml
+    return grouper==selected.iloc[0]
 
 
 basename = 'melting-test'
@@ -31,17 +62,40 @@ if __name__ == '__main__':
     c = cases.case.iloc[1]
     c.class_scheme = scheme
     c.train()
-    fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO'], cmap='viridis')
-    i = 29
-    zdrcol = c.cl_data_scaled.zdr.T.iloc[:, i]
-    rhocol = c.data.RHO.iloc[:, i]
+    i = 27
+    scaled_data = case.scale_data(c.data)
+    zdr = scaled_data.zdr
+    zh = scaled_data.ZH
+    rho = c.data.RHO
     f, ax = plt.subplots()
-    zdrcol.plot(ax=ax)
-    rhocol.plot(ax=ax)
-    indicator = (1-rhocol)*zdrcol
-    (indicator*10).plot(ax=ax)
-    dz = pd.DataFrame(index=indicator.index, data=ndimage.sobel(indicator))
-    a=filtering.median_filter_df(indicator, size=4)
-    (a*10).plot(ax=ax)
-    # maybe rather filter dz?
+    rhocol = rho.iloc[:, i]
+    zdr.iloc[:, i].plot(ax=ax, label='ZDR')
+    rhocol.plot(ax=ax, label='RHO')
+    zh.iloc[:, i].plot(ax=ax, label='ZH')
+    ax.set_title(zh.columns[i])
+    indicator = (1-rho)*(zdr+1)*zh
+    mli = indicator*100
+    mli = mli.apply(savgol_series, args=(5, 2))
+    c.data['MLI'] = mli
+    indicatorcol = mli.iloc[:, i]
+    c.data.MLI.iloc[:, i].plot(ax=ax, label='MLT')
+    ax.legend()
+    dz = pd.DataFrame(index=indicatorcol.index, data=ndimage.sobel(indicatorcol))
+    a = filtering.median_filter_df(indicatorcol, size=4)
+    #(a*10).plot(ax=ax)
+    pp = peakutils.indexes(indicatorcol, min_dist=10)
+    cwtp = signal.find_peaks_cwt(indicatorcol, range(1,10))
+    plt.figure()
+    pplot(indicatorcol.index.values, indicatorcol.values, pp)
+    ml = c.data.MLI>2
+    ml[rho>0.975] = False
+    ml = ml.apply(first_consecutive)
+    ml.iloc[:, i].astype(float).plot(ax=ax)
+    # expand
+    for t, mlc in ml.iteritems():
+        ml[t] = expand_ml(mlc, rho[t])
+    c.data['ML'] = ml
+    fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI', 'ML'], cmap='viridis')
+    mlcol = ml.iloc[:, i]
+    mlicol = mli.iloc[:, i]
 

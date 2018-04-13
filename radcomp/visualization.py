@@ -4,16 +4,18 @@ import matplotlib.pyplot as plt
 """Radar plotting functions and common variables."""
 
 VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0.8, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
-         'R': 0.05}
+         'R': 0.05, 'MLI': 0, 'ML': 0}
 VMAXS = {'ZH': 30, 'ZDR': 6, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 360,
-         'R': 16}
+         'R': 16, 'MLI': 7, 'ML': 1}
 LABELS = {'ZH': '$Z_{e}$, dBZ',
           'ZDR': '$Z_{dr}$, dB',
           'RHO': '$\\rho_{hv}$',
           'KDP': '$K_{dp}$, deg/km',
           'DP': 'deg',
           'PHIDP': 'deg',
-          'R': 'rainrate, mm$\,$h$^{-1}$'}
+          'R': 'rainrate, mm$\,$h$^{-1}$',
+          'MLI': 'ML indicator',
+          'ML': 'detected ML'}
 
 
 def plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,

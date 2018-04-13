@@ -140,13 +140,16 @@ def scale_data(pn, reverse=False):
     """Scale radar parameters so that values are same order of magnitude."""
     scaled = pn.copy()
     for field, data in scaled.iteritems():
-        if reverse:
-            data *= SCALING_LIMITS[field][1]
-            data += SCALING_LIMITS[field][0]
-        else:
-            data -= SCALING_LIMITS[field][0]
-            data *= 1.0/SCALING_LIMITS[field][1]
-        scaled[field] = data
+        try:
+            if reverse:
+                data *= SCALING_LIMITS[field][1]
+                data += SCALING_LIMITS[field][0]
+            else:
+                data -= SCALING_LIMITS[field][0]
+                data *= 1.0/SCALING_LIMITS[field][1]
+            scaled[field] = data
+        except KeyError:
+            continue
     return scaled
 
 
