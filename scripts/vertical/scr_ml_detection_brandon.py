@@ -38,7 +38,27 @@ def expand_ml(ml, rho, rholim=0.975):
     selected = grouper[ml]
     if selected.empty:
         return ml
-    return grouper==selected.iloc[0]
+    iml = selected.iloc[0]
+    ml_new = grouper==iml
+    rho_above_ml = rho[grouper==iml+1].iloc[0]
+    if (rho_above_ml < rholim) or np.isnan(rho_above_ml):
+        return mlcol==np.inf # all False
+    return ml_new
+
+
+def ml_top(ml, maxh=4500, no_ml_val=np.nan):
+    """extract ml top height from detected ml"""
+    top = ml[::-1].idxmax()
+    if no_ml_val is not None:
+        top[top>maxh] = no_ml_val
+    return top
+
+
+def filter_ml_top(top, size=3):
+    """apply median filter to ml top height"""
+    topf = filtering.median_filter_df(top.fillna(0), size=size)
+    topf[np.isnan(top)] = np.nan
+    return topf
 
 
 basename = 'melting-test'
@@ -59,7 +79,7 @@ if __name__ == '__main__':
     plt.close('all')
     plt.ion()
     cases = case.read_cases('melting-test')
-    c = cases.case.iloc[1]
+    c = cases.case.iloc[2]
     c.class_scheme = scheme
     c.train()
     i = 27
@@ -98,4 +118,7 @@ if __name__ == '__main__':
     fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI', 'ML'], cmap='viridis')
     mlcol = ml.iloc[:, i]
     mlicol = mli.iloc[:, i]
+    top = ml_top(ml)
+    topf = filter_ml_top(top)
+    topf.plot(marker='_', linestyle='', ax=axarr[-3], color='red')
 
