@@ -193,7 +193,8 @@ class VPC:
         else:
             training_data = self.prepare_data(data, n_components=n_eigens,
                                               extra_df=extra_df)
-        km = train(training_data, self.pca, reduced=self.reduced, **kws)
+        km = train(training_data, self.pca, reduced=self.reduced,
+                   n_clusters=self.n_clusters, **kws)
         self.km = km
 
     def classify(self, data_scaled, **kws):
