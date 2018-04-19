@@ -96,6 +96,30 @@ def ml_indicator(zdr_scaled, zh_scaled, rho):
     return mli
 
 
+def false_pd(df):
+    """Pandas data as all False"""
+    return df.astype(bool)*False
+
+
+def peak_series(s, thres=0.8, min_dist=5):
+    return list(peakutils.indexes(s.fillna(0), thres=thres, min_dist=min_dist))
+
+
+def peak_series_bool(s, **kws):
+    ind = peak_series(s, **kws)
+    out = false_pd(s)
+    out.iloc[ind] = True
+    return out
+
+
+def plot_peaks(peaks, ax=None, **kws):
+    ax = ax or plt.gca()
+    for ts, vals in peaks.iteritems():
+        x = np.full(len(vals), ts)
+        ax.scatter(x, vals, marker='+', zorder=1, color='red')
+
+
+
 basename = 'melting-test'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
@@ -128,4 +152,11 @@ if __name__ == '__main__':
     c.data['ML'] = ml
     fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI', 'ML'], cmap='viridis')
     topf.plot(marker='_', linestyle='', ax=axarr[-3], color='red', label='ML top')
+    #
+    i = 5
+    mlcol = ml.iloc[:, i]
+    mlicol = mli.iloc[:, i]
+    peaksi = mli.apply(peak_series)
+    peaks = peaksi.apply(lambda i: list(mli.iloc[i].index))
+    plot_peaks(peaks, ax=axarr[3])
 
