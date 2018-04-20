@@ -100,8 +100,11 @@ def false_pd(df):
     return df.astype(bool)*False
 
 
-def peak_series(s, imax=None, **kws):
+def peak_series(s, ilim=(None, None), **kws):
     ind, props = signal.find_peaks(s, **kws)
+    imin, imax = ilim
+    if imin is not None:
+        ind = ind[ind>imin]
     if imax is not None:
         ind = ind[ind<imax]
     return ind, props
@@ -135,7 +138,10 @@ def weighted_median(arr, w):
     isort = np.argsort(arr)
     cs = w[isort].cumsum()
     cutoff = w.sum()/2
-    return arr[cs>=cutoff][0]
+    try:
+        return arr[isort][cs>=cutoff][0]
+    except IndexError:
+        return np.nan
 
 
 def peak_weights(peaksi):
@@ -149,6 +155,28 @@ def ml_height_median(peaksi, peaks):
     warr=np.concatenate(weights.values)
     parr=np.concatenate(peaks.values)
     return weighted_median(parr, warr)
+
+
+def get_peaks(mlis, hlim=(0, H_MAX), height=2, distance=20, prominence=0.3):
+    limits = [find(mlis.index, lim) for lim in hlim]
+    peaksi = mlis.apply(peak_series, ilim=limits, height=height,
+                        distance=distance, prominence=prominence)
+    return peaksi, peaksi.apply(lambda i: list(mlis.iloc[i[0]].index))
+
+
+def ml_height(mlis, **kws):
+    peaksi, peaks = get_peaks(mlis, **kws)
+    return ml_height_median(peaksi, peaks)
+
+
+def df_rolling_apply(df, func, w=10, **kws):
+    size = df.shape[1]
+    out = pd.Series(index=df.columns)
+    for i in range(size-w):
+        sli = df.iloc[:, i:i+w]
+        out[int(i+w/2)] = func(sli, **kws)
+    return out
+
 
 
 basename = 'melting-test'
@@ -183,18 +211,20 @@ if __name__ == '__main__':
     c.data['MLI'] = mlis
     c.data['ML'] = ml
     fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI', 'ML'], cmap='viridis')
-    topf.plot(marker='_', linestyle='', ax=axarr[-3], color='red', label='ML top')
+    #topf.plot(marker='_', linestyle='', ax=axarr[-3], color='red', label='ML top')
     imaxh = find(mli.index, H_MAX)
     #
-    kws = dict(height=2, distance=20, prominence=0.3)
-    peaksi = mlis.apply(peak_series, imax=imaxh, **kws)
-    peaks = peaksi.apply(lambda i: list(mli.iloc[i[0]].index))
+    peaksi, peaks = get_peaks(mlis)
     heights = get_peaksi_prop(peaksi, 'peak_heights')
     prom = get_peaksi_prop(peaksi, 'prominences')
     weights = prom*heights
-    plot_peaks(peaks, ax=axarr[3])
     mlh = ml_height_median(peaksi, peaks)
     axarr[3].axhline(mlh, color='gray')
+    ml_max_change = 1500
+    peaksi2, peaks2 = get_peaks(mlis, hlim=(mlh-ml_max_change, mlh+ml_max_change))
+    plot_peaks(peaks2, ax=axarr[3])
+    #mlfit = df_rolling_apply(mlis, ml_height, hlim=(mlh-1500, mlh+1500))
+    #mlfit.plot(ax=axarr[2], color='olive')
     #
     i = -4
     mlcol = ml.iloc[:, i]
