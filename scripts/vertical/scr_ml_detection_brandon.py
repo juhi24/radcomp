@@ -81,12 +81,20 @@ def first_or_nan(l):
         return np.nan
 
 
-def ml_limits_peak(peaksi):
-    """extract ML top height from MLI peaks"""
-    up_edges = get_peaksi_prop(peaksi, 'right_ips').apply(first_or_nan)
-    low_edges = get_peaksi_prop(peaksi, 'left_ips').apply(first_or_nan)
-    # TODO
+def height_at(ind, heights):
+    try:
+        return heights[round(ind)]
+    except ValueError:
+        return np.nan
 
+
+def ml_limits_peak(peaksi, heights):
+    """extract ML top height from MLI peaks"""
+    edges = []
+    for ips_label in ('left_ips', 'right_ips'):
+        ips = get_peaksi_prop(peaksi, ips_label)
+        edges.append(ips.apply(first_or_nan).apply(height_at, args=(heights,)))
+    return tuple(edges)
 
 
 def filter_ml_top(top, size=3):
@@ -251,6 +259,7 @@ if __name__ == '__main__':
     ml_max_change = 1500
     peaksi2, peaks2 = get_peaks(mlis, hlim=(mlh-ml_max_change, mlh+ml_max_change))
     plot_peaks(peaks2, ax=axarr[3])
+    ml_bot, ml_top = ml_limits_peak(peaksi2, mlis.index)
     #mlfit = df_rolling_apply(mlis, ml_height, hlim=(mlh-1500, mlh+1500))
     #mlfit.plot(ax=axarr[2], color='olive')
     #
