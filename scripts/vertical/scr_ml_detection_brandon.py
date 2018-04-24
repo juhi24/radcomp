@@ -11,6 +11,7 @@ from radcomp.vertical import case, classification, filtering
 
 RHO_MAX = 0.975
 H_MAX = 4000
+MLI_THRESHOLD = 1.9
 
 
 def savgol_series(data, *args, **kws):
@@ -72,6 +73,22 @@ def ml_top(ml, maxh=H_MAX, no_ml_val=np.nan):
     return top
 
 
+def first_or_nan(l):
+    """Get first item in iterable if exists, else nan"""
+    try:
+        return l[0]
+    except IndexError:
+        return np.nan
+
+
+def ml_limits_peak(peaksi):
+    """extract ML top height from MLI peaks"""
+    up_edges = get_peaksi_prop(peaksi, 'right_ips').apply(first_or_nan)
+    low_edges = get_peaksi_prop(peaksi, 'left_ips').apply(first_or_nan)
+    # TODO
+
+
+
 def filter_ml_top(top, size=3):
     """Apply median filter to ml top height."""
     topf = filtering.median_filter_df(top.fillna(0), size=size)
@@ -79,7 +96,7 @@ def filter_ml_top(top, size=3):
     return topf
 
 
-def detect_ml(mli, rho, mli_thres=2, rholim=RHO_MAX):
+def detect_ml(mli, rho, mli_thres=MLI_THRESHOLD, rholim=RHO_MAX):
     """Detect ML using melting layer indicator."""
     ml = mli > mli_thres
     ml[rho>0.975] = False
@@ -103,11 +120,15 @@ def false_pd(df):
 def peak_series(s, ilim=(None, None), **kws):
     ind, props = signal.find_peaks(s, **kws)
     imin, imax = ilim
+    up_sel, low_sel = tuple(np.ones(ind.shape).astype(bool) for i in range(2))
     if imin is not None:
-        ind = ind[ind>imin]
+        low_sel = ind>imin
     if imax is not None:
-        ind = ind[ind<imax]
-    return ind, props
+        up_sel = ind<imax
+    selection = up_sel & low_sel
+    for key in props:
+        props[key] = props[key][selection]
+    return ind[selection], props
 
 
 def peak_series_bool(s, **kws):
@@ -135,6 +156,7 @@ def find(arr, value):
 
 
 def weighted_median(arr, w):
+    """general weighted median"""
     isort = np.argsort(arr)
     cs = w[isort].cumsum()
     cutoff = w.sum()/2
@@ -145,31 +167,37 @@ def weighted_median(arr, w):
 
 
 def peak_weights(peaksi):
+    """calculate peak weights as prominence*peak_height"""
     heights = get_peaksi_prop(peaksi, 'peak_heights')
     prom = get_peaksi_prop(peaksi, 'prominences')
     return prom*heights
 
 
 def ml_height_median(peaksi, peaks):
+    """weighted median ML height from peak data"""
     weights = peak_weights(peaksi)
     warr=np.concatenate(weights.values)
     parr=np.concatenate(peaks.values)
     return weighted_median(parr, warr)
 
 
-def get_peaks(mlis, hlim=(0, H_MAX), height=2, distance=20, prominence=0.3):
+def get_peaks(mlis, hlim=(0, H_MAX), height=2, width=0, distance=20,
+              prominence=0.3):
+    """Apply peak detection to ML indicator."""
     limits = [find(mlis.index, lim) for lim in hlim]
-    peaksi = mlis.apply(peak_series, ilim=limits, height=height,
+    peaksi = mlis.apply(peak_series, ilim=limits, height=height, width=width,
                         distance=distance, prominence=prominence)
     return peaksi, peaksi.apply(lambda i: list(mlis.iloc[i[0]].index))
 
 
 def ml_height(mlis, **kws):
+    """weighted median ML height from ML indicator using peak detection"""
     peaksi, peaks = get_peaks(mlis, **kws)
     return ml_height_median(peaksi, peaks)
 
 
 def df_rolling_apply(df, func, w=10, **kws):
+    """rolling apply on DataFrame columns"""
     size = df.shape[1]
     out = pd.Series(index=df.columns)
     for i in range(size-w):
@@ -197,7 +225,7 @@ if __name__ == '__main__':
     plt.close('all')
     plt.ion()
     cases = case.read_cases('melting-test')
-    c = cases.case.iloc[4]
+    c = cases.case.iloc[2]
     c.class_scheme = scheme
     c.train()
     #
@@ -230,8 +258,9 @@ if __name__ == '__main__':
     mlcol = ml.iloc[:, i]
     mlicol = mli.iloc[:, i]
     mliscol = mlis.iloc[:, i]
-    peakscol = peaks.iloc[i]
-    peaksicol = peaksi.iloc[i]
+    peakscol = peaks2.iloc[i]
+    peaksicol = peaksi2.iloc[i]
+    kws = {'distance': 20, 'height': 2, 'prominence': 0.3}
     pp = signal.find_peaks(mliscol, **kws)
     promcol = signal.peak_prominences(mliscol, peaksicol[0])[0]
     w = pp[1]['peak_heights']*promcol
