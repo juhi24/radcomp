@@ -10,8 +10,9 @@ from scipy import ndimage, signal
 from radcomp.vertical import case, classification, filtering
 
 RHO_MAX = 0.975
+RHO_LIM = 0.97
 H_MAX = 4000
-MLI_THRESHOLD = 1.9
+MLI_THRESHOLD = 2
 
 
 def savgol_series(data, *args, **kws):
@@ -31,8 +32,8 @@ def first_consecutive(s):
     g = s.groupby(grouper)
     true_groups = g.mean()[g.mean()]
     if true_groups.empty:
-        return grouper==-1
-    return grouper==[true_groups.index[0]]
+        return grouper == -1
+    return grouper == [true_groups.index[0]]
 
 
 def expand_ml(ml, rho):
@@ -59,18 +60,18 @@ def _check_above_ml(ml, rho, grouper, iml, rholim):
     try:
         rho_above_ml = rho[grouper==iml+1].iloc[0]
     except IndexError:
-        return ml==np.inf # all False
+        return ml == np.inf # all False
     if (rho_above_ml < rholim) or np.isnan(rho_above_ml):
-        return ml==np.inf # all False
+        return ml == np.inf # all False
     return ml
 
 
-def ml_top(ml, maxh=H_MAX, no_ml_val=np.nan):
-    """extract ml top height from detected ml"""
-    top = ml[::-1].idxmax()
-    if no_ml_val is not None:
-        top[top>maxh] = no_ml_val
-    return top
+#def ml_top(ml, maxh=H_MAX, no_ml_val=np.nan):
+#    """extract ml top height from detected ml"""
+#    top = ml[::-1].idxmax()
+#    if no_ml_val is not None:
+#        top[top>maxh] = no_ml_val
+#    return top
 
 
 def first_or_nan(l):
@@ -81,9 +82,10 @@ def first_or_nan(l):
         return np.nan
 
 
-def height_at(ind, heights):
+def value_at(ind, values):
+    """round index and return corresponding value, nan on ValueError"""
     try:
-        return heights[round(ind)]
+        return values[round(ind)]
     except ValueError:
         return np.nan
 
@@ -93,7 +95,7 @@ def ml_limits_peak(peaksi, heights):
     edges = []
     for ips_label in ('left_ips', 'right_ips'):
         ips = get_peaksi_prop(peaksi, ips_label)
-        edges.append(ips.apply(first_or_nan).apply(height_at, args=(heights,)))
+        edges.append(ips.apply(first_or_nan).apply(value_at, args=(heights,)))
     return tuple(edges)
 
 
@@ -130,9 +132,9 @@ def peak_series(s, ilim=(None, None), **kws):
     imin, imax = ilim
     up_sel, low_sel = tuple(np.ones(ind.shape).astype(bool) for i in range(2))
     if imin is not None:
-        low_sel = ind>imin
+        low_sel = ind > imin
     if imax is not None:
-        up_sel = ind<imax
+        up_sel = ind < imax
     selection = up_sel & low_sel
     for key in props:
         props[key] = props[key][selection]
@@ -169,7 +171,7 @@ def weighted_median(arr, w):
     cs = w[isort].cumsum()
     cutoff = w.sum()/2
     try:
-        return arr[isort][cs>=cutoff][0]
+        return arr[isort][cs >= cutoff][0]
     except IndexError:
         return np.nan
 
@@ -184,8 +186,8 @@ def peak_weights(peaksi):
 def ml_height_median(peaksi, peaks):
     """weighted median ML height from peak data"""
     weights = peak_weights(peaksi)
-    warr=np.concatenate(weights.values)
-    parr=np.concatenate(peaks.values)
+    warr = np.concatenate(weights.values)
+    parr = np.concatenate(peaks.values)
     return weighted_median(parr, warr)
 
 
@@ -214,6 +216,20 @@ def df_rolling_apply(df, func, w=10, **kws):
     return out
 
 
+def filter_rolling_median_threshold(s, window=6, threshold=800):
+    out = s.copy()
+    rolling_median = s.rolling(window, center=True, min_periods=1).median()
+    selection = (s-rolling_median).apply(abs) > threshold
+    out[selection] = np.nan
+    return out
+
+
+def filter_no_hydrometeors(s, rho, rholim=RHO_LIM, n_thresh=2):
+    out = s.copy()
+    no_hydrometeors = (rho > rholim).sum() < n_thresh
+    out[no_hydrometeors] = np.nan
+    return out
+
 
 basename = 'melting-test'
 params = ['ZH', 'zdr', 'kdp']
@@ -233,7 +249,7 @@ if __name__ == '__main__':
     plt.close('all')
     plt.ion()
     cases = case.read_cases('melting-test')
-    c = cases.case.iloc[2]
+    c = cases.case.iloc[4]
     c.class_scheme = scheme
     c.train()
     #
@@ -241,12 +257,8 @@ if __name__ == '__main__':
     rho = c.data.RHO
     mli = ml_indicator(scaled_data.zdr, scaled_data.ZH, rho)
     mlis = mli.apply(savgol_series, args=(15, 3))
-    ml = detect_ml(mli, rho)
-    top = ml_top(ml)
-    topf = filter_ml_top(top)
     c.data['MLI'] = mlis
-    c.data['ML'] = ml
-    fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI', 'ML'], cmap='viridis')
+    fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI'], cmap='viridis')
     #topf.plot(marker='_', linestyle='', ax=axarr[-3], color='red', label='ML top')
     imaxh = find(mli.index, H_MAX)
     #
@@ -260,11 +272,14 @@ if __name__ == '__main__':
     peaksi2, peaks2 = get_peaks(mlis, hlim=(mlh-ml_max_change, mlh+ml_max_change))
     plot_peaks(peaks2, ax=axarr[3])
     ml_bot, ml_top = ml_limits_peak(peaksi2, mlis.index)
+    ml_top = filter_rolling_median_threshold(ml_top)
+    ml_top = filter_no_hydrometeors(ml_top, rho)
+    ml_top.plot(ax=axarr[2], color='red', linestyle='', marker='_')
     #mlfit = df_rolling_apply(mlis, ml_height, hlim=(mlh-1500, mlh+1500))
     #mlfit.plot(ax=axarr[2], color='olive')
     #
     i = -4
-    mlcol = ml.iloc[:, i]
+    rhocol = rho.iloc[:, i]
     mlicol = mli.iloc[:, i]
     mliscol = mlis.iloc[:, i]
     peakscol = peaks2.iloc[i]
