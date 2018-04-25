@@ -7,17 +7,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import signal
-from radcomp.vertical import case, classification, filtering
+from radcomp.vertical import case, classification, filtering, ml
 
 RHO_LIM = 0.97
 H_MAX = 4000
 #MLI_THRESHOLD = 2
-
-
-def savgol_series(data, *args, **kws):
-    """savgol filter for Series"""
-    result_arr = signal.savgol_filter(data.values.flatten(), *args, **kws)
-    return pd.Series(index=data.index, data=result_arr)
 
 
 def first_or_nan(l):
@@ -50,13 +44,6 @@ def filter_ml_top(top, size=3):
     topf = filtering.median_filter_df(top.fillna(0), size=size)
     topf[np.isnan(top)] = np.nan
     return topf
-
-
-def ml_indicator(zdr_scaled, zh_scaled, rho):
-    """Calculate ML indicator."""
-    mli = (1-rho)*(zdr_scaled+1)*zh_scaled*100
-    mli = mli.apply(savgol_series, args=(5, 2))
-    return mli
 
 
 def peak_series(s, ilim=(None, None), **kws):
@@ -165,8 +152,8 @@ if __name__ == '__main__':
     #
     scaled_data = case.scale_data(c.data)
     rho = c.data.RHO
-    mli = ml_indicator(scaled_data.zdr, scaled_data.ZH, rho)
-    mlis = mli.apply(savgol_series, args=(15, 3))
+    mli = ml.indicator(scaled_data.zdr, scaled_data.ZH, rho)
+    mlis = mli
     c.data['MLI'] = mlis
     fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI'], cmap='viridis')
     #topf.plot(marker='_', linestyle='', ax=axarr[-3], color='red', label='ML top')
