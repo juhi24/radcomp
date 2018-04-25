@@ -6,7 +6,7 @@ __metaclass__ = type
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy import ndimage, signal
+from scipy import signal
 from radcomp.vertical import case, classification, filtering
 
 RHO_MAX = 0.975
@@ -19,51 +19,6 @@ def savgol_series(data, *args, **kws):
     """savgol filter for Series"""
     result_arr = signal.savgol_filter(data.values.flatten(), *args, **kws)
     return pd.Series(index=data.index, data=result_arr)
-
-
-def consecutive_grouper(s):
-    """Consecutive values to have same integer -> 111223333455"""
-    return (s != s.shift()).cumsum()
-
-
-def first_consecutive(s):
-    """only first consecutive group of trues is kept"""
-    grouper = consecutive_grouper(s)
-    g = s.groupby(grouper)
-    true_groups = g.mean()[g.mean()]
-    if true_groups.empty:
-        return grouper == -1
-    return grouper == [true_groups.index[0]]
-
-
-def expand_ml(ml, rho):
-    """expand ML"""
-    for t, mlc in ml.iteritems():
-        ml[t] = _expand_ml_series(mlc, rho[t])
-    return ml
-
-
-def _expand_ml_series(ml, rho, rholim=RHO_MAX):
-    """expand detected ml using rhohv"""
-    grouper = consecutive_grouper(rho<rholim)
-    selected = grouper[ml]
-    if selected.empty:
-        return ml
-    iml = selected.iloc[0]
-    ml_new = grouper==iml
-    ml_new = _check_above_ml(ml_new, rho, grouper, iml, rholim)
-    return ml_new
-
-
-def _check_above_ml(ml, rho, grouper, iml, rholim):
-    """check that value above expanded ml makes sense"""
-    try:
-        rho_above_ml = rho[grouper==iml+1].iloc[0]
-    except IndexError:
-        return ml == np.inf # all False
-    if (rho_above_ml < rholim) or np.isnan(rho_above_ml):
-        return ml == np.inf # all False
-    return ml
 
 
 #def ml_top(ml, maxh=H_MAX, no_ml_val=np.nan):
@@ -106,25 +61,11 @@ def filter_ml_top(top, size=3):
     return topf
 
 
-def detect_ml(mli, rho, mli_thres=MLI_THRESHOLD, rholim=RHO_MAX):
-    """Detect ML using melting layer indicator."""
-    ml = mli > mli_thres
-    ml[rho>0.975] = False
-    ml = ml.apply(first_consecutive)
-    ml = expand_ml(ml, rho)
-    return ml
-
-
 def ml_indicator(zdr_scaled, zh_scaled, rho):
     """Calculate ML indicator."""
     mli = (1-rho)*(zdr_scaled+1)*zh_scaled*100
     mli = mli.apply(savgol_series, args=(5, 2))
     return mli
-
-
-def false_pd(df):
-    """Pandas data as all False"""
-    return df.astype(bool)*False
 
 
 def peak_series(s, ilim=(None, None), **kws):
@@ -139,13 +80,6 @@ def peak_series(s, ilim=(None, None), **kws):
     for key in props:
         props[key] = props[key][selection]
     return ind[selection], props
-
-
-def peak_series_bool(s, **kws):
-    ind = peak_series(s, **kws)
-    out = false_pd(s)
-    out.iloc[ind] = True
-    return out
 
 
 def plot_peaks(peaks, ax=None, **kws):
@@ -217,6 +151,7 @@ def df_rolling_apply(df, func, w=10, **kws):
 
 
 def filter_rolling_median_threshold(s, window=6, threshold=800):
+    """Filter anomalous values by checking deviation from rolling median."""
     out = s.copy()
     rolling_median = s.rolling(window, center=True, min_periods=1).median()
     selection = (s-rolling_median).apply(abs) > threshold
@@ -225,6 +160,7 @@ def filter_rolling_median_threshold(s, window=6, threshold=800):
 
 
 def filter_no_hydrometeors(s, rho, rholim=RHO_LIM, n_thresh=2):
+    """Filter values where rhohv limit is not reached in the profile."""
     out = s.copy()
     no_hydrometeors = (rho > rholim).sum() < n_thresh
     out[no_hydrometeors] = np.nan
