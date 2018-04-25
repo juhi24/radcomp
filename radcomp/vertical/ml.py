@@ -87,9 +87,32 @@ def _value_at(ind, values):
 
 
 def limits_peak(peaksi, heights):
-    """extract ML height range from MLI peaks"""
+    """ML height range from MLI peaks"""
     edges = []
     for ips_label in ('left_ips', 'right_ips'):
         ips = get_peaksi_prop(peaksi, ips_label)
         edges.append(ips.apply(_first_or_nan).apply(_value_at, args=(heights,)))
     return tuple(edges)
+
+
+def ml_limits_raw(mli, ml_max_change=1500):
+    """ML height range from ML indicator"""
+    mlh = ml_height(mli)
+    peaksi, peaks = get_peaks(mli, hlim=(mlh-ml_max_change, mlh+ml_max_change))
+    return limits_peak(peaksi, mli.index)
+
+
+def fltr_ml_limits(limits, rho):
+    """filter ml range"""
+    lims = []
+    for lim in limits:
+        tmp = filtering.fltr_rolling_median_thresh(lim, threshold=800)
+        lims.append(filtering.fltr_no_hydrometeors(tmp, rho))
+    return lims
+
+
+def ml_limits(mli, rho, **kws):
+    """filtered ml bottom and top heights"""
+    lims = ml_limits_raw(mli, **kws)
+    return fltr_ml_limits(lims, rho)
+
