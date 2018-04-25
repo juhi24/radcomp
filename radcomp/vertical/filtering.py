@@ -127,3 +127,25 @@ def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
         result[result.isnull()] = NAN_REPLACEMENT[param.upper()]
     result[nullmask] = np.nan
     return result
+
+
+def replace_values(s, cond, replacement=np.nan):
+    """Replace values based on condition."""
+    out = s.copy()
+    out[cond] = replacement
+    return out
+
+
+def fltr_no_hydrometeors(s, rho, rholim=0.97, n_thresh=2):
+    """Filter values where rhohv limit is not reached in the profile."""
+    no_hydrometeors = (rho > rholim).sum() < n_thresh
+    return replace_values(s, no_hydrometeors)
+
+
+def fltr_rolling_median_thresh(s, window=6, threshold=10):
+    """Filter anomalous values by checking deviation from rolling median."""
+    rolling_median = s.rolling(window, center=True, min_periods=1).median()
+    cond = (s-rolling_median).apply(abs) > threshold
+    return replace_values(s, cond)
+
+

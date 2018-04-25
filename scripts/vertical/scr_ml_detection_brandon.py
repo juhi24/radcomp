@@ -9,24 +9,15 @@ import matplotlib.pyplot as plt
 from scipy import signal
 from radcomp.vertical import case, classification, filtering
 
-RHO_MAX = 0.975
 RHO_LIM = 0.97
 H_MAX = 4000
-MLI_THRESHOLD = 2
+#MLI_THRESHOLD = 2
 
 
 def savgol_series(data, *args, **kws):
     """savgol filter for Series"""
     result_arr = signal.savgol_filter(data.values.flatten(), *args, **kws)
     return pd.Series(index=data.index, data=result_arr)
-
-
-#def ml_top(ml, maxh=H_MAX, no_ml_val=np.nan):
-#    """extract ml top height from detected ml"""
-#    top = ml[::-1].idxmax()
-#    if no_ml_val is not None:
-#        top[top>maxh] = no_ml_val
-#    return top
 
 
 def first_or_nan(l):
@@ -150,23 +141,6 @@ def df_rolling_apply(df, func, w=10, **kws):
     return out
 
 
-def filter_rolling_median_threshold(s, window=6, threshold=800):
-    """Filter anomalous values by checking deviation from rolling median."""
-    out = s.copy()
-    rolling_median = s.rolling(window, center=True, min_periods=1).median()
-    selection = (s-rolling_median).apply(abs) > threshold
-    out[selection] = np.nan
-    return out
-
-
-def filter_no_hydrometeors(s, rho, rholim=RHO_LIM, n_thresh=2):
-    """Filter values where rhohv limit is not reached in the profile."""
-    out = s.copy()
-    no_hydrometeors = (rho > rholim).sum() < n_thresh
-    out[no_hydrometeors] = np.nan
-    return out
-
-
 basename = 'melting-test'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
@@ -208,8 +182,8 @@ if __name__ == '__main__':
     peaksi2, peaks2 = get_peaks(mlis, hlim=(mlh-ml_max_change, mlh+ml_max_change))
     plot_peaks(peaks2, ax=axarr[3])
     ml_bot, ml_top = ml_limits_peak(peaksi2, mlis.index)
-    ml_top = filter_rolling_median_threshold(ml_top)
-    ml_top = filter_no_hydrometeors(ml_top, rho)
+    ml_top = filtering.fltr_rolling_median_thresh(ml_top, threshold=800)
+    ml_top = filtering.fltr_no_hydrometeors(ml_top, rho)
     ml_top.plot(ax=axarr[2], color='red', linestyle='', marker='_')
     #mlfit = df_rolling_apply(mlis, ml_height, hlim=(mlh-1500, mlh+1500))
     #mlfit.plot(ax=axarr[2], color='olive')
