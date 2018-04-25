@@ -36,7 +36,7 @@ def df_rolling_apply(df, func, w=10, **kws):
 if __name__ == '__main__':
     plt.close('all')
     plt.ion()
-    cases = case.read_cases('melting-test')
+    cases = case.read_cases('melting')
     c = cases.case.iloc[3]
     #
     scaled_data = case.scale_data(c.data)

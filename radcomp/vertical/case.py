@@ -57,7 +57,11 @@ def dt2path(dt, datadir):
 
 def vprhimat2pn(datapath):
     """Read vertical profile mat files to Panel."""
-    data = loadmat(datapath)['VP_RHI']
+    try:
+        data = loadmat(datapath)['VP_RHI']
+    except FileNotFoundError as e:
+        print('{}. Skipping.'.format(e))
+        return pd.Panel()
     fields = list(data.dtype.fields)
     fields.remove('ObsTime')
     fields.remove('height')
@@ -85,7 +89,14 @@ def data_range(dt_start, dt_end):
     """read raw VP data between datetimes"""
     fnames = fname_range(dt_start, dt_end)
     pns = map(vprhimat2pn, fnames)
-    return pd.concat(pns, axis=2).loc[:, :, dt_start:dt_end]
+    pns_out = []
+    for pn in pns:
+        if not pn.empty:
+            pns_out.append(pn)
+    try:
+        return pd.concat(pns_out, axis=2).loc[:, :, dt_start:dt_end]
+    except ValueError:
+        return pd.Panel()
 
 
 def prepare_pn(pn, kdpmax=0.5):
@@ -230,7 +241,10 @@ class Case:
     @classmethod
     def from_dtrange(cls, t0, t1):
         pn = dt2pn(t0, t1)
-        return cls(data=pn)
+        try:
+            return cls(data=pn)
+        except ValueError:
+            return cls()
 
     @classmethod
     def by_combining(cls, cases, **kws):
