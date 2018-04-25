@@ -1,6 +1,7 @@
 # coding: utf-8
 import numpy as np
 import pandas as pd
+from scipy.signal import savgol_filter
 from scipy.ndimage.filters import median_filter
 from radcomp.vertical import NAN_REPLACEMENT
 
@@ -127,6 +128,12 @@ def median_filter_df(df, param=None, fill=True, nullmask=None, **kws):
         result[result.isnull()] = NAN_REPLACEMENT[param.upper()]
     result[nullmask] = np.nan
     return result
+
+
+def savgol_series(data, *args, **kws):
+    """savgol filter for Series"""
+    result_arr = savgol_filter(data.values.flatten(), *args, **kws)
+    return pd.Series(index=data.index, data=result_arr)
 
 
 def replace_values(s, cond, replacement=np.nan):
