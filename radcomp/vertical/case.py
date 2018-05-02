@@ -46,7 +46,13 @@ def read_case_times(name):
 
 def read_cases(name):
     dts = read_case_times(name)
-    cases_list = [Case.from_dtrange(row[1][COL_START], row[1][COL_END]) for row in dts.iterrows()]
+    cases_list = []
+    for cid, row in dts.iterrows():
+        try:
+            cases_list.append(Case.from_dtrange(row[COL_START], row[COL_END]))
+        except ValueError as e:
+            print('Error: {}. Skipping {}'.format(e, cid))
+            dts.drop(cid, inplace=True)
     dts['case'] = cases_list
     return dts
 
@@ -93,10 +99,7 @@ def data_range(dt_start, dt_end):
     for pn in pns:
         if not pn.empty:
             pns_out.append(pn)
-    try:
-        return pd.concat(pns_out, axis=2).loc[:, :, dt_start:dt_end]
-    except ValueError:
-        return pd.Panel()
+    return pd.concat(pns_out, axis=2).loc[:, :, dt_start:dt_end]
 
 
 def prepare_pn(pn, kdpmax=0.5):
@@ -241,10 +244,7 @@ class Case:
     @classmethod
     def from_dtrange(cls, t0, t1):
         pn = dt2pn(t0, t1)
-        try:
-            return cls(data=pn)
-        except ValueError:
-            return cls()
+        return cls(data=pn)
 
     @classmethod
     def by_combining(cls, cases, **kws):
