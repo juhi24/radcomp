@@ -6,7 +6,7 @@ __metaclass__ = type
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from radcomp.vertical import case, filtering, ml
+from radcomp.vertical import case, filtering, ml, NAN_REPLACEMENT
 
 
 def filter_ml_top(top, size=3):
@@ -33,11 +33,21 @@ def df_rolling_apply(df, func, w=10, **kws):
     return out
 
 
+def hseries2mask(hseries, hindex):
+    """series of height values to a boolean mask"""
+    return hseries.apply(lambda x: pd.Series(data=hindex>x, index=hindex)).T
+
+
+def collapse(s_filled_masked):
+    """reset ground level according to mask"""
+    return s_filled_masked.shift(-s_filled_masked.isnull().sum())
+
+
 if __name__ == '__main__':
     plt.close('all')
     plt.ion()
-    cases = case.read_cases('melting')
-    c = cases.case.iloc[3]
+    cases = case.read_cases('melting-test')
+    c = cases.case.iloc[4]
     #
     scaled_data = case.scale_data(c.data)
     rho = c.data.RHO
@@ -50,7 +60,12 @@ if __name__ == '__main__':
     peaksi, peaks = ml.get_peaks(mli, hlim=(mlh-ml_max_change, mlh+ml_max_change))
     plot_peaks(peaks, ax=axarr[3])
     ml_bot, ml_top = ml.ml_limits(mli, rho)
-    ml_top.plot(ax=axarr[2], color='red', linestyle='', marker='_')
+    top = ml_top.interpolate().dropna()
+    mask = hseries2mask(top, mli.index)
+    z_masked = c.data.ZH.fillna(NAN_REPLACEMENT['ZH'])[mask]
+    zh0 = z_masked.apply(collapse)
+    top.plot(ax=axarr[2], color='gray', linestyle='', marker='_')
+    ml_top.plot(ax=axarr[2], color='black', linestyle='', marker='_')
     #
     axarr[3].axhline(mlh, color='gray')
 
