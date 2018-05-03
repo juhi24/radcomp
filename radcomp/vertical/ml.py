@@ -126,3 +126,11 @@ def hseries2mask(hseries, hindex):
 def collapse(s_filled_masked):
     """reset ground level according to mask"""
     return s_filled_masked.shift(-s_filled_masked.isnull().sum())
+
+
+def collapse2top(df_filled, top):
+    """Reset ground of a filled DataFrame to specified levels"""
+    if df_filled.isnull().any().any():
+        raise ValueError('df_filled must not contain NaNs')
+    mask = hseries2mask(top.interpolate().dropna(), df_filled.index)
+    return df_filled[mask].apply(collapse)

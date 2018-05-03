@@ -51,9 +51,8 @@ if __name__ == '__main__':
     plot_peaks(peaks, ax=axarr[3])
     ml_bot, ml_top = ml.ml_limits(mli, rho)
     top = ml_top.interpolate().dropna()
-    mask = ml.hseries2mask(top, mli.index)
-    z_masked = c.data.ZH.fillna(NAN_REPLACEMENT['ZH'])[mask]
-    zh0 = z_masked.apply(ml.collapse)
+    z_filled = c.data.ZH.fillna(NAN_REPLACEMENT['ZH'])
+    zh0 = ml.collapse2top(z_filled, ml_top)
     top.plot(ax=axarr[2], color='gray', linestyle='', marker='_')
     ml_top.plot(ax=axarr[2], color='black', linestyle='', marker='_')
     #
