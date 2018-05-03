@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 import numpy as np
+import pandas as pd
 from scipy import signal
 from j24.tools import find
 from j24.math import weighted_median
@@ -116,3 +117,12 @@ def ml_limits(mli, rho, **kws):
     lims = ml_limits_raw(mli, **kws)
     return fltr_ml_limits(lims, rho)
 
+
+def hseries2mask(hseries, hindex):
+    """boolean mask DataFrame with False below given height limits"""
+    return hseries.apply(lambda x: pd.Series(data=hindex>x, index=hindex)).T
+
+
+def collapse(s_filled_masked):
+    """reset ground level according to mask"""
+    return s_filled_masked.shift(-s_filled_masked.isnull().sum())

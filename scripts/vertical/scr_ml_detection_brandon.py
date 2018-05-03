@@ -33,16 +33,6 @@ def df_rolling_apply(df, func, w=10, **kws):
     return out
 
 
-def hseries2mask(hseries, hindex):
-    """series of height values to a boolean mask"""
-    return hseries.apply(lambda x: pd.Series(data=hindex>x, index=hindex)).T
-
-
-def collapse(s_filled_masked):
-    """reset ground level according to mask"""
-    return s_filled_masked.shift(-s_filled_masked.isnull().sum())
-
-
 if __name__ == '__main__':
     plt.close('all')
     plt.ion()
@@ -61,9 +51,9 @@ if __name__ == '__main__':
     plot_peaks(peaks, ax=axarr[3])
     ml_bot, ml_top = ml.ml_limits(mli, rho)
     top = ml_top.interpolate().dropna()
-    mask = hseries2mask(top, mli.index)
+    mask = ml.hseries2mask(top, mli.index)
     z_masked = c.data.ZH.fillna(NAN_REPLACEMENT['ZH'])[mask]
-    zh0 = z_masked.apply(collapse)
+    zh0 = z_masked.apply(ml.collapse)
     top.plot(ax=axarr[2], color='gray', linestyle='', marker='_')
     ml_top.plot(ax=axarr[2], color='black', linestyle='', marker='_')
     #
