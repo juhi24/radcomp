@@ -1,10 +1,10 @@
 # coding: utf-8
 import pickle
-import numpy as np
 import pandas as pd
 from os import path
 from baecc import prepare
 from radcomp import CACHE_DIR
+from j24 import home
 
 TABLE_PKL = path.join(CACHE_DIR, 'insitu_table.pkl')
 TABLE_FILTERED_PKL = path.join(CACHE_DIR, 'insitu_table_fltrd.pkl')
@@ -41,4 +41,14 @@ def time_weighted_mean(data, rule='15min', resolution='1min', offset=None,
         offset = rule
     upsampled = data.resample(rule=resolution).bfill()
     return upsampled.resample(rule=rule, loffset=pd.Timedelta(offset), **kws).mean()
+
+
+def load_pluvio(start=None, end=None, kind='400'):
+    """Load Pluvio data from hdf5 database."""
+    import baecc.instruments.pluvio as pl
+    name = 'pluvio{}'.format(str(kind))
+    hdfpath = path.join(home(), 'DATA', 'pluvio14-16.h5')
+    data = pd.read_hdf(hdfpath, key=name)[start:end]
+    pluv = pl.Pluvio(data=data, name=name)
+    return pluv
 

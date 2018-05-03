@@ -185,16 +185,6 @@ def handle_ax(ax):
     return ax_out, update, axkws
 
 
-def load_pluvio(start=None, end=None, kind='400'):
-    """Load Pluvio data from hdf5 database."""
-    import baecc.instruments.pluvio as pl
-    name = 'pluvio{}'.format(str(kind))
-    hdfpath = path.join(home(), 'DATA', 'pluvio14-16.h5')
-    data = pd.read_hdf(hdfpath, key=name)[start:end]
-    pluv = pl.Pluvio(data=data, name=name)
-    return pluv
-
-
 def plot_occurrence_counts(count, ax=None):
     """Bar plot occurrence counts.
 
@@ -592,7 +582,8 @@ class Case:
 
     def load_pluvio(self, **kws):
         """load_pluvio wrapper"""
-        self.pluvio = load_pluvio(start=self.t_start(), end=self.t_end(), **kws)
+        self.pluvio = insitu.load_pluvio(start=self.t_start(),
+                                         end=self.t_end(), **kws)
 
     def lwe(self):
         """liquid water equivalent precipitation rate"""
