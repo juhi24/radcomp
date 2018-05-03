@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from os import path
 from functools import partial
-from radcomp.vertical import (filtering, classification, plotting, insitu,
+from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
                               NAN_REPLACEMENT)
 from radcomp import arm, azs, HOME, USER_DIR
 from j24 import home, daterange2str
@@ -258,6 +258,7 @@ class Case:
         self.classify(**kws)
 
     def prepare_cl_data(self, save=True):
+        """Prepare unscaled classification data."""
         if self.data is not None:
             cl_data = prep_data(self.data, self.class_scheme)
             if save:
@@ -278,6 +279,18 @@ class Case:
                 self.cl_data_scaled = scaled
             return scaled
         return None
+
+    def prepare_mli(self, save=True):
+        """Prepare melting layer indicator."""
+        if self.cl_data_scaled is None:
+            self.scale_cl_data()
+        zdr = self.cl_data_scaled['zdr'].T
+        z = self.cl_data_scaled['ZH'].T
+        rho = self.data['RHO'].loc[z.index]
+        mli = ml.indicator(zdr, z, rho)
+        if save:
+            self.data['MLI'] = mli
+        return mli
 
     def classify(self, scheme=None, save=True):
         """classify based on class_scheme"""

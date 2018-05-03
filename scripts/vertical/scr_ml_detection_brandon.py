@@ -6,7 +6,7 @@ __metaclass__ = type
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from radcomp.vertical import case, filtering, ml, NAN_REPLACEMENT
+from radcomp.vertical import case, filtering, ml, classification, NAN_REPLACEMENT
 
 
 def filter_ml_top(top, size=3):
@@ -33,16 +33,21 @@ def df_rolling_apply(df, func, w=10, **kws):
     return out
 
 
+scheme = classification.VPC(params=['ZH', 'zdr', 'kdp'], hlimits=(190, 10e3),
+                            n_eigens=5, n_clusters=5,
+                            reduced=True, t_weight_factor=0.8,
+                            basename='melting-test', use_temperature=False)
+
 if __name__ == '__main__':
     plt.close('all')
     plt.ion()
     cases = case.read_cases('melting-test')
     c = cases.case.iloc[4]
+    c.class_scheme = scheme
     #
-    scaled_data = case.scale_data(c.data)
+    scaled_data = c.scale_cl_data()
     rho = c.data.RHO
-    mli = ml.indicator(scaled_data.zdr, scaled_data.ZH, rho)
-    c.data['MLI'] = mli
+    mli = c.prepare_mli()
     fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI'], cmap='viridis')
     #
     mlh = ml.ml_height(mli)
