@@ -263,35 +263,38 @@ class Case:
         self.class_scheme = classification.VPC.load(name)
         self.classify(**kws)
 
-    def prepare_cl_data(self, save=True):
+    def prepare_cl_data(self, save=True, force_no_crop=False):
         """Prepare unscaled classification data."""
         if self.data is not None:
             cl_data = prep_data(self.data, self.class_scheme)
-            if save:
+            if self.has_ml and not force_no_crop:
+                collapsefun = lambda df: ml.collapse2top(df.T, top=self.ml_top())
+                cl_data = cl_data.apply(collapsefun, axis=(1,2))
+            if save and not force_no_crop:
                 self.cl_data = cl_data
             return cl_data
         return None
 
-    def scale_cl_data(self, save=True):
+    def ml_top(self):
+        bot, top = ml.ml_limits(self.data['MLI'], self.data['RHO'])
+        return top
+
+    def scale_cl_data(self, save=True, force_no_crop=False):
         """scaled version of classification data
 
         time rounded to the nearest minute
         """
-        if self.cl_data is None:
-            self.prepare_cl_data()
-        if self.cl_data is not None:
-            scaled = scale_data(self.cl_data)
-            if save:
-                self.cl_data_scaled = scaled
-            return scaled
-        return None
+        cl_data = self.prepare_cl_data(save=save, force_no_crop=force_no_crop)
+        scaled = scale_data(cl_data)
+        if save and not force_no_crop:
+            self.cl_data_scaled = scaled
+        return scaled
 
     def prepare_mli(self, save=True):
         """Prepare melting layer indicator."""
-        if self.cl_data_scaled is None:
-            self.scale_cl_data()
-        zdr = self.cl_data_scaled['zdr'].T
-        z = self.cl_data_scaled['ZH'].T
+        cl_data_scaled = self.scale_cl_data(force_no_crop=True)
+        zdr = cl_data_scaled['zdr'].T
+        z = cl_data_scaled['ZH'].T
         rho = self.data['RHO'].loc[z.index]
         mli = ml.indicator(zdr, z, rho)
         if save:
