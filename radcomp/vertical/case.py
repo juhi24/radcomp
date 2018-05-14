@@ -48,8 +48,12 @@ def read_cases(name):
     dts = read_case_times(name)
     cases_list = []
     for cid, row in dts.iterrows():
+        case_kws = dict()
+        if 'ml' in row:
+            case_kws['has_ml'] = bool(row['ml'])
         try:
-            cases_list.append(Case.from_dtrange(row[COL_START], row[COL_END]))
+            cases_list.append(Case.from_dtrange(row[COL_START], row[COL_END],
+                                                **case_kws))
         except ValueError as e:
             print('Error: {}. Skipping {}'.format(e, cid))
             dts.drop(cid, inplace=True)
@@ -220,7 +224,8 @@ class Case:
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, class_scheme=None, temperature=None):
+                 classes=None, class_scheme=None, temperature=None,
+                 has_ml=False):
         self.data = data
         self.cl_data = cl_data
         self.cl_data_scaled = cl_data_scaled
@@ -228,13 +233,14 @@ class Case:
         self.class_scheme = class_scheme
         self.temperature = temperature
         self.pluvio = None
+        self.has_ml = has_ml
         self._cl_ax = None
         self._dt_ax = None
 
     @classmethod
-    def from_dtrange(cls, t0, t1):
+    def from_dtrange(cls, t0, t1, **kws):
         pn = dt2pn(t0, t1)
-        return cls(data=pn)
+        return cls(data=pn, **kws)
 
     @classmethod
     def by_combining(cls, cases, **kws):
