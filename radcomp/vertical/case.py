@@ -268,16 +268,12 @@ class Case:
         if self.data is not None:
             cl_data = prep_data(self.data, self.class_scheme)
             if self.has_ml and not force_no_crop:
-                collapsefun = lambda df: ml.collapse2top(df.T, top=self.ml_top())
+                collapsefun = lambda df: ml.collapse2top(df.T, top=self.ml_top()).T
                 cl_data = cl_data.apply(collapsefun, axis=(1,2))
             if save and not force_no_crop:
                 self.cl_data = cl_data
             return cl_data
         return None
-
-    def ml_top(self):
-        bot, top = ml.ml_limits(self.data['MLI'], self.data['RHO'])
-        return top
 
     def scale_cl_data(self, save=True, force_no_crop=False):
         """scaled version of classification data
@@ -285,10 +281,18 @@ class Case:
         time rounded to the nearest minute
         """
         cl_data = self.prepare_cl_data(save=save, force_no_crop=force_no_crop)
-        scaled = scale_data(cl_data)
+        scaled = scale_data(cl_data).fillna(0)
         if save and not force_no_crop:
             self.cl_data_scaled = scaled
         return scaled
+
+    def ml_top(self, interpolate=True):
+        if 'MLI' not in self.data:
+            self.prepare_mli(save=True)
+        bot, top = ml.ml_limits(self.data['MLI'], self.data['RHO'])
+        if not interpolate:
+            return top
+        return top.interpolate().bfill().ffill()
 
     def prepare_mli(self, save=True):
         """Prepare melting layer indicator."""
@@ -322,7 +326,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, plot_t=True, plot_azs=True, **kws):
+             plot_fr=True, plot_t=True, plot_azs=True, ml_iax=3, **kws):
         if raw:
             data = self.data
         else:
@@ -355,6 +359,8 @@ class Case:
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])
+        if self.has_ml:
+            self.plot_ml(ax=axarr[ml_iax])
         if interactive:
             for ax in axarr:
                 # TODO: cursor not showing
@@ -368,6 +374,12 @@ class Case:
         axarr[0].set_title(date_us_fmt(self.t_start(), self.t_end()))
         axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         return fig, axarr
+
+    def plot_ml(self, linestyle='', marker='_', ax=None):
+        ax = ax or plt.gca()
+        common_kws = dict(linestyle=linestyle, marker=marker, ax=ax)
+        self.ml_top(interpolate=True).plot(color='gray', **common_kws)
+        self.ml_top(interpolate=False).plot(color='black', **common_kws)
 
     def plot_t(self, ax, tmin=-20, tmax=10):
         # TODO: remove copy-pasta

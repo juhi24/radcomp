@@ -105,7 +105,7 @@ def _pn_scalekws(field, scaled, x_is_date):
     fieldup = field.upper()
     if scaled:
         scalekws = {'vmin': 0, 'vmax': 1}
-        cb_label = 'scaled'
+        cb_label = 'scaled {}'.format(field)
     elif fieldup in vis.LABELS:
         # custom limits
         vmins = vis.VMINS
