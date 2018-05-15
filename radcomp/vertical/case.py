@@ -586,6 +586,8 @@ class Case:
             t = arm.var_in_timerange(self.t_start(), t_end, var='temp_mean')
         else:
             hdfpath = path.join(home(), 'DATA', 't_fmi_14-17.h5')
+            if not path.exists(hdfpath):
+                return pd.Series()
             t = pd.read_hdf(hdfpath, 'data')['TC'][self.t_start():t_end]
             t.name = 'temp_mean'
         tre = t.resample('15min', base=self.base_minute()).mean()
@@ -600,6 +602,8 @@ class Case:
     def azs(self, **kws):
         t_end = self.t_end()+pd.Timedelta(minutes=15)
         data = azs.load_series()[self.t_start(): t_end]
+        if data.empty:
+            return pd.Series()
         return data.resample('15min', base=self.base_minute()).mean()
 
     def load_pluvio(self, **kws):
@@ -618,6 +622,8 @@ class Case:
         """rime mass fraction"""
         t_end = self.t_end()+pd.Timedelta(minutes=15)
         hdfpath = path.join(home(), 'DATA', 'FR_haoran.h5')
+        if not path.exists(hdfpath):
+            return pd.Series()
         fr = pd.read_hdf(hdfpath, 'data')[self.t_start():t_end]
         return self.time_weighted_mean(fr, offset_half_delta=False)
 

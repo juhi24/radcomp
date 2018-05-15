@@ -30,6 +30,8 @@ def mat2series(filename, key='azs'):
     return series
 
 def load_series(datafiles=P400SET, **kws):
+    if len(datafiles) < 1:
+        return pd.Series()
     azss = []
     for fn in datafiles:
         try:
