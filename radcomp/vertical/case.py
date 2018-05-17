@@ -243,6 +243,7 @@ class Case:
 
     @classmethod
     def from_dtrange(cls, t0, t1, **kws):
+        """Create a case from data between a time range."""
         pn = dt2pn(t0, t1)
         return cls(data=pn, **kws)
 
@@ -258,12 +259,15 @@ class Case:
         return case_id_fmt(self.t_start(), self.t_end(), **kws)
 
     def t_start(self):
+        """data start time"""
         return self.data.minor_axis[0]
 
     def t_end(self):
+        """data end time"""
         return self.data.minor_axis[-1]
 
     def load_classification(self, name, **kws):
+        """Load a classification scheme based on its id, and classify."""
         self.class_scheme = classification.VPC.load(name)
         self.classify(**kws)
 
@@ -329,10 +333,12 @@ class Case:
         return None
 
     def plot_classes(self):
+        """plot_classes wrapper"""
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              plot_fr=True, plot_t=True, plot_azs=True, ml_iax=1, **kws):
+        """Visualize the case."""
         if raw:
             data = self.data
         else:
