@@ -18,7 +18,8 @@ if __name__ == '__main__':
         c = row.case
         c.class_scheme = scheme
         fig, axarr = c.plot(params=['ZH', 'kdp', 'zdr', 'RHO'], cmap='viridis',
-                            ml_iax=3)
+                            ml_iax=3, plot_fr=False, plot_t=False,
+                            plot_azs=False)
         results_dir = ensure_dir(path.join(RESULTS_DIR, 'ml'))
         fname = path.join(results_dir, c.name()+'.png')
         fig.savefig(fname, bbox_inches='tight')
