@@ -382,6 +382,7 @@ class Case:
         return fig, axarr
 
     def plot_ml(self, linestyle='', marker='_', ax=None):
+        """Plot melting layer highlighting interpolated parts."""
         ax = ax or plt.gca()
         common_kws = dict(linestyle=linestyle, marker=marker, ax=ax)
         boti, topi = self.ml_limits(interpolate=True)
@@ -390,6 +391,7 @@ class Case:
         top.plot(color='black', **common_kws)
 
     def plot_t(self, ax, tmin=-20, tmax=10):
+        """Plot temperature."""
         # TODO: remove copy-pasta
         half_dt = self.mean_delta()/2
         t = self.ground_temperature().shift(freq=half_dt)
@@ -398,6 +400,7 @@ class Case:
         ax.set_ylim([tmin, tmax])
 
     def plot_lwe(self, ax, rmax=4):
+        """plot LWE"""
         half_dt = self.mean_delta()/2
         i = self.lwe().shift(freq=half_dt)
         plotting.plot_data(i, ax=ax, label=self.pluvio.name)
@@ -406,6 +409,7 @@ class Case:
         self.set_xlim(ax)
 
     def plot_fr(self, ax, frmin=-0.1, frmax=1):
+        """Plot riming fraction."""
         half_dt = self.mean_delta()/2
         fr = self.fr().shift(freq=half_dt)
         plotting.plot_data(fr, ax=ax, label='FR')
@@ -414,6 +418,7 @@ class Case:
         self.set_xlim(ax)
 
     def plot_azs(self, ax, amin=10, amax=4000):
+        """Plot prefactor of Z-S relation"""
         half_dt = self.mean_delta()/2
         azs = self.azs().shift(freq=half_dt)
         label = plotting.LABELS[azs.name]
@@ -425,6 +430,7 @@ class Case:
         self.set_xlim(ax)
 
     def train(self, **kws):
+        """Train a classification scheme with scaled classification data."""
         if self.class_scheme.use_temperature:
             extra_df = self.ground_temperature()
         else:
