@@ -52,8 +52,12 @@ def read_cases(name):
         if 'ml' in row:
             case_kws['has_ml'] = bool(row['ml'])
         try:
-            cases_list.append(Case.from_dtrange(row[COL_START], row[COL_END],
-                                                **case_kws))
+            t_start, t_end = row[COL_START], row[COL_END]
+            c = Case.from_dtrange(t_start, t_end, **case_kws)
+            if c.data.empty:
+                err_msg_fmt = 'No data available between {} and {}.'
+                raise ValueError(err_msg_fmt.format(t_start, t_end))
+            cases_list.append(c)
         except ValueError as e:
             print('Error: {}. Skipping {}'.format(e, cid))
             dts.drop(cid, inplace=True)
