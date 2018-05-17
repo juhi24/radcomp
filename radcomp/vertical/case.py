@@ -272,7 +272,8 @@ class Case:
         if self.data is not None:
             cl_data = prep_data(self.data, self.class_scheme)
             if self.has_ml and not force_no_crop:
-                collapsefun = lambda df: ml.collapse2top(df.T, top=self.ml_top()).T
+                top = self.ml_limits()[1]
+                collapsefun = lambda df: ml.collapse2top(df.T, top=top).T
                 cl_data = cl_data.apply(collapsefun, axis=(1,2))
             if save and not force_no_crop:
                 self.cl_data = cl_data
@@ -290,13 +291,14 @@ class Case:
             self.cl_data_scaled = scaled
         return scaled
 
-    def ml_top(self, interpolate=True):
+    def ml_limits(self, interpolate=True):
+        """ML top using peak detection"""
         if 'MLI' not in self.data:
             self.prepare_mli(save=True)
         bot, top = ml.ml_limits(self.data['MLI'], self.data['RHO'])
         if not interpolate:
-            return top
-        return top.interpolate().bfill().ffill()
+            return bot, top
+        return tuple(lim.interpolate().bfill().ffill() for lim in bot, top)
 
     def prepare_mli(self, save=True):
         """Prepare melting layer indicator."""
@@ -382,8 +384,10 @@ class Case:
     def plot_ml(self, linestyle='', marker='_', ax=None):
         ax = ax or plt.gca()
         common_kws = dict(linestyle=linestyle, marker=marker, ax=ax)
-        self.ml_top(interpolate=True).plot(color='gray', **common_kws)
-        self.ml_top(interpolate=False).plot(color='black', **common_kws)
+        boti, topi = self.ml_limits(interpolate=True)
+        bot, top = self.ml_limits(interpolate=False)
+        topi.plot(color='gray', **common_kws)
+        top.plot(color='black', **common_kws)
 
     def plot_t(self, ax, tmin=-20, tmax=10):
         # TODO: remove copy-pasta
