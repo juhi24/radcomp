@@ -326,7 +326,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, plot_t=True, plot_azs=True, ml_iax=3, **kws):
+             plot_fr=True, plot_t=True, plot_azs=True, ml_iax=1, **kws):
         if raw:
             data = self.data
         else:
@@ -483,14 +483,16 @@ class Case:
         clus_centroids, extra = self.class_scheme.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
         decoded = scale_data(clus_centroids, reverse=True)
-        if not sortby is None and not order:
-            if isinstance(sortby, str):
+        if (sortby is not None) and (not order):
+            if isinstance(sortby, str) and extra.empty:
                 order = extra.sort_values(by=sortby).index
             elif isinstance(sortby, pd.Series):
                 order = sortby.sort_values().index
             else:
                 raise ValueError('sortby must be series or extra column name.')
         if order is not None:
+            if extra.empty:
+                return decoded.loc[:, :, order], extra
             return decoded.loc[:, :, order], extra.loc[order]
         return decoded, extra
 
@@ -528,7 +530,7 @@ class Case:
         fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
         if plot_counts:
-            plot_occurrence_counts(self.class_counts().loc[extra.index], ax=ax_last)
+            plot_occurrence_counts(self.class_counts().loc[pn.minor_axis], ax=ax_last)
         if colorful_bars:
             cmkw = {}
             if colorful_bars=='blue':
@@ -540,7 +542,7 @@ class Case:
                 check_rect = lambda p: isinstance(p, mpl.patches.Rectangle)
                 pa = np.array(pa)[list(map(check_rect, pa))]
                 for i, p in enumerate(pa):
-                    p.set_color(self.class_color(extra.index[i], default=(1, 1, 1, 0), **cmkw))
+                    p.set_color(self.class_color(pn.minor_axis[i], default=(1, 1, 1, 0), **cmkw))
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr, order_out
 

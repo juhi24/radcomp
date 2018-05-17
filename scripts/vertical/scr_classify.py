@@ -13,7 +13,7 @@ from warnings import warn
 plt.ioff()
 plt.close('all')
 
-case_set = '14-16by_hand'
+case_set = 'melting-confirmed'
 n_eigens = 19
 n_clusters = 19
 reduced = True
@@ -24,23 +24,27 @@ radar_weight_factors = dict(zdr=0.5)
 save = True
 
 cases = case.read_cases(case_set)
-name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
-                                  n_clusters=n_clusters, reduced=reduced,
-                                  use_temperature=use_temperature,
-                                  t_weight_factor=t_weight_factor,
-                                  radar_weight_factors=radar_weight_factors)
+#name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
+#                                  n_clusters=n_clusters, reduced=reduced,
+#                                  use_temperature=use_temperature,
+#                                  t_weight_factor=t_weight_factor,
+#                                  radar_weight_factors=radar_weight_factors)
+name = 'mlt_10eig10clus_pca'
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))
 #c = cases.case['140303']
 for i, c in cases.case.iteritems():
     print(i)
     try:
         c.load_classification(name)
-        c.load_pluvio()
+        try:
+            c.load_pluvio()
+        except FileNotFoundError:
+            warn('Pluvio data not found.')
     except ValueError as e:
         warn(str(e))
         continue
     #c.plot_classes()
-    fig, axarr = c.plot(n_extra_ax=0, plot_fr=True)#, cmap='viridis')
+    fig, axarr = c.plot(n_extra_ax=0, ml_iax=2)#, cmap='viridis')
     if save:
         fig.savefig(path.join(results_dir, c.name()+'.png'), bbox_inches='tight')
         plt.close(fig)

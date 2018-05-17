@@ -14,16 +14,16 @@ np.random.seed(1)
 
 plot = False
 
-cases = case.read_cases('14-16by_hand')
-basename = '14-16'
+cases = case.read_cases('melting-confirmed')
+basename = 'mlt'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
-n_eigens = 19
-n_clusters = 19
+n_eigens = 10
+n_clusters = 10
 reduced = True
-use_temperature = True
+use_temperature = False
 t_weight_factor = 0.8
-radar_weight_factors = dict(zdr=0.5)
+radar_weight_factors = dict()
 
 if plot:
     for name, c in cases.case.iteritems():
@@ -34,7 +34,7 @@ if plot:
 scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
                             reduced=reduced, t_weight_factor=t_weight_factor,
                             radar_weight_factors=radar_weight_factors,
-                            basename=basename)
+                            basename=basename, n_clusters=n_clusters)
 c = case.Case.by_combining(cases, class_scheme=scheme)
 c.train()
 scheme.save()
@@ -42,5 +42,7 @@ scheme.save()
 name = c.class_scheme.name()
 print(name)
 c.load_classification(name)
-c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue')
+order = c.clus_centroids()[0].ZH.iloc[0]
+c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue',
+                         sortby=order)
 
