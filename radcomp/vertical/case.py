@@ -490,8 +490,10 @@ class Case:
         cen, t = self.clus_centroids()
         data = cen.minor_xs(n)
         axarr = plotting.plot_vps(data, **kws)
-        titlestr = 'Class {n}, $T={t:.1f}^{{\circ}}$C'
-        axarr[1].set_title(titlestr.format(n=int(n), t=t.temp_mean[n]))
+        titlestr = 'Class {}'.format(n)
+        if self.class_scheme.use_temperature:
+            titlestr += ', $T={t:.1f}^{{\circ}}$C'.format(t['temp_mean'][n])
+        axarr[1].set_title(titlestr)
         return axarr
 
     def pcolor_classes(self, **kws):
