@@ -111,7 +111,7 @@ def data_range(dt_start, dt_end):
     return pd.concat(pns_out, axis=2).loc[:, :, dt_start:dt_end]
 
 
-def prepare_pn(pn, kdpmax=0.5):
+def prepare_pn(pn, kdpmax=1):
     """Filter data and calculate extra parameters."""
     dr = pd.Series(pn.major_axis.values, index=pn.major_axis).diff().bfill()
     dr_km = dr/1000
@@ -129,10 +129,10 @@ def prepare_pn(pn, kdpmax=0.5):
     return pn_new
 
 
-def dt2pn(dt0, dt1):
+def dt2pn(dt0, dt1, **kws):
     """Read and preprocess VP data between datetimes."""
     pn_raw = data_range(dt0, dt1)
-    return prepare_pn(pn_raw)
+    return prepare_pn(pn_raw, **kws)
 
 
 def fillna(dat, field=''):
@@ -245,7 +245,11 @@ class Case:
     @classmethod
     def from_dtrange(cls, t0, t1, **kws):
         """Create a case from data between a time range."""
-        pn = dt2pn(t0, t1)
+        kdpmax = 0.5
+        if 'has_ml' in kws:
+            if kws['has_ml']:
+                kdpmax = 1
+        pn = dt2pn(t0, t1, kdpmax=kdpmax)
         return cls(data=pn, **kws)
 
     @classmethod

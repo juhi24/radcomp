@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0.8, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
          'R': 0.05, 'MLI': 0, 'ML': 0}
-VMAXS = {'ZH': 30, 'ZDR': 6, 'RHO': 1, 'KDP': 0.26, 'DP': 360, 'PHIDP': 30,
+VMAXS = {'ZH': 30, 'ZDR': 6, 'RHO': 1, 'KDP': 0.5, 'DP': 360, 'PHIDP': 30,
          'R': 16, 'MLI': 7, 'ML': 1}
 LABELS = {'ZH': '$Z_{e}$, dBZ',
           'ZDR': '$Z_{dr}$, dB',
