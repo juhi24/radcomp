@@ -19,11 +19,12 @@ SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 
 
-def case_id_fmt(t_start, t_end=None, dtformat='{year}{month}{day}',
-                day_fmt='%d', month_fmt='%m', year_fmt='%y'):
+def case_id_fmt(t_start, t_end=None, dtformat='{year}{month}{day}{hour}',
+                day_fmt='%d', month_fmt='%m', year_fmt='%y', hour_fmt='T%H'):
     """daterange2str wrapper for date range based IDs"""
-    return daterange2str(t_start, t_end, dtformat=dtformat, day_fmt=day_fmt,
-                         month_fmt=month_fmt, year_fmt=year_fmt).lower()
+    return daterange2str(t_start, t_end, dtformat=dtformat, hour_fmt=hour_fmt,
+                         day_fmt=day_fmt, month_fmt=month_fmt,
+                         year_fmt=year_fmt)
 
 
 def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
@@ -302,7 +303,7 @@ class Case:
         bot, top = ml.ml_limits(self.data['MLI'], self.data['RHO'])
         if not interpolate:
             return bot, top
-        return tuple(lim.interpolate().bfill().ffill() for lim in bot, top)
+        return tuple(lim.interpolate().bfill().ffill() for lim in (bot, top))
 
     def prepare_mli(self, save=True):
         """Prepare melting layer indicator."""

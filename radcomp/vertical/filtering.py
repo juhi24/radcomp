@@ -35,7 +35,7 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
     for field in keys:
         view = pn_new[field].iloc[:heigth_px]
         fltrd = median_filter_df(view, param=field, fill=True,
-                                     nullmask=pn.ZH.isnull(), size=size)
+                                 nullmask=pn.ZH.isnull(), size=size)
         new_values = fltrd.iloc[:crop_px]
         selection = pn_new[field]>ground_threshold[field.upper()]
         selection.loc[:, selection.iloc[crop_px]] = False # not clutter
@@ -56,7 +56,8 @@ def fltr_median(pn):
     new = create_filtered_fields_if_missing(pn_out, sizes.keys())[keys]
     nullmask = pn['ZH'].isnull()
     for field, data in new.iteritems():
-        df = median_filter_df(data, param=field, nullmask=nullmask, size=sizes[field.upper()])
+        df = median_filter_df(data, param=field, nullmask=nullmask,
+                              size=sizes[field.upper()])
         pn_out[field] = df
     return pn_out
 
