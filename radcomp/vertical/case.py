@@ -271,6 +271,14 @@ class Case:
         """data end time"""
         return self.data.minor_axis[-1]
 
+    def timestamps(self, round_index=False):
+        """data timestamps as Series"""
+        t = self.data.minor_axis
+        ts = pd.Series(index=t, data=t)
+        if round_index:
+            return round_time_index(ts)
+        return ts
+
     def load_classification(self, name, **kws):
         """Load a classification scheme based on its id, and classify."""
         self.class_scheme = classification.VPC.load(name)
