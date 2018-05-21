@@ -573,6 +573,12 @@ class Case:
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr, order_out
 
+    def scatter_class_pca(self, **kws):
+        """plotting.scatter_class_pca wrapper"""
+        return plotting.scatter_class_pca(self.class_scheme.data,
+                                          self.classes.values,
+                                          color_fun=self.class_color, **kws)
+
     def class_color(self, *args, **kws):
         mapping = self.class_color_mapping()
         return plotting.class_color(*args, mapping=mapping, **kws)

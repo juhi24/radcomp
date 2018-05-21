@@ -10,6 +10,7 @@ import radcomp.visualization as vis
 import j24.visualization as jvis
 from radcomp import vertical, learn
 import pyart # for colormaps
+from mpl_toolkits.mplot3d import Axes3D
 
 
 DISPLACEMENT_FACTOR = 0.5
@@ -174,12 +175,12 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
 
 def class_color(cid, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     """j24.visualization.class_color wrapper"""
-    jvis.class_color(cid, cmap=cmap, **kws)
+    return jvis.class_color(cid, cmap=cmap, **kws)
 
 
 def class_colors(classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
     """j24.visualization.class_colors wrapper"""
-    jvis.class_colors(classes, cmap=cmap, **kws)
+    return jvis.class_colors(classes, cmap=cmap, **kws)
 
 
 def plot_classes(data, classes):
@@ -239,3 +240,27 @@ def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
             p.set_color(class_color(iclass, cm, **kws))
     #plt.tight_layout()
     return fig
+
+
+def scatter_class_pca(profiles_pca, classes, color_fun=class_color, plot3d=True):
+    """scatterplot of profiles in pca space highlighting classes"""
+    profs_pca = profiles_pca.copy()
+    profs_pca['class'] = classes
+    cg = profs_pca.groupby('class')
+    markers = ['d', 'o', 'v', '^', '<', '>', 's', 'p', '*', 'x', 'D', 'h', 's',
+               'o', 'v', '^']
+    fig = plt.figure()
+    kws3d = {}
+    if plot3d:
+        kws3d['projection'] = '3d'
+    ax = fig.add_subplot(111, **kws3d)
+    for cl, eig in cg:
+        marker_kws = dict(color=color_fun(cl), marker=markers[cl-1])
+        if plot3d:
+            ax.scatter(eig[0], eig[1], eig[2], **marker_kws)
+            ax.set_zlabel('component 3')
+        else:
+            eig.plot.scatter(0, 1, ax=ax, **marker_kws)
+        ax.set_xlabel('component 1')
+        ax.set_ylabel('component 2')
+    return ax

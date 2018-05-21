@@ -20,7 +20,7 @@ basename = 'mlt'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
 n_eigens = 20
-n_clusters = 20
+n_clusters = 15
 reduced = True
 use_temperature = False
 t_weight_factor = 0.8
@@ -47,3 +47,4 @@ order = c.clus_centroids()[0].ZH.iloc[0]
 c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue',
                          sortby=order)
 
+c.scatter_class_pca(plot3d=True)
