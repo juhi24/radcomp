@@ -85,6 +85,13 @@ def n_class_in_cases(class_n, cases, combined_cases=None):
     return groups.agg(lambda x: (x==class_n).sum())
 
 
+def plot_cases_with_class(cases, class_n, **kws):
+    selection = n_class_in_cases(class_n, cases).astype(bool)
+    matching_cases = cases[selection]
+    for name, c in matching_cases.case.iteritems():
+        c.plot(**kws)
+
+
 def dt2path(dt, datadir):
     return path.join(datadir, dt.strftime('%Y%m%d_IKA_VP_from_RHI.mat'))
 
