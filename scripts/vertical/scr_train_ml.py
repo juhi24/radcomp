@@ -45,8 +45,7 @@ name = c.class_scheme.name()
 print(name)
 c.load_classification(name)
 order = c.clus_centroids()[0].ZH.iloc[0]
-c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue',
-                         sortby=order)
+c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=order)
 
 c.scatter_class_pca(plot3d=True)
 
