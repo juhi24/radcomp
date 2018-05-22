@@ -2,9 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.metrics import silhouette_samples
 from radcomp.vertical import case, classification
 
 

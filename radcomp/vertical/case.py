@@ -377,7 +377,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, plot_t=True, plot_azs=True, **kws):
+             plot_fr=True, plot_t=True, plot_azs=True, plot_silh=True, **kws):
         """Visualize the case."""
         if raw:
             data = self.data
@@ -394,10 +394,14 @@ class Case:
         plot_azs = plot_azs and (self.azs().size > 0)
         plot_fr = plot_fr and (self.fr().size > 0)
         plot_t = plot_t and (self.ground_temperature().size > 0)
-        n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs
+        plot_silh = plot_silh and (self.classes is not None)
+        n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, **kws)
+        if plot_silh:
+            self.plot_silh(ax=axarr[next_free_ax])
+            next_free_ax += 1
         if plot_lwe:
             self.plot_lwe(ax=axarr[next_free_ax])
             next_free_ax += 1
@@ -476,6 +480,17 @@ class Case:
         ax.set_yscale('log')
         ax.set_ylim(bottom=amin, top=amax)
         ax.set_yticks([10, 100, 1000])
+        self.set_xlim(ax)
+
+    def plot_silh(self, ax=None):
+        """Plot silhouette coefficient"""
+        ax = ax or plt.gca()
+        half_dt = self.mean_delta()/2
+        silh = self.silhouette_coef().shift(freq=half_dt)
+        plotting.plot_data(silh, ax=ax)
+        ax.set_ylabel('silhouette coefficient')
+        ax.set_ylim(bottom=-1, top=1)
+        ax.set_yticks([-1, 0, 1])
         self.set_xlim(ax)
 
     def train(self, **kws):
