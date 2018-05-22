@@ -13,7 +13,7 @@ from warnings import warn
 plt.ioff()
 plt.close('all')
 
-case_set = 'melting-confirmed'
+case_set = 'melting'
 n_eigens = 19
 n_clusters = 19
 reduced = True
@@ -21,15 +21,16 @@ use_temperature = True
 t_weight_factor = 0.8
 radar_weight_factors = dict(zdr=0.5)
 
-save = True
+save = False
 
 cases = case.read_cases(case_set)
+cases = cases[cases.ml_ok.astype(bool)]
 #name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
 #                                  n_clusters=n_clusters, reduced=reduced,
 #                                  use_temperature=use_temperature,
 #                                  t_weight_factor=t_weight_factor,
 #                                  radar_weight_factors=radar_weight_factors)
-name = 'mlt_10eig10clus_pca'
+name = 'mlt_20eig15clus_pca'
 results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))
 #c = cases.case['140303']
 for i, c in cases.case.iteritems():
@@ -44,7 +45,7 @@ for i, c in cases.case.iteritems():
         warn(str(e))
         continue
     #c.plot_classes()
-    fig, axarr = c.plot(n_extra_ax=0, ml_iax=2)#, cmap='viridis')
+    #fig, axarr = c.plot(n_extra_ax=0, ml_iax=2)#, cmap='viridis')
     if save:
         fig.savefig(path.join(results_dir, c.name()+'.png'), bbox_inches='tight')
         plt.close(fig)

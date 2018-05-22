@@ -66,6 +66,25 @@ def read_cases(name):
     return dts
 
 
+def ts_case_ids(cases):
+    """case ids by timestamp"""
+    cids_list = []
+    for cid, c in cases.case.iteritems():
+        cids_list.append(c.timestamps().apply(lambda x: cid))
+    return pd.concat(cids_list)
+
+
+def n_class_in_cases(class_n, cases, combined_cases=None):
+    """numbers of occurrences of a given class per case in cases DataFrame"""
+    case_ids = ts_case_ids(cases)
+    if cases.case.iloc[0].class_scheme is not None:
+        classes = pd.concat([x.classes for i, x in cases.case.iteritems()])
+    elif combined_cases is not None:
+        classes = combined_cases.classes
+    groups = classes.groupby(case_ids)
+    return groups.agg(lambda x: (x==class_n).sum())
+
+
 def dt2path(dt, datadir):
     return path.join(datadir, dt.strftime('%Y%m%d_IKA_VP_from_RHI.mat'))
 
@@ -254,6 +273,7 @@ class Case:
 
     @classmethod
     def by_combining(cls, cases, **kws):
+        """Combine a DataFrame of Case objects into one."""
         t = pd.concat([c.ground_temperature() for i,c in cases.case.iteritems()])
         datas = list(cases.case.apply(lambda c: c.data)) # data of each case
         data = pd.concat(datas, axis=2)
@@ -350,7 +370,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, plot_t=True, plot_azs=True, ml_iax=1, **kws):
+             plot_fr=True, plot_t=True, plot_azs=True, **kws):
         """Visualize the case."""
         if raw:
             data = self.data
@@ -362,6 +382,8 @@ class Case:
             else:
                 params = ['ZH', 'zdr', 'kdp']
         plot_lwe = self.pluvio is not None
+        if plot_lwe:
+            plot_lwe = not self.pluvio.data.empty
         plot_azs = plot_azs and (self.azs().size > 0)
         plot_fr = plot_fr and (self.fr().size > 0)
         plot_t = plot_t and (self.ground_temperature().size > 0)
@@ -385,7 +407,8 @@ class Case:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])
         if self.has_ml:
-            self.plot_ml(ax=axarr[ml_iax])
+            for i in range(len(params)):
+                self.plot_ml(ax=axarr[i])
         if interactive:
             for ax in axarr:
                 # TODO: cursor not showing
@@ -460,7 +483,7 @@ class Case:
                                        extra_df=extra_df, **kws)
 
     def _on_click_plot_dt_cs(self, event, params=None):
-        """on click plot cross section"""
+        """on click plot profiles at a timestamp"""
         try:
             dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
         except TypeError: # clicked outside axes
@@ -471,6 +494,7 @@ class Case:
             ax.get_figure().canvas.draw()
 
     def _on_click_plot_cl_cs(self, event):
+        """click a class centroid to plot it"""
         try:
             i = int(round(event.xdata))
         except TypeError: # clicked outside axes
@@ -484,6 +508,7 @@ class Case:
             ax.get_figure().canvas.draw()
 
     def plot_data_at(self, dt, params=None, **kws):
+        """Plot profiles at given timestamp."""
         data_orig = self.data
         i = data_orig.minor_axis.get_loc(dt, method='nearest')
         data = data_orig.iloc[:, :, i]
@@ -495,6 +520,8 @@ class Case:
         return axarr
 
     def plot_centroid(self, n, **kws):
+        """Plot centroid for class n."""
+        # TODO move to VPC
         cen, t = self.clus_centroids()
         data = cen.minor_xs(n)
         axarr = plotting.plot_vps(data, **kws)
@@ -515,6 +542,8 @@ class Case:
         return out
 
     def clus_centroids(self, order=None, sortby=None):
+        """cluster centroids translated to original units"""
+        # TODO: move to VPC
         clus_centroids, extra = self.class_scheme.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
         decoded = scale_data(clus_centroids, reverse=True)
@@ -536,6 +565,7 @@ class Case:
                                plot_counts=True, **kws):
         """class centroids pcolormesh"""
         # TODO: split massive func
+        # TODO: move to VPC
         pn, extra = self.clus_centroids(order=order, sortby=sortby)
         order_out = pn.minor_axis
         n_extra = extra.shape[1]
@@ -588,14 +618,18 @@ class Case:
                                           color_fun=self.class_color, **kws)
 
     def class_color(self, *args, **kws):
+        """color associated to a given class number"""
+        # TODO: move to VPC
         mapping = self.class_color_mapping()
         return plotting.class_color(*args, mapping=mapping, **kws)
 
     def class_colors(self, *args, **kws):
+        # TODO: move to VPC
         mapping = self.class_color_mapping()
         return plotting.class_colors(*args, mapping=mapping, **kws)
 
     def class_color_mapping(self):
+        # TODO: move to VPC
         pn = self.clus_centroids()[0]
         zmean = pn.loc['ZH'].mean()
         selection = zmean[zmean>-9].index
@@ -612,6 +646,8 @@ class Case:
         return plotting.mean_delta(self.data.minor_axis).round('1min')
 
     def base_minute(self):
+        """positive offset in minutes for profile measurements after each hour
+        """
         return self.data.minor_axis[0].round('1min').minute%15
 
     def base_middle(self):

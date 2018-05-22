@@ -15,14 +15,6 @@ np.random.seed(1)
 plot = False
 
 
-def ts_case_ids(cases):
-    """case ids by timestamp"""
-    cids_list = []
-    for cid, c in cases.case.iteritems():
-        cids_list.append(c.timestamps().apply(lambda x: cid))
-    return pd.concat(cids_list)
-
-
 cases = case.read_cases('melting')
 cases = cases[cases.ml_ok.astype(bool)]
 basename = 'mlt'
