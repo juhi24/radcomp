@@ -24,7 +24,6 @@ n_eigens = 20
 n_clusters = 15
 reduced = True
 use_temperature = False
-t_weight_factor = 0.8
 radar_weight_factors = dict()
 
 if plot:
@@ -34,7 +33,7 @@ if plot:
         fig.savefig(savepath)
 
 scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
-                            reduced=reduced, t_weight_factor=t_weight_factor,
+                            reduced=reduced,
                             radar_weight_factors=radar_weight_factors,
                             basename=basename, n_clusters=n_clusters)
 c = case.Case.by_combining(cases, class_scheme=scheme, has_ml=True)

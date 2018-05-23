@@ -2,28 +2,54 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
+import pandas as pd
 import matplotlib.pyplot as plt
 from radcomp.vertical import case, classification
 
 
 case_set = 'melting'
-scheme_id = 'mlt_20eig15clus_pca'
+scheme_id = 'mlt_15eig17clus_pca'
+
+
+basename = 'mlt'
+params = ['ZH', 'zdr', 'kdp']
+hlimits = (190, 10e3)
+n_eigens = 15
+reduced = True
+use_temperature = False
+radar_weight_factors = dict()
+
+
+def silh_score_avgs(cc, n_iter=10, **kws):
+    scores = pd.DataFrame()
+    for i in range(n_iter):
+        for n_classes in range(5, 25):
+            scheme = classification.VPC(params=params, hlimits=hlimits,
+                                        n_eigens=n_eigens, reduced=reduced,
+                                        radar_weight_factors=radar_weight_factors,
+                                        basename=basename, n_clusters=n_classes)
+            cc.class_scheme = scheme
+            cc.train(quiet=True)
+            cc.classify()
+            #fig, ax = plt.subplots()
+            #cc.plot_silhouette(ax=ax)
+            scores.loc[i, n_classes] = cc.silhouette_score(**kws)
+    return scores
 
 
 if __name__ == '__main__':
     cases = case.read_cases(case_set)
     cases = cases[cases.ml_ok.astype(bool)]
     plt.close('all')
+    cc = case.Case.by_combining(cases, has_ml=True)
+    cc.load_classification(scheme_id)
+    #scores = silh_score_avgs(cc, n_iter=5, n_pc=4)
+    #scores.mean().plot()
     #cases.case.apply(lambda x: x.load_classification(scheme_id))
     #c = cases.case.iloc[0]
-    scheme = classification.load(scheme_id)
-    cc = case.Case.by_combining(cases, class_scheme=scheme, has_ml=True)
-    cc.load_classification(scheme_id)
-    order = cc.clus_centroids()[0].ZH.iloc[0]
+    #order = cc.clus_centroids()[0].ZH.iloc[0]
     #c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=order)
-    sh = cc.silhouette_coef()
-    sg = sh.groupby(cc.classes)
-    fig, ax = plt.subplots()
-    cc.plot_silhouette(ax=ax)
+    #fig, ax = plt.subplots()
+    #cc.plot_silhouette(ax=ax)
 
 

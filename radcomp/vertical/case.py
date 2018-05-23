@@ -640,11 +640,15 @@ class Case:
                                           self.classes.values,
                                           color_fun=self.class_color, **kws)
 
-    def class_selection(self):
+    def precip_classes(self):
         """select potentially precipitating classes"""
         pn = self.clus_centroids()[0]
         zmean = pn.loc['ZH'].mean()
         return zmean[zmean>-9].index
+
+    def precip_selection(self):
+        """selector for precipitating classes over all time stamps"""
+        return self.classes.isin(self.precip_classes())
 
     def class_color(self, *args, **kws):
         """color associated to a given class number"""
@@ -659,7 +663,7 @@ class Case:
 
     def class_color_mapping(self):
         # TODO: move to VPC
-        selection = self.class_selection()
+        selection = self.precip_classes()
         mapping = pd.Series(index=selection, data=range(selection.size))
         return mapping
 
@@ -764,16 +768,25 @@ class Case:
         sh_arr = silhouette_samples(self.class_scheme.data, self.classes)
         return pd.Series(index=self.classes.index, data=sh_arr)
 
+    def silhouette_score(self, n_pc=8):
+        """silhouette score
+
+        useful for combined cases"""
+        selection = self.precip_selection()
+        round_selection = round_time_index(self.precip_selection())
+        class_data = self.class_scheme.data.loc[:, :n_pc]
+        return silhouette_score(class_data, self.classes)
 
     def plot_silhouette(self, ax=None):
-        """plot silhouette analysis"""
+        """plot silhouette analysis
+
+        useful for combined cases"""
         ax = ax or plt.gca()
         s_coef = self.silhouette_coef()
         s_groups = s_coef.groupby(self.classes)
-        s_score = silhouette_score(self.class_scheme.data, self.classes)
         y_lower = 10
         for cname, clust in s_groups:
-            if cname not in self.class_selection():
+            if cname not in self.precip_classes():
                 continue
             color = self.class_color(cname)
             cluster = clust.sort_values()
@@ -782,7 +795,7 @@ class Case:
                              facecolor=color, edgecolor=color)
             y_lower = y_upper + 30
             #ax.text(-0.05, y_lower + 0.5*cluster.size, str(cname))
-        ax.axvline(x=s_score, color="red", linestyle="--")
+        ax.axvline(x=self.silhouette_score(), color="red", linestyle="--")
         ax.set_xlabel('silhouette coefficient')
         ax.set_ylabel('classes')
         ax.set_yticks([])
