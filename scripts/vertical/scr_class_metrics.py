@@ -22,4 +22,8 @@ if __name__ == '__main__':
     order = cc.clus_centroids()[0].ZH.iloc[0]
     #c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=order)
     sh = cc.silhouette_coef()
+    sg = sh.groupby(cc.classes)
+    fig, ax = plt.subplots()
+    cc.plot_silhouette(ax=ax)
+
 

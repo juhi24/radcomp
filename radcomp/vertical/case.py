@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from os import path
 from functools import partial
+from sklearn.metrics import silhouette_score
 from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
                               NAN_REPLACEMENT)
 from radcomp import arm, azs, HOME, USER_DIR
@@ -488,7 +489,7 @@ class Case:
         half_dt = self.mean_delta()/2
         silh = self.silhouette_coef().shift(freq=half_dt)
         plotting.plot_data(silh, ax=ax)
-        ax.set_ylabel('silhouette coefficient')
+        ax.set_ylabel('silhouette\ncoefficient')
         ax.set_ylim(bottom=-1, top=1)
         ax.set_yticks([-1, 0, 1])
         self.set_xlim(ax)
@@ -639,6 +640,12 @@ class Case:
                                           self.classes.values,
                                           color_fun=self.class_color, **kws)
 
+    def class_selection(self):
+        """select potentially precipitating classes"""
+        pn = self.clus_centroids()[0]
+        zmean = pn.loc['ZH'].mean()
+        return zmean[zmean>-9].index
+
     def class_color(self, *args, **kws):
         """color associated to a given class number"""
         # TODO: move to VPC
@@ -652,9 +659,7 @@ class Case:
 
     def class_color_mapping(self):
         # TODO: move to VPC
-        pn = self.clus_centroids()[0]
-        zmean = pn.loc['ZH'].mean()
-        selection = zmean[zmean>-9].index
+        selection = self.class_selection()
         mapping = pd.Series(index=selection, data=range(selection.size))
         return mapping
 
@@ -758,4 +763,27 @@ class Case:
         from sklearn.metrics import silhouette_samples
         sh_arr = silhouette_samples(self.class_scheme.data, self.classes)
         return pd.Series(index=self.classes.index, data=sh_arr)
+
+
+    def plot_silhouette(self, ax=None):
+        """plot silhouette analysis"""
+        ax = ax or plt.gca()
+        s_coef = self.silhouette_coef()
+        s_groups = s_coef.groupby(self.classes)
+        s_score = silhouette_score(self.class_scheme.data, self.classes)
+        y_lower = 10
+        for cname, clust in s_groups:
+            if cname not in self.class_selection():
+                continue
+            color = self.class_color(cname)
+            cluster = clust.sort_values()
+            y_upper = y_lower + cluster.size
+            ax.fill_betweenx(np.arange(y_lower, y_upper), 0, cluster,
+                             facecolor=color, edgecolor=color)
+            y_lower = y_upper + 30
+            #ax.text(-0.05, y_lower + 0.5*cluster.size, str(cname))
+        ax.axvline(x=s_score, color="red", linestyle="--")
+        ax.set_xlabel('silhouette coefficient')
+        ax.set_ylabel('classes')
+        ax.set_yticks([])
 
