@@ -227,8 +227,7 @@ def plot_occurrence_counts(count, ax=None):
     Args:
         count (Series)
     """
-    if ax is None:
-        ax = plt.gca()
+    ax = ax or plt.gca()
     count.plot.bar(ax=ax)
     ax.set_ylabel('Occurrence')
     ax.yaxis.grid(True)
@@ -584,7 +583,7 @@ class Case:
         return decoded, extra
 
     def plot_cluster_centroids(self, colorful_bars=False, order=None,
-                               sortby='temp_mean', n_extra_ax=0,
+                               sortby=None, n_extra_ax=0,
                                plot_counts=True, **kws):
         """class centroids pcolormesh"""
         # TODO: split massive func
@@ -618,7 +617,8 @@ class Case:
         fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
         if plot_counts:
-            plot_occurrence_counts(self.class_counts().loc[pn.minor_axis], ax=ax_last)
+            counts = self.class_counts().loc[pn.minor_axis]
+            plot_occurrence_counts(counts, ax=ax_last)
         if colorful_bars:
             cmkw = {}
             if colorful_bars=='blue':
@@ -630,14 +630,16 @@ class Case:
                 check_rect = lambda p: isinstance(p, mpl.patches.Rectangle)
                 pa = np.array(pa)[list(map(check_rect, pa))]
                 for i, p in enumerate(pa):
-                    p.set_color(self.class_color(pn.minor_axis[i], default=(1, 1, 1, 0), **cmkw))
+                    color = self.class_color(pn.minor_axis[i],
+                                             default=(1, 1, 1, 0), **cmkw)
+                    p.set_color(color)
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr, order_out
 
     def scatter_class_pca(self, **kws):
         """plotting.scatter_class_pca wrapper"""
-        return plotting.scatter_class_pca(self.class_scheme.data,
-                                          self.classes.values,
+        classes = round_time_index(self.classes)
+        return plotting.scatter_class_pca(self.class_scheme.data, classes,
                                           color_fun=self.class_color, **kws)
 
     def precip_classes(self):

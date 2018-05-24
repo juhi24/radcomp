@@ -19,9 +19,9 @@ cases = case.read_cases('melting')
 cases = cases[cases.ml_ok.astype(bool)]
 basename = 'mlt'
 params = ['ZH', 'zdr', 'kdp']
-hlimits = (190, 10e3)
-n_eigens = 20
-n_clusters = 15
+hlimits = (290, 10e3)
+n_eigens = 18
+n_clusters = 17
 reduced = True
 use_temperature = False
 radar_weight_factors = dict()
@@ -43,9 +43,11 @@ scheme.save()
 name = c.class_scheme.name()
 print(name)
 c.load_classification(name)
-order = c.clus_centroids()[0].ZH.iloc[0]
-c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=order)
+#order = c.clus_centroids()[0].ZH.iloc[0]
+c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=None)
 
 c.scatter_class_pca(plot3d=True)
+fig, ax = plt.subplots()
+c.plot_silhouette(ax=ax)
 
 

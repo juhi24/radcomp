@@ -66,6 +66,12 @@ def load(name):
         return pickle.load(f)
 
 
+def sort_by_column(arr, by=0):
+    """sort array by column"""
+    df = pd.DataFrame(arr)
+    return df.sort_values(by=by).values
+
+
 def plot_reduced(data, n_clusters):
     # http://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_digits.html
     reduced_data = decomposition.PCA(n_components=2).fit_transform(data)
@@ -202,7 +208,7 @@ class VPC:
         return pd.Series(data=self.km.predict(data), index=data_scaled.major_axis)
 
     def clus_centroids_df(self):
-        centroids = self.km.cluster_centers_
+        centroids = sort_by_column(self.km.cluster_centers_, by=0)
         n_extra = len(self.params_extra)
         if n_extra < 1:
             components = centroids

@@ -47,8 +47,8 @@ if __name__ == '__main__':
     #scores.mean().plot()
     #cases.case.apply(lambda x: x.load_classification(scheme_id))
     #c = cases.case.iloc[0]
-    #order = cc.clus_centroids()[0].ZH.iloc[0]
-    #c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=order)
+    order = cc.clus_centroids()[0].ZH.iloc[0]
+    cc.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=order)
     #fig, ax = plt.subplots()
     #cc.plot_silhouette(ax=ax)
 
