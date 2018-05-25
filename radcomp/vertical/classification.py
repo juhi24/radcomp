@@ -69,7 +69,9 @@ def load(name):
 def sort_by_column(arr, by=0):
     """sort array by column"""
     df = pd.DataFrame(arr)
-    return df.sort_values(by=by).values
+    df_sorted = df.sort_values(by=by)
+    mapping = pd.Series(index=df_sorted.index, data=range(df_sorted.shape[0]))
+    return df_sorted.values, mapping.sort_index()
 
 
 def plot_reduced(data, n_clusters):
@@ -142,6 +144,7 @@ class VPC:
         self.radar_weight_factors = radar_weight_factors
         self.basename = basename
         self.use_temperature = use_temperature
+        self.mapping = None
         self._n_eigens = n_eigens
         self._n_clusters = n_clusters
 
@@ -185,7 +188,7 @@ class VPC:
                            radar_weight_factors=self.radar_weight_factors)
 
     def get_class_list(self):
-        return range(self.km.n_clusters)
+        return range(self.n_clusters)
 
     def save(self, **kws):
         with open(model_path(self.name(**kws)), 'wb') as f:
@@ -205,10 +208,12 @@ class VPC:
 
     def classify(self, data_scaled, **kws):
         data = self.prepare_data(data_scaled, **kws)
-        return pd.Series(data=self.km.predict(data), index=data_scaled.major_axis)
+        self.clus_centroids_df()
+        classes = self.mapping[self.km.predict(data)].values
+        return pd.Series(data=classes, index=data_scaled.major_axis)
 
     def clus_centroids_df(self):
-        centroids = sort_by_column(self.km.cluster_centers_, by=0)
+        centroids = self.km.cluster_centers_
         n_extra = len(self.params_extra)
         if n_extra < 1:
             components = centroids
@@ -217,8 +222,10 @@ class VPC:
             components = centroids[:, :-n_extra]
             extra = centroids[:, -n_extra:]/self.extra_weight_factor
         if self.reduced:
+            components, self.mapping = sort_by_column(components, by=0)
             centroids = self.pca.inverse_transform(components)
-        return pd.DataFrame(centroids.T), pd.DataFrame(extra, columns=self.params_extra)
+        extra_df = pd.DataFrame(extra, columns=self.params_extra)
+        return pd.DataFrame(centroids.T), extra_df
 
     def clus_centroids_pn(self):
         clus_centroids, extra = self.clus_centroids_df()
