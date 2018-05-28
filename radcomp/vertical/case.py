@@ -54,7 +54,11 @@ def read_cases(name):
         if 'ml' in row:
             case_kws['has_ml'] = bool(row['ml'])
         if 'convective' in row:
-            case_kws['is_convective'] = bool(row['convective'])
+            if np.isnan(row['convective']):
+                is_convective = None
+            else:
+                is_convective = bool(row['convective'])
+            case_kws['is_convective'] = is_convective
         try:
             t_start, t_end = row[COL_START], row[COL_END]
             c = Case.from_dtrange(t_start, t_end, **case_kws)
