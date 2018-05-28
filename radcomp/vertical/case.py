@@ -53,6 +53,8 @@ def read_cases(name):
         case_kws = dict()
         if 'ml' in row:
             case_kws['has_ml'] = bool(row['ml'])
+        if 'convective' in row:
+            case_kws['is_convective'] = bool(row['convective'])
         try:
             t_start, t_end = row[COL_START], row[COL_END]
             c = Case.from_dtrange(t_start, t_end, **case_kws)
@@ -256,7 +258,7 @@ class Case:
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
                  classes=None, class_scheme=None, temperature=None,
-                 has_ml=False):
+                 has_ml=False, is_convective=None):
         self.data = data
         self.cl_data = cl_data
         self.cl_data_scaled = cl_data_scaled
@@ -265,6 +267,7 @@ class Case:
         self.temperature = temperature
         self.pluvio = None
         self.has_ml = has_ml
+        self.is_convective = is_convective
         self._cl_ax = None
         self._dt_ax = None
 
