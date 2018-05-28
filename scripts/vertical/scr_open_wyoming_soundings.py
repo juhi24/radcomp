@@ -8,7 +8,7 @@ import pandas as pd
 from datetime import timedelta
 from radcomp.vertical import case, classification
 
-case_set = '14-16by_hand'
+case_set = 'melting'
 n_eigens = 19
 n_clusters = 19
 reduced = True
@@ -21,6 +21,8 @@ name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
                                   use_temperature=use_temperature,
                                   t_weight_factor=t_weight_factor,
                                   radar_weight_factors=radar_weight_factors)
+name = 'mlt_18eig17clus_pca'
+
 
 def round_hours(tm, hres=12):
      tt = tm + timedelta(hours=hres/2)
