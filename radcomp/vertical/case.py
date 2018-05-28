@@ -46,19 +46,24 @@ def read_case_times(name):
     return dts
 
 
+def _row_bool_flag(row, flag_name, default=None):
+    """If exists, convert flag to boolean, else use default. None on empty."""
+    if flag_name in row:
+        if np.isnan(row[flag_name]):
+            flag = None
+        else:
+            flag = bool(row[flag_name])
+        return flag
+    return default
+
+
 def read_cases(name):
     dts = read_case_times(name)
     cases_list = []
     for cid, row in dts.iterrows():
         case_kws = dict()
-        if 'ml' in row:
-            case_kws['has_ml'] = bool(row['ml'])
-        if 'convective' in row:
-            if np.isnan(row['convective']):
-                is_convective = None
-            else:
-                is_convective = bool(row['convective'])
-            case_kws['is_convective'] = is_convective
+        case_kws['has_ml'] = _row_bool_flag(row, 'ml', default=False)
+        case_kws['is_convective'] = _row_bool_flag(row, 'convective', default=None)
         try:
             t_start, t_end = row[COL_START], row[COL_END]
             c = Case.from_dtrange(t_start, t_end, **case_kws)
