@@ -1,9 +1,11 @@
 # coding: utf-8
-"""This is radcomp"""
+"""radcomp"""
 
 import locale
 from os import path
 from j24 import home, ensure_join
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 locale.setlocale(locale.LC_ALL, 'C')
 HOME = home()
