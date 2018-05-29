@@ -1,4 +1,5 @@
 # coding: utf-8
+"""tools for working with collections of cases"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
@@ -38,6 +39,7 @@ def _row_bool_flag(row, flag_name, default=None):
 
 
 def read_cases(name):
+    """Read cases based on a cases list."""
     dts = read_case_times(name)
     cases_list = []
     for cid, row in dts.iterrows():
@@ -67,7 +69,21 @@ class MultiCase(case.Case):
         t = pd.concat([c.ground_temperature() for i,c in cases.case.iteritems()])
         datas = list(cases.case.apply(lambda c: c.data)) # data of each case
         data = pd.concat(datas, axis=2)
+        if 'convective' in cases:
+            conv_flags = []
+            for i, c in cases.case.iteritems():
+                flag_series = c.timestamps().apply(lambda x: c.is_convective)
+                conv_flags.append(flag_series)
+            kws['is_convective'] = pd.concat(conv_flags)
         return cls(data=data, temperature=t, **kws)
+
+    @classmethod
+    def from_caselist(cls, name, filter_flag=None, **kws):
+        """MultiCase from a case list using optional filter flag"""
+        cases = read_cases(name)
+        if filter_flag is not None:
+            cases = cases[cases[filter_flag].astype(bool)]
+        return cls.by_combining(cases, **kws)
 
     def silhouette_score(self, n_pc=8):
         """silhouette score"""

@@ -6,7 +6,7 @@ __metaclass__ = type
 """
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import case, classification, RESULTS_DIR
+from radcomp.vertical import multicase, classification, RESULTS_DIR
 from j24 import ensure_dir
 from warnings import warn
 
@@ -23,7 +23,7 @@ radar_weight_factors = dict(zdr=0.5)
 
 save = True
 
-cases = case.read_cases(case_set)
+cases = multicase.read_cases(case_set)
 cases = cases[cases.ml_ok.astype(bool)]
 #name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
 #                                  n_clusters=n_clusters, reduced=reduced,

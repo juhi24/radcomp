@@ -10,7 +10,7 @@ from radcomp.vertical import multicase
 def load_ml_cases(cases_name='melting', scheme_name='mlt_18eig17clus_pca'):
     """load cases and classification"""
     cases = multicase.read_cases(cases_name)
-    cases = cases[cases.ml_ok.astype(bool)] # only verified ones
+    cases = cases[cases['ml_ok'].astype(bool)] # only verified ones
     cases.case.apply(lambda c: c.load_classification(scheme_name))
     return cases
 
