@@ -6,14 +6,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from os import path
 from radcomp import RESULTS_DIR
-from radcomp.vertical import case, classification
+from radcomp.vertical import case, classification, RESULTS_DIR
+from j24 import ensure_join
 
 plt.ion()
 plt.close('all')
 np.random.seed(1)
-
-plot = False
-
 
 cases = case.read_cases('melting')
 cases = cases[cases.ml_ok.astype(bool)]
@@ -26,11 +24,7 @@ reduced = True
 use_temperature = False
 radar_weight_factors = dict()
 
-if plot:
-    for name, c in cases.case.iteritems():
-        fig, axarr = case.plot(params=params, cmap='viridis')
-        savepath = path.join(RESULTS_DIR, 'cases', name+'.png')
-        fig.savefig(savepath)
+save_plots = True
 
 scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
                             reduced=reduced,
@@ -44,10 +38,15 @@ name = c.class_scheme.name()
 print(name)
 c.load_classification(name)
 #order = c.clus_centroids()[0].ZH.iloc[0]
-c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=None)
+fig_cc, axarr_cc, i = c.plot_cluster_centroids(cmap='viridis',
+                                               colorful_bars='blue',
+                                               sortby=None)
 
 c.scatter_class_pca(plot3d=True)
-fig, ax = plt.subplots()
-c.plot_silhouette(ax=ax)
+fig_s, ax_s = plt.subplots()
+c.plot_silhouette(ax=ax_s)
 
-
+if save_plots:
+    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name)
+    fig_cc.savefig(path.join(savedir, 'centroids.png'))
+    fig_s.savefig(path.join(savedir, 'silhouettes.png'))
