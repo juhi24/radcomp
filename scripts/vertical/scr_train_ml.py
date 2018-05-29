@@ -33,9 +33,7 @@ c = multicase.MultiCase.by_combining(cases, class_scheme=scheme, has_ml=True)
 c.train()
 scheme.save()
 # Load classification and plot centroids
-name = c.class_scheme.name()
-print(name)
-c.load_classification(name)
+c.load_classification()
 #order = c.clus_centroids()[0].ZH.iloc[0]
 fig_cc, axarr_cc, i = c.plot_cluster_centroids(cmap='viridis',
                                                colorful_bars='blue',
@@ -46,6 +44,6 @@ fig_s, ax_s = plt.subplots()
 c.plot_silhouette(ax=ax_s)
 
 if save_plots:
-    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name)
+    savedir = ensure_join(RESULTS_DIR, 'classes_summary', c.class_scheme.name())
     fig_cc.savefig(path.join(savedir, 'centroids.png'))
     fig_s.savefig(path.join(savedir, 'silhouettes.png'))

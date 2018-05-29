@@ -264,8 +264,10 @@ class Case:
             return round_time_index(ts)
         return ts
 
-    def load_classification(self, name, **kws):
+    def load_classification(self, name=None, **kws):
         """Load a classification scheme based on its id, and classify."""
+        if name is None:
+            name = self.class_scheme.name()
         self.class_scheme = classification.VPC.load(name)
         self.classify(**kws)
 
@@ -574,23 +576,15 @@ class Case:
         ax_last.set_xlabel('Class ID')
         fig = ax_last.get_figure()
         axarr[0].set_title('Class centroids')
+        if colorful_bars=='blue':
+            cmkw = {}
+            cmkw['cm'] = plotting.cm_blue()
         if plot_counts:
             counts = self.class_counts().loc[pn.minor_axis]
             plot_occurrence_counts(counts, ax=ax_last)
         if colorful_bars:
-            cmkw = {}
-            if colorful_bars=='blue':
-                blue = (0.29803921568627451, 0.44705882352941179,
-                        0.69019607843137254, 1.0)
-                cmkw['cm'] = mpl.colors.ListedColormap([blue]*50)
-            for ax in [ax_last]:
-                pa = ax.patches
-                check_rect = lambda p: isinstance(p, mpl.patches.Rectangle)
-                pa = np.array(pa)[list(map(check_rect, pa))]
-                for i, p in enumerate(pa):
-                    color = self.class_color(pn.minor_axis[i],
-                                             default=(1, 1, 1, 0), **cmkw)
-                    p.set_color(color)
+            plotting.bar_plot_colors(ax_last, pn.minor_axis,
+                                     class_color_fun=self.class_color, **cmkw)
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         return fig, axarr, order_out
 

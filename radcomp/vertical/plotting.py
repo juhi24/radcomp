@@ -264,3 +264,17 @@ def scatter_class_pca(profiles_pca, classes, color_fun=class_color, plot3d=True)
         ax.set_xlabel('component 1')
         ax.set_ylabel('component 2')
     return ax
+
+
+def cm_blue():
+    blue = (0.29803921568627451, 0.44705882352941179, 0.69019607843137254, 1.0)
+    return mpl.colors.ListedColormap([blue]*50)
+
+
+def bar_plot_colors(ax, classes, class_color_fun=class_color, **cmkw):
+    pa = ax.patches
+    check_rect = lambda p: isinstance(p, mpl.patches.Rectangle)
+    pa = np.array(pa)[list(map(check_rect, pa))]
+    for i, p in enumerate(pa):
+        color = class_color_fun(classes[i], default=(1, 1, 1, 0), **cmkw)
+        p.set_color(color)

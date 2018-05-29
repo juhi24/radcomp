@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from os import path
 from sklearn.metrics import silhouette_score
 from radcomp import USER_DIR
-from radcomp.vertical import case
+from radcomp.vertical import case, plotting
 
 
 COL_START = 'start'
@@ -58,6 +58,18 @@ def read_cases(name):
             dts.drop(cid, inplace=True)
     dts['case'] = cases_list
     return dts
+
+
+def plot_convective_occurrence(occ, ax=None, **kws):
+    """Bar plot convective occurrence.
+
+    Args:
+        occ (Series)
+    """
+    ax = ax or plt.gca()
+    occ.plot.bar(ax=ax, **kws)
+    ax.set_ylabel('rel. occ. in\nconvection')
+    ax.yaxis.grid(True)
 
 
 class MultiCase(case.Case):
@@ -112,3 +124,33 @@ class MultiCase(case.Case):
         ax.set_xlabel('silhouette coefficient')
         ax.set_ylabel('classes')
         ax.set_yticks([])
+
+    def class_convective_fraction(self):
+        """fraction of convective profiles per class"""
+        groups = self.is_convective.groupby(self.classes)
+        return groups.agg(lambda x: x.sum()/x.count())
+
+    def class_convective_rel_occ(self):
+        """relative occurrence of convective profiles per class"""
+        frac_total = self.is_convective.sum()/self.is_convective.count()
+        return (self.class_convective_fraction()-frac_total)/frac_total
+
+    def plot_cluster_centroids(self, plot_conv_occ=True, n_extra_ax=0,
+                               colorful_bars=False, **kws):
+        """class centroids pcolormesh with optional extra stats"""
+        n_extra_ax += plot_conv_occ
+        fig, axarr, order = super().plot_cluster_centroids(n_extra_ax=n_extra_ax,
+                                                           colorful_bars=colorful_bars,
+                                                           **kws)
+        if plot_conv_occ:
+            ax_conv = axarr[-2]
+            occ = self.class_convective_rel_occ()
+            plot_convective_occurrence(occ, ax=ax_conv)
+            if colorful_bars:
+                if colorful_bars=='blue':
+                    cmkw = {}
+                    cmkw['cm'] = plotting.cm_blue()
+                plotting.bar_plot_colors(ax_conv, order,
+                                         class_color_fun=self.class_color,
+                                         **cmkw)
+        return fig, axarr, order
