@@ -32,32 +32,6 @@ def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
                          month_fmt=month_fmt, year_fmt=year_fmt)
 
 
-def ts_case_ids(cases):
-    """case ids by timestamp"""
-    cids_list = []
-    for cid, c in cases.case.iteritems():
-        cids_list.append(c.timestamps().apply(lambda x: cid))
-    return pd.concat(cids_list)
-
-
-def n_class_in_cases(class_n, cases, combined_cases=None):
-    """numbers of occurrences of a given class per case in cases DataFrame"""
-    case_ids = ts_case_ids(cases)
-    if cases.case.iloc[0].class_scheme is not None:
-        classes = pd.concat([x.classes for i, x in cases.case.iteritems()])
-    elif combined_cases is not None:
-        classes = combined_cases.classes
-    groups = classes.groupby(case_ids)
-    return groups.agg(lambda x: (x==class_n).sum())
-
-
-def plot_cases_with_class(cases, class_n, **kws):
-    selection = n_class_in_cases(class_n, cases).astype(bool)
-    matching_cases = cases[selection]
-    for name, c in matching_cases.case.iteritems():
-        c.plot(**kws)
-
-
 def dt2path(dt, datadir):
     return path.join(datadir, dt.strftime('%Y%m%d_IKA_VP_from_RHI.mat'))
 
@@ -494,7 +468,7 @@ class Case:
         data_orig = self.data
         i = data_orig.minor_axis.get_loc(dt, method='nearest')
         data = data_orig.iloc[:, :, i]
-        if params:
+        if params is not None:
             data = data[params]
         axarr = plotting.plot_vps(data, **kws)
         t = data_orig.minor_axis[i]

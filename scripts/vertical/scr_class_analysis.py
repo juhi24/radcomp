@@ -18,6 +18,7 @@ def load_ml_cases(cases_name='melting', scheme_name='mlt_18eig17clus_pca'):
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
-    class_n = 7
+    class_n = 13
     cases = load_ml_cases()
+    multicase.plot_cases_with_class(cases, class_n, cmap='viridis')
 
