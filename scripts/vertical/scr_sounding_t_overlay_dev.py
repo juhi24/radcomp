@@ -17,6 +17,7 @@ if __name__ == '__main__':
     cases = multicase.read_cases(case_set)
     cases = cases[cases.ml_ok.astype(bool)]
     c = cases.case.iloc[0]
+    c.load_classification(name)
     ts = c.timestamps().apply(sounding.round_hours, hres=12).drop_duplicates()
     ts.index = ts.values
     a = ts.apply(lambda x: sounding.read_sounding(x, index_col='HGHT')['TEMP'])
@@ -26,5 +27,6 @@ if __name__ == '__main__':
     t = pd.concat([na,a]).sort_index().interpolate(method='time')
     t = t.loc[:, 0:10000].drop(a.index)
     fig, axarr = c.plot(cmap='viridis')
-    axarr[2].contour(t.index, t.columns, t.T, levels=[-8, -3], colors='red')
-    axarr[2].contour(t.index, t.columns, t.T, levels=[-22, -10], colors='olive')
+    axarr[2].contour(t.index, t.columns, t.T, levels=[0], colors='red')
+    #axarr[2].contour(t.index, t.columns, t.T, levels=[-8, -3], colors='red')
+    #axarr[2].contour(t.index, t.columns, t.T, levels=[-22, -10], colors='olive')
