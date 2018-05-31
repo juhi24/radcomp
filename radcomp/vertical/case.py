@@ -351,7 +351,7 @@ class Case:
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])
-        if self.has_ml:
+        if self.has_ml and (self.class_scheme is not None):
             for i in range(len(params)):
                 self.plot_ml(ax=axarr[i])
         if interactive:
