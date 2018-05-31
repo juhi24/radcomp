@@ -24,10 +24,10 @@ def sounding_url(t, dtype='text'):
                             day=t.day, hour=t.hour)
 
 
-def read_sounding(datetime):
+def read_sounding(datetime, index_col=0):
     skiprows = (0,1,2,3,4,5,6,8,9)
     url = sounding_url(datetime)
-    data = pd.read_table(url, delim_whitespace=True, index_col=0, skiprows=skiprows).dropna()
+    data = pd.read_table(url, delim_whitespace=True, index_col=index_col, skiprows=skiprows).dropna()
     data = data.drop(data.tail(1).index).astype(np.float)
     data.index = data.index.astype(np.float)
     return data
