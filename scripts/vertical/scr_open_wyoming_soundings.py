@@ -6,8 +6,8 @@ __metaclass__ = type
 import webbrowser
 import time
 import pandas as pd
-from datetime import timedelta
-from radcomp.vertical import multicase, classification, sounding
+from radcomp import sounding
+from radcomp.vertical import multicase, classification
 
 case_set = 'melting'
 n_eigens = 19
@@ -26,13 +26,12 @@ name = 'mlt_18eig17clus_pca'
 
 if __name__ == '__main__':
     search_class = 11
-    c = multicase.MultiCase.from_caselist(case_set, filter_flag='ml_ok')
-    c.load_classification(name)
-    matchi = c.classes[c.classes==search_class].index
+    mc = multicase.MultiCase.from_caselist(case_set, filter_flag='ml_ok')
+    mc.load_classification(name)
+    matchi = mc.classes[mc.classes==search_class].index
     matcha = pd.Series(data=matchi, index=matchi)
-    match = pd.concat([matcha.iloc[0:1], matcha[matcha.diff()>timedelta(hours=2)]])
-    for d, cla in match.iteritems():
-        t = sounding.round_hours(d, hres=12)
+    match = matcha.apply(sounding.round_hours, hres=12).drop_duplicates()
+    for i, t in match.iteritems():
         url = sounding.sounding_url(t, dtype='text')
         webbrowser.open(url)
         time.sleep(1)
