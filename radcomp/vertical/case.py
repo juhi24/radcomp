@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from datetime import timedelta
 from scipy.io import loadmat
 from os import path
 from functools import partial
@@ -173,6 +174,7 @@ def plot_occurrence_counts(count, ax=None):
 
 
 def round_time_index(data, resolution='1min'):
+    """round datetime index to a given resolution"""
     dat = data.copy()
     ind = data.index.round(resolution)
     dat.index = ind
@@ -311,7 +313,8 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, plot_t=True, plot_azs=True, plot_silh=True, **kws):
+             plot_fr=True, plot_t=True, plot_azs=True, plot_silh=True,
+             plot_snd=True, **kws):
         """Visualize the case."""
         if raw:
             data = self.data
@@ -348,6 +351,11 @@ class Case:
         if plot_t:
             self.plot_t(ax=axarr[next_free_ax])
             next_free_ax += 1
+        if plot_snd:
+            try:
+                self.plot_snd_growth_zones(ax=axarr[1])
+            except TypeError:
+                print('{}: Could not plot sounding.'.format(self.name()))
         if self.classes is not None:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])
@@ -376,6 +384,7 @@ class Case:
         bot, top = self.ml_limits(interpolate=False)
         topi.plot(color='gray', **common_kws)
         top.plot(color='black', **common_kws)
+        return ax
 
     def plot_t(self, ax, tmin=-20, tmax=10):
         """Plot temperature."""
@@ -385,6 +394,7 @@ class Case:
         plotting.plot_data(t, ax=ax)
         ax.set_ylabel(plotting.LABELS['temp_mean'])
         ax.set_ylim([tmin, tmax])
+        return ax
 
     def plot_lwe(self, ax, rmax=4):
         """plot LWE"""
@@ -394,6 +404,7 @@ class Case:
         ax.set_ylim(bottom=0, top=rmax)
         ax.set_ylabel(plotting.LABELS['intensity'])
         self.set_xlim(ax)
+        return ax
 
     def plot_fr(self, ax, frmin=-0.1, frmax=1):
         """Plot riming fraction."""
@@ -403,6 +414,7 @@ class Case:
         ax.set_ylim(bottom=frmin, top=frmax)
         ax.set_ylabel(plotting.LABELS[fr.name])
         self.set_xlim(ax)
+        return ax
 
     def plot_azs(self, ax, amin=10, amax=4000):
         """Plot prefactor of Z-S relation"""
@@ -415,6 +427,7 @@ class Case:
         ax.set_ylim(bottom=amin, top=amax)
         ax.set_yticks([10, 100, 1000])
         self.set_xlim(ax)
+        return ax
 
     def plot_silh(self, ax=None):
         """Plot silhouette coefficient"""
@@ -426,6 +439,23 @@ class Case:
         ax.set_ylim(bottom=-1, top=1)
         ax.set_yticks([-1, 0, 1])
         self.set_xlim(ax)
+        return ax
+
+    def plot_snd(self, ax=None, var='TEMP', **kws):
+        """contour plot of interpolated sounding data"""
+        ax = ax or plt.gca()
+        x = self.snd(var=var)
+        ax.contour(x.columns, x.index, x, **kws)
+        return ax
+
+    def plot_snd_growth_zones(self, ax=None, var='TEMP', **kws):
+        """Plot interpolated sounding data on growth zone edges."""
+        ax = ax or plt.gca()
+        x = self.snd(var=var)
+        ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
+        ax.contour(x.columns, x.index, x, levels=[-22], colors='pink')
+        ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
+        return ax
 
     def train(self, **kws):
         """Train a classification scheme with scaled classification data."""
@@ -683,6 +713,35 @@ class Case:
         lwp = arm.var_in_timerange(self.t_start(), t_end, var='liq',
                                    globfmt=arm.MWR_GLOB)
         return lwp.resample('15min', base=self.base_minute()).mean()
+
+    def snd(self, var='TEMP'):
+        """interpolated sounding profile data"""
+        from radcomp import sounding
+        ts = self.timestamps().apply(sounding.round_hours, hres=12).drop_duplicates()
+        ts.index = ts.values
+        if ts.iloc[0] > self.t_start():
+            t0 = ts.iloc[0]-timedelta(hours=12)
+            ts[t0] = t0
+            ts.sort_index(inplace=True)
+        if ts.iloc[-1] < self.t_end():
+            t1 = ts.iloc[-1]+timedelta(hours=12)
+            ts[t1] = t1
+            ts.sort_index(inplace=True)
+        def snd_col(x):
+            try:
+                return sounding.read_sounding(x, index_col='HGHT')[var]
+            except pd.errors.ParserError:
+                return pd.Series(index=(0,20000), data=(np.nan, np.nan))
+        a = ts.apply(snd_col)
+        a.interpolate(axis=1, inplace=True)
+        na = self.timestamps().apply(lambda x: np.nan)
+        na = pd.DataFrame(na).reindex(a.columns, axis=1)
+        t = pd.concat([na,a]).sort_index().interpolate(method='time')
+        if self.class_scheme is not None:
+            hmax = self.class_scheme.hlimits[1]
+        else:
+            hmax = self.data.major_axis.max()
+        return t.loc[:, 0:hmax].drop(a.index).T
 
     def class_counts(self):
         """occurrences of each class"""
