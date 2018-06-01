@@ -5,7 +5,13 @@ __metaclass__ = type
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from os import path
 from datetime import timedelta
+from j24 import home, ensure_join
+
+
+CACHE_DIR = ensure_join(home(), '.pysonde', 'cache')
+CACHE_KEY_FMT = 'wyo%Y%m%d%H'
 
 
 def round_hours(timestamp, hres=12):
@@ -24,13 +30,54 @@ def sounding_url(t, dtype='text'):
                             day=t.day, hour=t.hour)
 
 
-def read_sounding(datetime, index_col=0):
+def read_sounding(timestamp, index_col=0, caching=True, **kws):
+    """read wyoming sounding with optional caching (default)"""
+    if caching:
+        if in_cache(timestamp, **kws):
+            data = cache_read(timestamp, **kws)
+            # TODO: index col swapping
+            return data
     skiprows = (0,1,2,3,4,5,6,8,9)
-    url = sounding_url(datetime)
+    url = sounding_url(timestamp)
     data = pd.read_table(url, delim_whitespace=True, index_col=index_col, skiprows=skiprows).dropna()
     data = data.drop(data.tail(1).index).astype(np.float)
     data.index = data.index.astype(np.float)
+    if caching:
+        cache_write(timestamp, data, **kws)
     return data
+
+
+def cache_file(station='02963', cachedir=CACHE_DIR):
+    """cache file path"""
+    return path.join(cachedir, station+'.h5')
+
+
+def cache_filename_key(timestamp, **kws):
+    """oneliner to get both cache filename and key"""
+    filename = cache_file(**kws)
+    key = timestamp.strftime(CACHE_KEY_FMT)
+    return filename, key
+
+
+def in_cache(timestamp, **kws):
+    """check if sounding"""
+    filename, key = cache_filename_key(timestamp, **kws)
+    if not path.exists(filename):
+        return False
+    with pd.HDFStore(filename, mode='r') as store:
+        if '/'+key in store.keys():
+            return True
+    return False
+
+
+def cache_write(timestamp, data, **kws):
+    """sounding to cache"""
+    data.to_hdf(*cache_filename_key(timestamp, **kws))
+
+
+def cache_read(timestamp, **kws):
+    """Read sounding from cache."""
+    return pd.read_hdf(*cache_filename_key(timestamp, **kws))
 
 
 def create_pn(freq='12H'):
