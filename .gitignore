@@ -93,3 +93,5 @@ ENV/
 .spyproject/
 .idea/
 .~lock.*
+.vscode/
+.pytest_cache/
