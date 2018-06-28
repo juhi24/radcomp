@@ -3,11 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 
-def consecutive_grouper(s):
-    """Consecutive values to have same integer -> 111223333455"""
-    return (s != s.shift()).cumsum()
-
-
 def _check_above_ml(ml, rho, grouper, iml, rholim):
     """check that value above expanded ml makes sense"""
     try:

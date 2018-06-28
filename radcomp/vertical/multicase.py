@@ -161,7 +161,7 @@ class MultiCase(case.Case):
         frac_total = self.is_convective.sum()/self.is_convective.count()
         return (self.class_convective_fraction()-frac_total)/frac_total
 
-    def plot_cluster_centroids(self, plot_conv_occ=True, n_extra_ax=0,
+    def plot_cluster_centroids(self, plot_conv_occ=False, n_extra_ax=0,
                                colorful_bars=False, **kws):
         """class centroids pcolormesh with optional extra stats"""
         n_extra_ax += plot_conv_occ

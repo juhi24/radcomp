@@ -35,7 +35,7 @@ scheme.save()
 # Load classification and plot centroids
 c.load_classification()
 #order = c.clus_centroids()[0].ZH.iloc[0]
-fig_cc, axarr_cc, i = c.plot_cluster_centroids(cmap='viridis',
+fig_cc, axarr_cc, i = c.plot_cluster_centroids(#cmap='viridis',
                                                colorful_bars='blue',
                                                sortby=None)
 

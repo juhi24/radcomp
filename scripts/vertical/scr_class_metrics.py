@@ -4,11 +4,11 @@ __metaclass__ = type
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from radcomp.vertical import case, classification
+from radcomp.vertical import multicase, classification
 
 
 case_set = 'melting'
-scheme_id = 'mlt_15eig17clus_pca'
+scheme_id = 'mlt_18eig17clus_pca'
 
 
 basename = 'mlt'
@@ -38,10 +38,10 @@ def silh_score_avgs(cc, n_iter=10, **kws):
 
 
 if __name__ == '__main__':
-    cases = case.read_cases(case_set)
-    cases = cases[cases.ml_ok.astype(bool)]
     plt.close('all')
-    cc = case.Case.by_combining(cases, has_ml=True)
+    cases = multicase.read_cases(case_set)
+    cases = cases[cases.ml_ok.astype(bool)]
+    cc = multicase.MultiCase.by_combining(cases, has_ml=True)
     cc.load_classification(scheme_id)
     #scores = silh_score_avgs(cc, n_iter=5, n_pc=4)
     #scores.mean().plot()
