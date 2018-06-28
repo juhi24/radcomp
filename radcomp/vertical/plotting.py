@@ -144,7 +144,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
     fig = _pn_fig(fig_scale_factor, n_rows, **fig_kws)
     gs = _pn_gs(fig_scale_factor, n_rows)
     axarr = []
-    for i, field in enumerate(fields):
+    for i, field in enumerate(np.sort(fields)):
         subplot_kws = {}
         if i > 0:
             subplot_kws['sharex'] = axarr[0]
