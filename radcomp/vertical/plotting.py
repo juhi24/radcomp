@@ -137,19 +137,24 @@ def _pn_x(df, x_is_date):
 
 
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
-           x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150}, **kws):
+           x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150},
+           n_ax_shift=0, **kws):
     if fields is None:
         fields = pn.items
     n_rows = len(fields) + n_extra_ax
     fig = _pn_fig(fig_scale_factor, n_rows, **fig_kws)
     gs = _pn_gs(fig_scale_factor, n_rows)
     axarr = []
+    h = -1
+    for h in range(n_ax_shift):
+        ax = fig.add_subplot(gs[h, 0])
+        axarr.append(ax)
     for i, field in enumerate(np.sort(fields)):
         subplot_kws = {}
         if i > 0:
             subplot_kws['sharex'] = axarr[0]
-        ax = fig.add_subplot(gs[i, 0], **subplot_kws)
-        ax_cb = fig.add_subplot(gs[i, 1])
+        ax = fig.add_subplot(gs[h+1+i, 0], **subplot_kws)
+        ax_cb = fig.add_subplot(gs[h+1+i, 1])
         axarr.append(ax)
         scalekws, cb_label = _pn_scalekws(field, scaled, x_is_date)
         kws.update(scalekws)
@@ -160,8 +165,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         set_h_ax(ax)
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
-    for j in range(n_extra_ax):
-        ax = fig.add_subplot(gs[i+1+j, 0], sharex=axarr[0])
+    for j in range(n_extra_ax-n_ax_shift):
+        ax = fig.add_subplot(gs[h+i+2+j, 0], sharex=axarr[0])
         axarr.append(ax)
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')

@@ -558,6 +558,8 @@ class Case:
         n_extra = extra.shape[1]
         pn_plt = pn.copy() # with shifted axis, only for plotting
         pn_plt.minor_axis = pn.minor_axis-0.5
+        if n_extra>0:
+            kws['n_ax_shift'] = n_extra
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+n_extra_ax+plot_counts,
                                      **kws)
@@ -568,9 +570,9 @@ class Case:
         for iax in range(len(axarr)-n_omit_coloring):
             self.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
         ax_last = axarr[-1]
-        ax_extra = axarr[-2]
+        ax_extra = axarr[0]
         if n_extra>0:
-            extra.plot.bar(ax=ax_extra)
+            extra.plot.bar(ax=ax_extra, color='black')
             ax_extra.get_legend().set_visible(False)
             ax_extra.set_ylim([-15, 6])
             ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
@@ -578,9 +580,9 @@ class Case:
         n_comp = self.class_scheme.km.n_clusters
         ax_last.set_xticks(extra.index.values)
         ax_last.set_xlim(-0.5,n_comp-0.5)
-        ax_last.set_xlabel('Class ID')
         fig = ax_last.get_figure()
-        axarr[0].set_title('Class centroids')
+        precip_type = 'rain' if self.has_ml else 'snow'
+        axarr[0].set_title('Class centroids for {} cases'.format(precip_type))
         if colorful_bars=='blue':
             cmkw = {}
             cmkw['cm'] = plotting.cm_blue()
@@ -591,6 +593,7 @@ class Case:
             plotting.bar_plot_colors(ax_last, pn.minor_axis,
                                      class_color_fun=self.class_color, **cmkw)
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
+        ax_last.set_xlabel('{} profile class ID'.capitalize().format(precip_type))
         return fig, axarr, order_out
 
     def scatter_class_pca(self, **kws):

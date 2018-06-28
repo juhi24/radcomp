@@ -5,7 +5,9 @@ __metaclass__ = type
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from radcomp.vertical import multicase, plotting
+from os import path
+from radcomp.vertical import multicase, plotting, RESULTS_DIR
+from j24 import ensure_join
 
 
 def consecutive_grouper(s):
@@ -51,6 +53,7 @@ if __name__ == '__main__':
     cases_s, cc_s = init_snow()
     #
     for cases in (cases_r, cases_s):
+        precip_type = 'rain' if cases.case.iloc[0].has_ml else 'snow'
         class_list = []
         count_list = []
         for i, c in cases.case.iteritems():
@@ -69,4 +72,7 @@ if __name__ == '__main__':
         ax.grid(axis='y')
         ax.set_ylabel('avg. occurrence\nstreak')
         ax.set_ylim(bottom=0, top=8)
-
+        savedir = ensure_join(RESULTS_DIR, 'erad18')
+        filename = 'centroids_streak_{}.png'.format(precip_type)
+        savefile = path.join(savedir, filename)
+        fig.savefig(savefile, bbox_inches='tight')
