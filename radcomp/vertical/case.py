@@ -514,7 +514,7 @@ class Case:
         axarr = plotting.plot_vps(data, **kws)
         titlestr = 'Class {}'.format(n)
         if self.class_scheme.use_temperature:
-            titlestr += ', $T={t:.1f}^{{\circ}}$C'.format(t['temp_mean'][n])
+            titlestr += ', $T={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])
         axarr[1].set_title(titlestr)
         return axarr
 
