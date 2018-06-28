@@ -314,7 +314,7 @@ class Case:
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              plot_fr=True, plot_t=True, plot_azs=True, plot_silh=True,
-             plot_snd=True, **kws):
+             plot_snd=True, plot_classes=True, **kws):
         """Visualize the case."""
         if raw:
             data = self.data
@@ -325,6 +325,7 @@ class Case:
                 params = self.class_scheme.params
             else:
                 params = ['ZH', 'zdr', 'kdp']
+        plot_classes = (self.classes is not None) and plot_classes
         plot_lwe = self.pluvio is not None
         if plot_lwe:
             plot_lwe = not self.pluvio.data.empty
@@ -356,7 +357,7 @@ class Case:
                 self.plot_snd_growth_zones(ax=axarr[1])
             except TypeError:
                 print('{}: Could not plot sounding.'.format(self.name()))
-        if self.classes is not None:
+        if plot_classes:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])
         if self.has_ml and (self.class_scheme is not None):
@@ -452,8 +453,8 @@ class Case:
         """Plot interpolated sounding data on growth zone edges."""
         ax = ax or plt.gca()
         x = self.snd(var=var)
-        ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
-        ax.contour(x.columns, x.index, x, levels=[-22], colors='pink')
+        ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='silver')
+        ax.contour(x.columns, x.index, x, levels=[-20], colors='dimgray')
         ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
         return ax
 
