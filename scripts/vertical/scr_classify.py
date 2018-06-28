@@ -7,7 +7,7 @@ __metaclass__ = type
 import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, classification, RESULTS_DIR
-from j24 import ensure_dir
+from j24 import ensure_join
 from warnings import warn
 
 plt.ioff()
@@ -31,7 +31,7 @@ cases = cases[cases.ml_ok.astype(bool)]
 #                                  t_weight_factor=t_weight_factor,
 #                                  radar_weight_factors=radar_weight_factors)
 name = 'mlt_18eig17clus_pca'
-results_dir = ensure_dir(path.join(RESULTS_DIR, 'classified', name, case_set))
+results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
 #c = cases.case['140303']
 for i, c in cases.case.iteritems():
     print(i)
