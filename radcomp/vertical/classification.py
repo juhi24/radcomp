@@ -225,6 +225,9 @@ class VPC:
             components, self.mapping = sort_by_column(components, by=0)
             centroids = self.pca.inverse_transform(components)
         extra_df = pd.DataFrame(extra, columns=self.params_extra)
+        # extra index order
+        extra_df = extra_df.loc[self.mapping.sort_values().index]
+        extra_df.reset_index(drop=True, inplace=True)
         return pd.DataFrame(centroids.T), extra_df
 
     def clus_centroids_pn(self):
