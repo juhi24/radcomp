@@ -171,6 +171,7 @@ def plot_occurrence_counts(count, ax=None):
     count.plot.bar(ax=ax)
     ax.set_ylabel('Occurrence')
     ax.yaxis.grid(True)
+    ax.set_ylim(bottom=0, top=400) # TODO: don't hardcode
 
 
 def round_time_index(data, resolution='1min'):
@@ -453,8 +454,8 @@ class Case:
         """Plot interpolated sounding data on growth zone edges."""
         ax = ax or plt.gca()
         x = self.snd(var=var)
-        ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
-        #ax.contour(x.columns, x.index, x, levels=[-20], colors='dimgray')
+        #ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
+        #ax.contour(x.columns, x.index, x, levels=[-20, -10], colors='dimgray')
         #ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
         return ax
 
@@ -512,9 +513,9 @@ class Case:
         cen, t = self.clus_centroids()
         data = cen.minor_xs(n)
         axarr = plotting.plot_vps(data, **kws)
-        titlestr = 'Class {}'.format(n)
+        titlestr = 'Class {} centroid'.format(n)
         if self.class_scheme.use_temperature:
-            titlestr += ', $T={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])
+            titlestr += ', $T_{{s}}={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])
         axarr[1].set_title(titlestr)
         return axarr
 
@@ -574,7 +575,7 @@ class Case:
         if n_extra>0:
             extra.plot.bar(ax=ax_extra, color='black')
             ax_extra.get_legend().set_visible(False)
-            ax_extra.set_ylim([-15, 6])
+            ax_extra.set_ylim([-20, 1])
             ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
             ax_extra.yaxis.grid(True)
         n_comp = self.class_scheme.km.n_clusters
@@ -593,7 +594,7 @@ class Case:
             plotting.bar_plot_colors(ax_last, pn.minor_axis,
                                      class_color_fun=self.class_color, **cmkw)
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
-        ax_last.set_xlabel('{} profile class ID'.capitalize().format(precip_type))
+        ax_last.set_xlabel('Class ID')
         return fig, axarr, order_out
 
     def scatter_class_pca(self, **kws):

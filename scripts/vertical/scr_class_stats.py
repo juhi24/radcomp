@@ -76,3 +76,8 @@ if __name__ == '__main__':
         filename = 'centroids_streak_{}.png'.format(precip_type)
         savefile = path.join(savedir, filename)
         fig.savefig(savefile, bbox_inches='tight')
+    fig_s, axarr_s, i = cc_s.plot_cluster_centroids(colorful_bars='blue')
+    fig_r, axarr_r, i = cc_r.plot_cluster_centroids(colorful_bars='blue',
+                                                    plot_conv_occ=True)
+    fig_s.savefig(path.join(savedir, 'clusters_s.png'), bbox_inches='tight')
+    fig_r.savefig(path.join(savedir, 'clusters_r.png'), bbox_inches='tight')
