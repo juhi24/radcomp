@@ -44,7 +44,7 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5, 3)}, **kws):
         fig, axarr = plt.subplots(nrows=1, ncols=ncols, sharey=True, **fig_kws)
     else:
         fig = axarr[0].figure
-    for i, (name, data) in enumerate(df.T.iterrows()):
+    for i, (name, data) in enumerate(df.T.sort_index().iterrows()):
         ax = axarr[i]
         plot_vp(data, ax=ax, **kws)
         search_name = name.upper()

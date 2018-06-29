@@ -453,7 +453,7 @@ class Case:
         """Plot interpolated sounding data on growth zone edges."""
         ax = ax or plt.gca()
         x = self.snd(var=var)
-        ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='silver')
+        ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
         #ax.contour(x.columns, x.index, x, levels=[-20], colors='dimgray')
         #ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
         return ax
