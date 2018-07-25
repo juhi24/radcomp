@@ -66,6 +66,10 @@ if __name__ == '__main__':
         g_class_counts = counts.groupby(classes)
         #
         fig, axarr, i = c.plot_cluster_centroids(plot_counts=False, n_extra_ax=1)
+        if precip_type=='rain':
+            axarr[0].set_ylabel('')
+            axarr[1].set_ylabel('Height, km above ML top')
+            axarr[2].set_ylabel('')
         ax = axarr[-1]
         g_class_counts.mean().plot.bar(ax=ax)
         plotting.bar_plot_colors(ax, i, class_color_fun=c.class_color, cm=plotting.cm_blue())
@@ -79,5 +83,8 @@ if __name__ == '__main__':
     fig_s, axarr_s, i = cc_s.plot_cluster_centroids(colorful_bars='blue')
     fig_r, axarr_r, i = cc_r.plot_cluster_centroids(colorful_bars='blue',
                                                     plot_conv_occ=True)
+    axarr_r[0].set_ylabel('')
+    axarr_r[1].set_ylabel('Height, km above ML top')
+    axarr_r[2].set_ylabel('')
     fig_s.savefig(path.join(savedir, 'clusters_s.png'), bbox_inches='tight')
     fig_r.savefig(path.join(savedir, 'clusters_r.png'), bbox_inches='tight')
