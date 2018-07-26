@@ -101,7 +101,7 @@ def _pn_gs(fig_scale_factor, n_rows):
                                  left=left, right=right)
 
 
-def _pn_scalekws(field, scaled, x_is_date):
+def _pn_scalekws(field, scaled, x_is_date, has_ml):
     """plotpn helper function for setting scaling arguments and cb label"""
     fieldup = field.upper()
     if scaled:
@@ -114,6 +114,8 @@ def _pn_scalekws(field, scaled, x_is_date):
         vmins['ZDR'] = -0.5
         if not x_is_date: # if not a time series
             vmaxs['ZDR'] = 2.5
+        if has_ml: # ML present
+            vmaxs['KDP'] = 0.5 # increase saturation limit
         ##
         scalekws = {'vmin': vmins[fieldup],
                     'vmax': vmaxs[fieldup]}
@@ -138,7 +140,8 @@ def _pn_x(df, x_is_date):
 
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150},
-           n_ax_shift=0, **kws):
+           n_ax_shift=0, has_ml=False, **kws):
+    """Plot Panel of VPs"""
     if fields is None:
         fields = pn.items
     n_rows = len(fields) + n_extra_ax
@@ -156,7 +159,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         ax = fig.add_subplot(gs[h+1+i, 0], **subplot_kws)
         ax_cb = fig.add_subplot(gs[h+1+i, 1])
         axarr.append(ax)
-        scalekws, cb_label = _pn_scalekws(field, scaled, x_is_date)
+        scalekws, cb_label = _pn_scalekws(field, scaled, x_is_date, has_ml)
         kws.update(scalekws)
         x = _pn_x(pn[field], x_is_date)
         im = ax.pcolormesh(x, pn[field].index,

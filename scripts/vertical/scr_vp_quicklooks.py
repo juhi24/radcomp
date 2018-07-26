@@ -12,16 +12,19 @@ from radcomp.vertical import case, multicase
 from j24 import ensure_join
 
 
-def plot_quicklooks(cases, save=True):
+def plot_quicklooks(cases, save=True, **kws):
     """Plot and save quicklooks."""
+    params = ['ZH', 'zdr', 'kdp', 'RHO']
     if save:
-        savedir = ensure_join(case.DATA_DIR, 'quicklooks')
+        savedir = ensure_join(case.DATA_DIR, 'quicklooks_viridis')
     for _, c in cases.case.iteritems():
         c.plot(plot_fr=False, plot_t=False, plot_azs=False)
-        fig, _ = c.plot(plot_fr=False, plot_t=False, plot_azs=False)
+        fig, _ = c.plot(params=params, plot_fr=False, plot_t=False,
+                        plot_azs=False, plot_snd=False, **kws)
         if save:
             filename = path.join(savedir, c.name()+'.png')
             fig.savefig(filename, bbox_inches='tight')
+            plt.close(fig)
 
 
 def datetime_df(datelistfile):
@@ -44,5 +47,5 @@ if __name__ == '__main__':
     casesname = 'daily_quicklooks'
     casesfile = path.join(USER_DIR, 'cases', casesname + '.csv')
     datelistfile = path.join(case.DATA_DIR, 'date.list')
-    write_dates(datelistfile)
-    cases = multicase.read_cases(casesname)
+    #write_dates(datelistfile)
+    #cases = multicase.read_cases(casesname)

@@ -337,7 +337,8 @@ class Case:
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
         fig, axarr = plotting.plotpn(data, fields=params,
-                                     n_extra_ax=n_extra_ax, **kws)
+                                     n_extra_ax=n_extra_ax, has_ml=self.has_ml,
+                                     **kws)
         if plot_silh:
             self.plot_silh(ax=axarr[next_free_ax])
             next_free_ax += 1
