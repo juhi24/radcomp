@@ -451,7 +451,7 @@ class Case:
         x = self.snd(var=var)
         #ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
         #ax.contour(x.columns, x.index, x, levels=[-20, -10], colors='dimgray')
-        #ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
+        ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
         return ax
 
     def train(self, **kws):
@@ -494,10 +494,16 @@ class Case:
         """Plot profiles at given timestamp."""
         data_orig = self.data
         i = data_orig.minor_axis.get_loc(dt, method='nearest')
+        dti = data_orig.minor_axis[i]
         data = data_orig.iloc[:, :, i]
         if params is not None:
             data = data[params]
         axarr = plotting.plot_vps(data, **kws)
+        _, ml_top = self.ml_limits(interpolate=False)
+        _, ml_top_i = self.ml_limits(interpolate=True)
+        for ax in axarr:
+            ax.axhline(ml_top_i.loc[dti], color='gray')
+            ax.axhline(ml_top.loc[dti], color='black')
         t = data_orig.minor_axis[i]
         axarr[1].set_title(str(t))
         return axarr
