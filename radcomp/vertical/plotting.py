@@ -156,6 +156,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         subplot_kws = {}
         if i > 0:
             subplot_kws['sharex'] = axarr[0]
+            subplot_kws['sharey'] = axarr[0]
         ax = fig.add_subplot(gs[h+1+i, 0], **subplot_kws)
         ax_cb = fig.add_subplot(gs[h+1+i, 1])
         axarr.append(ax)
@@ -169,7 +170,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
     for j in range(n_extra_ax-n_ax_shift):
-        ax = fig.add_subplot(gs[h+i+2+j, 0], sharex=axarr[0])
+        ax = fig.add_subplot(gs[h+i+2+j, 0], sharex=axarr[0], sharey=axarr[0])
         axarr.append(ax)
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')
