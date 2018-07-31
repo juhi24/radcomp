@@ -339,21 +339,15 @@ class Case:
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, has_ml=self.has_ml,
                                      **kws)
-        if plot_silh:
-            self.plot_silh(ax=axarr[next_free_ax])
-            next_free_ax += 1
-        if plot_lwe:
-            self.plot_lwe(ax=axarr[next_free_ax])
-            next_free_ax += 1
-        if plot_azs:
-            self.plot_azs(ax=axarr[next_free_ax])
-            next_free_ax += 1
-        if plot_fr:
-            self.plot_fr(ax=axarr[next_free_ax])
-            next_free_ax += 1
-        if plot_t:
-            self.plot_t(ax=axarr[next_free_ax])
-            next_free_ax += 1
+        plotfuns = {plot_silh: self.plot_silh,
+                    plot_lwe: self.plot_lwe,
+                    plot_azs: self.plot_azs,
+                    plot_fr: self.plot_fr,
+                    plot_t: self.plot_t}
+        for flag, plotfun in plotfuns.items():
+            if flag:
+                plotfun(ax=axarr[next_free_ax])
+                next_free_ax += 1
         if plot_snd:
             try:
                 self.plot_snd_growth_zones(ax=axarr[1])
