@@ -11,12 +11,13 @@ from j24.math import weighted_median
 from radcomp.vertical import filtering
 
 
-H_MAX = 4000
+H_MAX = 4200
 
 
-def indicator(zdr_scaled, zh_scaled, rho, savgol_args=(15, 3)):
+def indicator(zdr_scaled, zh_scaled, rho, savgol_args=(41, 3)):
     """Calculate ML indicator."""
     mli = (1-rho)*(zdr_scaled+1)*zh_scaled*100
+    # TODO: check window_length
     mli = mli.apply(filtering.savgol_series, args=savgol_args)
     return mli
 
@@ -57,11 +58,12 @@ def peak_series(s, ilim=(None, None), **kws):
 
 
 def get_peaks(mli, hlim=(0, H_MAX), height=2, width=0, distance=20,
-              prominence=0.3):
+              prominence=0.3, rel_height=0.75):
     """Apply peak detection to ML indicator."""
     limits = [find(mli.index, lim) for lim in hlim]
     peaksi = mli.apply(peak_series, ilim=limits, height=height, width=width,
-                        distance=distance, prominence=prominence)
+                       distance=distance, prominence=prominence,
+                       rel_height=rel_height)
     return peaksi, peaksi.apply(lambda i: list(mli.iloc[i[0]].index))
 
 
@@ -96,10 +98,11 @@ def limits_peak(peaksi, heights):
     return tuple(edges)
 
 
-def ml_limits_raw(mli, ml_max_change=1500):
+def ml_limits_raw(mli, ml_max_change=1500, **kws):
     """ML height range from ML indicator"""
     mlh = ml_height(mli)
-    peaksi, peaks = get_peaks(mli, hlim=(mlh-ml_max_change, mlh+ml_max_change))
+    peaksi, peaks = get_peaks(mli, hlim=(mlh-ml_max_change, mlh+ml_max_change),
+                              **kws)
     return limits_peak(peaksi, mli.index)
 
 

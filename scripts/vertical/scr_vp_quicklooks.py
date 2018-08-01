@@ -18,8 +18,7 @@ def plot_quicklooks(cases, save=True, **kws):
     if save:
         savedir = ensure_join(case.DATA_DIR, 'quicklooks_viridis')
     for _, c in cases.case.iteritems():
-        c.plot(plot_fr=False, plot_t=False, plot_azs=False)
-        fig, _ = c.plot(params=params, plot_fr=False, plot_t=False,
+        fig, _ = c.plot(params=params, plot_fr=False, plot_t=True,
                         plot_azs=False, plot_snd=False, **kws)
         if save:
             filename = path.join(savedir, c.name()+'.png')
