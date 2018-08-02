@@ -16,7 +16,7 @@ H_MAX = 4200
 
 def indicator(zdr_scaled, zh_scaled, rho, savgol_args=(35, 3)):
     """Calculate ML indicator."""
-    rho[rho<0.86] = 0.86 # rho lower cap
+    rho[rho<0.86] = 0.86 # rho lower cap; free param
     mli = (1-rho)*(zdr_scaled+1)*zh_scaled*100
     # TODO: check window_length
     mli = mli.apply(filtering.savgol_series, args=savgol_args)
@@ -59,7 +59,7 @@ def peak_series(s, ilim=(None, None), **kws):
 
 
 def get_peaks(mli, hlim=(0, H_MAX), height=2, width=0, distance=20,
-              prominence=0.3, rel_height=0.7):
+              prominence=0.3, rel_height=0.7): # free params
     """Apply peak detection to ML indicator."""
     limits = [find(mli.index, lim) for lim in hlim]
     peaksi = mli.apply(peak_series, ilim=limits, height=height, width=width,
@@ -99,7 +99,7 @@ def limits_peak(peaksi, heights):
     return tuple(edges)
 
 
-def ml_limits_raw(mli, ml_max_change=1500, **kws):
+def ml_limits_raw(mli, ml_max_change=1500, **kws): # free param
     """ML height range from ML indicator"""
     mlh = ml_height(mli)
     peaksi, peaks = get_peaks(mli, hlim=(mlh-ml_max_change, mlh+ml_max_change),
@@ -120,6 +120,10 @@ def fltr_ml_limits(limits, rho):
 def ml_limits(mli, rho, **kws):
     """filtered ml bottom and top heights"""
     lims = ml_limits_raw(mli, **kws)
+    # filter based on rel_height sensitivity
+    lims05 = ml_limits_raw(mli, rel_height=0.5) # free param
+    for lim, lim05 in zip(lims, lims05):
+        lim[abs(lim-lim05)>800] = np.nan # free param
     return fltr_ml_limits(lims, rho)
 
 
