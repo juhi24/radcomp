@@ -14,8 +14,9 @@ from radcomp.vertical import filtering
 H_MAX = 4200
 
 
-def indicator(zdr_scaled, zh_scaled, rho, savgol_args=(41, 3)):
+def indicator(zdr_scaled, zh_scaled, rho, savgol_args=(35, 3)):
     """Calculate ML indicator."""
+    rho[rho<0.86] = 0.86 # rho lower cap
     mli = (1-rho)*(zdr_scaled+1)*zh_scaled*100
     # TODO: check window_length
     mli = mli.apply(filtering.savgol_series, args=savgol_args)
@@ -37,7 +38,7 @@ def peak_weights(peaksi):
 def ml_height_median(peaksi, peaks):
     """weighted median ML height from peak data"""
     weights = peak_weights(peaksi)
-    warr = np.concatenate(weights.values)
+    warr = np.sqrt(np.concatenate(weights.values))
     parr = np.concatenate(peaks.values)
     return weighted_median(parr, warr)
 
@@ -58,7 +59,7 @@ def peak_series(s, ilim=(None, None), **kws):
 
 
 def get_peaks(mli, hlim=(0, H_MAX), height=2, width=0, distance=20,
-              prominence=0.3, rel_height=0.75):
+              prominence=0.3, rel_height=0.7):
     """Apply peak detection to ML indicator."""
     limits = [find(mli.index, lim) for lim in hlim]
     peaksi = mli.apply(peak_series, ilim=limits, height=height, width=width,
@@ -110,8 +111,9 @@ def fltr_ml_limits(limits, rho):
     """filter ml range"""
     lims = []
     for lim in limits:
-        tmp = filtering.fltr_rolling_median_thresh(lim, threshold=800)
-        lims.append(filtering.fltr_no_hydrometeors(tmp, rho))
+        lim = filtering.fltr_rolling_median_thresh(lim, threshold=800)
+        lim = filtering.fltr_no_hydrometeors(lim, rho)
+        lims.append(lim)
     return lims
 
 

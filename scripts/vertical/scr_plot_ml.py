@@ -7,15 +7,27 @@ from os import path
 from radcomp.vertical import multicase, RESULTS_DIR
 from j24 import ensure_dir
 
-
 name = 'mlt_18eig17clus_pca'
 interactive = True
+
+
+def interpolate(mli):
+    mli.loc[0] = 0
+    mli.loc[0:310] = mli.loc[0:310].interpolate()
+
+
+def fltr_median(lim):
+    from scipy.ndimage.filters import median_filter
+    na = lim.isnull()
+    lim = pd.Series(index=lim.index, data=median_filter(lim.fillna(0), 7))
+    lim[na] = np.nan
+
 
 if __name__ == '__main__':
     plt.close('all')
     plt.ion() if interactive else plt.ioff()
-    cases = multicase.read_cases('melting')
-    cases = cases[cases.ml_ok.isnull()]
+    cases = multicase.read_cases('mlt_test')
+    #cases = cases[cases.ml_ok.isnull()]
     results_dir = ensure_dir(path.join(RESULTS_DIR, 'ml'))
     for caseid, row in cases.iterrows():
         c = row.case
