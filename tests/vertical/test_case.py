@@ -40,12 +40,14 @@ def case_full_setup():
     return c
 
 
-###### TESTS
+## TESTS
 
 def test_mean_delta(case_full_setup):
     """mean delta should be 15 minutes by default"""
     assert case_full_setup.mean_delta() == pd.Timedelta(minutes=15)
 
+
+##
 
 if __name__ == '__main__':
     scheme_name = class_scheme_name()
