@@ -5,7 +5,7 @@ __metaclass__ = type
 import pytest
 import matplotlib.pyplot as plt
 import pandas as pd
-from radcomp.vertical import case, classification
+from radcomp.vertical import multicase, classification
 
 
 def class_scheme_name():
@@ -22,7 +22,7 @@ def class_scheme_name():
 
 def cases_from_cases_set():
     """setup cases based on a cases list"""
-    return case.read_cases('debug')
+    return multicase.read_cases('debug')
 
 
 def case_post(c):
