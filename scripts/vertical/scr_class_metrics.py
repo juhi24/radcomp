@@ -5,10 +5,11 @@ __metaclass__ = type
 import pandas as pd
 import matplotlib.pyplot as plt
 from radcomp.vertical import multicase, classification
+from conf import SCHEME_ID_MELT, CASES_MELT
 
 
-case_set = 'melting'
-scheme_id = 'mlt_18eig17clus_pca'
+case_set = CASES_MELT
+scheme_id = SCHEME_ID_MELT
 
 
 basename = 'mlt'

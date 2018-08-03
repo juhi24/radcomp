@@ -4,13 +4,14 @@ __metaclass__ = type
 
 import matplotlib.pyplot as plt
 from radcomp.vertical import multicase
+import conf
 
 
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
     case_set = 'mlt_test'
-    name = 'mlt_18eig17clus_pca'
+    name = conf.SCHEME_ID_MELT
     cases = multicase.read_cases(case_set)
     cases = cases[cases.ml_ok.astype(bool)]
     c = cases.case.iloc[0]

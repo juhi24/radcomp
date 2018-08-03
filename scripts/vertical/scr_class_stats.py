@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, plotting, RESULTS_DIR
 from j24 import ensure_join
+import conf
 
 
 def consecutive_grouper(s):
@@ -27,12 +28,12 @@ def init_data(cases_id, scheme_id, has_ml=False, **kws):
     return cases, cc
 
 
-def init_snow(cases_id='14-16by_hand', scheme_id='14-16_t08_zdr05_19eig19clus_pca'):
+def init_snow(cases_id=conf.CASES_SNOW, scheme_id=conf.SCHEME_ID_SNOW):
     """initialize snow data"""
     return init_data(cases_id, scheme_id, has_ml=False)
 
 
-def init_rain(cases_id='melting', scheme_id='mlt_18eig17clus_pca'):
+def init_rain(cases_id=conf.CASES_MELT, scheme_id=conf.SCHEME_ID_MELT):
     """initialize rain data"""
     return init_data(cases_id, scheme_id, has_ml=True)
 

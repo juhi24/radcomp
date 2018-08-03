@@ -5,9 +5,10 @@ __metaclass__ = type
 
 import matplotlib.pyplot as plt
 from radcomp.vertical import multicase
+from conf import SCHEME_ID_MELT, CASES_MELT
 
 
-def load_ml_cases(cases_name='melting', scheme_name='mlt_18eig17clus_pca'):
+def load_ml_cases(cases_name=CASES_MELT, scheme_name=SCHEME_ID_MELT):
     """load cases and classification"""
     cases = multicase.read_cases(cases_name)
     cases = cases[cases['ml_ok'].astype(bool)] # only verified ones

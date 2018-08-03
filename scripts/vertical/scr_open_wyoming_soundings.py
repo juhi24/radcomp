@@ -7,22 +7,13 @@ import webbrowser
 import time
 import pandas as pd
 from radcomp import sounding
-from radcomp.vertical import multicase, classification
+from radcomp.vertical import multicase
+from conf import SCHEME_ID_MELT
+
 
 case_set = 'melting'
-n_eigens = 19
-n_clusters = 19
-reduced = True
-use_temperature = True
-t_weight_factor = 0.8
-radar_weight_factors = dict(zdr=0.5)
+name = SCHEME_ID_MELT
 
-name = classification.scheme_name(basename='14-16', n_eigens=n_eigens,
-                                  n_clusters=n_clusters, reduced=reduced,
-                                  use_temperature=use_temperature,
-                                  t_weight_factor=t_weight_factor,
-                                  radar_weight_factors=radar_weight_factors)
-name = 'mlt_18eig17clus_pca'
 
 if __name__ == '__main__':
     search_class = 11

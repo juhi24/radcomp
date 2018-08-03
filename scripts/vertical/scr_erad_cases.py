@@ -6,12 +6,13 @@ import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, RESULTS_DIR
 from j24 import ensure_join
+import conf
 
 
 case_set_r = 'erad18_rain'
 case_set_s = 'erad18_snow'
-scheme_id_r = 'mlt_18eig17clus_pca'
-scheme_id_s = '14-16_t08_zdr05_19eig19clus_pca'
+scheme_id_r = conf.SCHEME_ID_MELT
+scheme_id_s = conf.SCHEME_ID_SNOW
 savedir = ensure_join(RESULTS_DIR, 'erad18')
 
 if __name__ == '__main__':

@@ -6,8 +6,10 @@ import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, RESULTS_DIR
 from j24 import ensure_dir
+from conf import SCHEME_ID_MELT
 
-name = 'mlt_18eig17clus_pca'
+
+name = SCHEME_ID_MELT
 interactive = True
 
 

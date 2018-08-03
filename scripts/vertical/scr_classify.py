@@ -9,6 +9,7 @@ from os import path
 from radcomp.vertical import multicase, classification, RESULTS_DIR
 from j24 import ensure_join
 from warnings import warn
+import conf
 
 plt.ioff()
 plt.close('all')
@@ -30,7 +31,7 @@ cases = cases[cases.ml_ok.astype(bool)]
 #                                  use_temperature=use_temperature,
 #                                  t_weight_factor=t_weight_factor,
 #                                  radar_weight_factors=radar_weight_factors)
-name = 'mlt_18eig17clus_pca'
+name = conf.SCHEME_ID_MELT
 results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
 #c = cases.case['140303']
 for i, c in cases.case.iteritems():
