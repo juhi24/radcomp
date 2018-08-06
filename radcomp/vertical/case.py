@@ -256,6 +256,8 @@ class Case:
                 top = self.ml_limits()[1]
                 collapsefun = lambda df: ml.collapse2top(df.T, top=top).T
                 cl_data = cl_data.apply(collapsefun, axis=(1,2))
+                if cl_data.size==0:
+                    return None
             if save and not force_no_crop:
                 self.cl_data = cl_data
             return cl_data
@@ -267,6 +269,8 @@ class Case:
         time rounded to the nearest minute
         """
         cl_data = self.prepare_cl_data(save=save, force_no_crop=force_no_crop)
+        if cl_data is None:
+            return None
         scaled = scale_data(cl_data).fillna(0)
         if save and not force_no_crop:
             self.cl_data_scaled = scaled
