@@ -170,7 +170,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
     for j in range(n_extra_ax-n_ax_shift):
-        ax = fig.add_subplot(gs[h+i+2+j, 0], sharex=axarr[0], sharey=axarr[0])
+        ax = fig.add_subplot(gs[h+i+2+j, 0], sharex=axarr[0])
         axarr.append(ax)
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')
