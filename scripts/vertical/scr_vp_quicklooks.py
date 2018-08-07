@@ -12,6 +12,9 @@ from radcomp.vertical import case, multicase
 from j24 import ensure_join
 
 
+interactive = True
+
+
 def plot_quicklooks(cases, save=True, **kws):
     """Plot and save quicklooks."""
     params = ['ZH', 'zdr', 'kdp', 'RHO']
@@ -42,9 +45,17 @@ def write_dates(datelistfile):
 
 if __name__ == '__main__':
     plt.close('all')
-    plt.ioff()
-    casesname = 'daily_quicklooks'
+    #casesname = 'daily_quicklooks'
+    casesname = 'mlt_test'
     casesfile = path.join(USER_DIR, 'cases', casesname + '.csv')
     datelistfile = path.join(case.DATA_DIR, 'date.list')
     #write_dates(datelistfile)
-    #cases = multicase.read_cases(casesname)
+    cases = multicase.read_cases(casesname)
+    if interactive:
+        plt.ion()
+        save = False
+    else:
+        plt.ioff()
+        save = True
+    plot_quicklooks(cases, save=save, cmap='viridis')
+

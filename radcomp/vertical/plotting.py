@@ -115,7 +115,7 @@ def _pn_scalekws(field, scaled, x_is_date, has_ml):
         if not x_is_date: # if not a time series
             vmaxs['ZDR'] = 2.5
         if has_ml: # ML present
-            vmaxs['KDP'] = 0.5 # increase saturation limit
+            vmaxs['KDP'] = vmaxs['KDP_R'] # increase saturation limit
         ##
         scalekws = {'vmin': vmins[fieldup],
                     'vmax': vmaxs[fieldup]}

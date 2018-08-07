@@ -28,13 +28,14 @@ def fltr_median(lim):
 if __name__ == '__main__':
     plt.close('all')
     plt.ion() if interactive else plt.ioff()
-    #cases = multicase.read_cases('mlt_test')
-    cases = multicase.read_cases('melting')
+    cases = multicase.read_cases('mlt_test')
+    #cases = multicase.read_cases('melting')
     #cases = cases[cases.ml_ok.isnull()]
-    cases = cases[~cases.ml_ok.astype(bool)]
+    #cases = cases[~cases.ml_ok.astype(bool)]
     results_dir = ensure_dir(path.join(RESULTS_DIR, 'ml'))
     for caseid, row in cases.iterrows():
         c = row.case
+        print(c.name())
         c.load_classification(name)
         fig, axarr = c.plot(params=['ZH', 'zdr', 'RHO', 'MLI'], cmap='viridis',
                             plot_fr=False, plot_t=False, plot_azs=False,

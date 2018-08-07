@@ -568,7 +568,7 @@ class Case:
             kws['n_ax_shift'] = n_extra
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+n_extra_ax+plot_counts,
-                                     **kws)
+                                     has_ml=self.has_ml, **kws)
         if colorful_bars==True: # Might be str, so check for True.
             n_omit_coloring = 2
         else:

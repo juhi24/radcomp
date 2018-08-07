@@ -54,7 +54,7 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
 
 def fltr_median(pn, window_kdp=MEDIAN_WINDOW_KDP,
                 window_zdr=MEDIAN_WINDOW_ZDR):
-    """apply median filter on ZDR and KDP"""
+    """Apply median filter on ZDR and KDP."""
     pn_out = pn.copy()
     sizes = {'ZDR': window_zdr, 'KDP': window_kdp} # filter window sizes
     # filtered field names are same as originals but in lower case
