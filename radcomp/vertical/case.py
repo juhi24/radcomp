@@ -161,7 +161,7 @@ def handle_ax(ax):
     return ax_out, update, axkws
 
 
-def plot_occurrence_counts(count, ax=None):
+def plot_occurrence_counts(count, ax=None, bottom=0, top=800):
     """Bar plot occurrence counts.
 
     Args:
@@ -171,7 +171,7 @@ def plot_occurrence_counts(count, ax=None):
     count.plot.bar(ax=ax)
     ax.set_ylabel('Occurrence')
     ax.yaxis.grid(True)
-    ax.set_ylim(bottom=0, top=400) # TODO: don't hardcode
+    ax.set_ylim(bottom=bottom, top=top)
 
 
 def round_time_index(data, resolution='1min'):
@@ -217,7 +217,7 @@ class Case:
         kdpmax = 0.5
         if 'has_ml' in kws:
             if kws['has_ml']:
-                kdpmax = 1
+                kdpmax = 1.2
         pn = dt2pn(t0, t1, kdpmax=kdpmax)
         return cls(data=pn, **kws)
 
