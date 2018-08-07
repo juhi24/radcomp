@@ -6,6 +6,11 @@ from scipy.ndimage.filters import median_filter
 from radcomp.vertical import NAN_REPLACEMENT
 
 
+# CONFIG
+MEDIAN_WINDOW_KDP = (20, 1)
+MEDIAN_WINDOW_ZDR = (5, 1)
+
+
 def dict_keys_lower(d):
     """list of dictionary keys in lower case"""
     return list(map(str.lower, d.keys()))
@@ -47,10 +52,11 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
     return pn_new
 
 
-def fltr_median(pn):
+def fltr_median(pn, window_kdp=MEDIAN_WINDOW_KDP,
+                window_zdr=MEDIAN_WINDOW_ZDR):
     """apply median filter on ZDR and KDP"""
     pn_out = pn.copy()
-    sizes = {'ZDR': (5, 1), 'KDP': (20, 1)} # filter window sizes
+    sizes = {'ZDR': window_zdr, 'KDP': window_kdp} # filter window sizes
     # filtered field names are same as originals but in lower case
     keys = dict_keys_lower(sizes)
     new = create_filtered_fields_if_missing(pn_out, sizes.keys())[keys]
