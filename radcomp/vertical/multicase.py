@@ -123,14 +123,14 @@ class MultiCase(case.Case):
             cases = cases[cases[filter_flag].astype(bool)]
         return cls.by_combining(cases, **kws)
 
-    def silhouette_score(self, n_pc=8):
+    def silhouette_score(self, cols=(0,1,2)):
         """silhouette score"""
         #selection = self.precip_selection()
         #round_selection = round_time_index(self.precip_selection())
-        class_data = self.class_scheme.data.loc[:, :n_pc]
+        class_data = self.class_scheme.data.loc[:, cols]
         return silhouette_score(class_data, self.classes)
 
-    def plot_silhouette(self, ax=None):
+    def plot_silhouette(self, ax=None, **kws):
         """plot silhouette analysis"""
         ax = ax or plt.gca()
         s_coef = self.silhouette_coef()
@@ -146,7 +146,7 @@ class MultiCase(case.Case):
                              facecolor=color, edgecolor=color)
             y_lower = y_upper + 30
             #ax.text(-0.05, y_lower + 0.5*cluster.size, str(cname))
-        ax.axvline(x=self.silhouette_score(), color="red", linestyle="--")
+        ax.axvline(x=self.silhouette_score(**kws), color="red", linestyle="--")
         ax.set_xlabel('silhouette coefficient')
         ax.set_ylabel('classes')
         ax.set_yticks([])

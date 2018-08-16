@@ -257,7 +257,7 @@ def scatter_class_pca(profiles_pca, classes, color_fun=class_color, plot3d=True)
     profs_pca['class'] = classes
     cg = profs_pca.groupby('class')
     markers = ['d', 'o', 'v', '^', '<', '>', 's', 'p', '*', 'x', 'D', 'h', 's',
-               'o', 'v', '^']
+               'o', 'v', '^', 's', 'p', '*', 'x']
     fig = plt.figure()
     kws3d = {}
     if plot3d:

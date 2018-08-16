@@ -42,7 +42,7 @@ if __name__ == '__main__':
     fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue')
     c.scatter_class_pca(plot3d=True)
     fig_s, ax_s = plt.subplots()
-    c.plot_silhouette(ax=ax_s)
+    c.plot_silhouette(ax=ax_s, cols=(0,1,2,'temp_mean'))
     if save_plots:
         savedir = ensure_join(RESULTS_DIR, 'classes_summary', c.class_scheme.name())
         savefile = path.join(savedir, 'centroids.png')
