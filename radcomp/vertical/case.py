@@ -663,7 +663,7 @@ class Case:
             offset = 0
         return insitu.time_weighted_mean(data, rule=dt, base=base, offset=offset)
 
-    def ground_temperature(self, save=False, use_arm=False):
+    def ground_temperature(self, save=False, use_arm=False, interp_gaps=True):
         """resampled ground temperature
 
         Returns:
@@ -681,6 +681,8 @@ class Case:
             t = pd.read_hdf(hdfpath, 'data')['TC'][self.t_start():t_end]
             t.name = 'temp_mean'
         tre = t.resample('15min', base=self.base_minute()).mean()
+        if interp_gaps:
+            tre = tre.interpolate()
         if save:
             self.temperature = tre
         return tre
