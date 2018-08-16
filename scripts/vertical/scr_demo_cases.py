@@ -1,11 +1,12 @@
 # coding: utf-8
+"""Plot demo cases with classification."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import multicase, RESULTS_DIR
-from j24 import ensure_join
+from radcomp.vertical import multicase#, RESULTS_DIR
+#from j24 import ensure_join
 import conf
 
 
@@ -13,10 +14,11 @@ case_set_r = 'erad18_rain'
 case_set_s = 'erad18_snow'
 scheme_id_r = conf.SCHEME_ID_MELT
 scheme_id_s = conf.SCHEME_ID_SNOW
-savedir = ensure_join(RESULTS_DIR, 'erad18')
+savedir = conf.P1_FIG_DIR
 
 if __name__ == '__main__':
     plt.close('all')
+    plt.ion()
     cases_r = multicase.read_cases(case_set_r)
     cases_s = multicase.read_cases(case_set_s)
     for i, c in cases_r.case.iteritems():
