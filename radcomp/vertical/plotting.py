@@ -156,7 +156,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         subplot_kws = {}
         if i > 0:
             subplot_kws['sharex'] = axarr[0]
-            subplot_kws['sharey'] = axarr[0]
+            subplot_kws['sharey'] = axarr[n_ax_shift]
         ax = fig.add_subplot(gs[h+1+i, 0], **subplot_kws)
         ax_cb = fig.add_subplot(gs[h+1+i, 1])
         axarr.append(ax)
