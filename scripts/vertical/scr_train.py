@@ -9,11 +9,8 @@ from radcomp.vertical import multicase, classification, RESULTS_DIR
 from j24 import ensure_join
 
 
-plt.ion()
-plt.close('all')
-np.random.seed(1)
-
-savefig = False
+save_plots = True
+train = False
 
 cases = multicase.read_cases('snow')
 basename = 'snow'
@@ -26,25 +23,27 @@ use_temperature = True
 t_weight_factor = 0.8
 radar_weight_factors = dict(zdr=0.7, kdp=1.1)
 
-scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
-                            reduced=reduced, t_weight_factor=t_weight_factor,
-                            radar_weight_factors=radar_weight_factors,
-                            basename=basename, n_clusters=n_clusters,
-                            use_temperature=use_temperature)
-c = multicase.MultiCase.by_combining(cases, class_scheme=scheme)
-trainkws = {}
-#if reduced:
-    #trainkws['n_clusters'] = n_clusters
-    #trainkws['use_temperature'] = use_temperature
-c.train(**trainkws)
-scheme.save()
-# Load classification and plot centroids
-name = c.class_scheme.name()
-print(name)
-c.load_classification(name)
-fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue')
-c.scatter_class_pca(plot3d=True)
-if savefig:
-    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name)
-    savefile = path.join(savedir, 'centroids.png')
-    fig.savefig(savefile, bbox_inches='tight')
+
+if __name__ == '__main__':
+    plt.ion()
+    plt.close('all')
+    np.random.seed(1)
+    scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
+                                reduced=reduced, t_weight_factor=t_weight_factor,
+                                radar_weight_factors=radar_weight_factors,
+                                basename=basename, n_clusters=n_clusters,
+                                use_temperature=use_temperature)
+    c = multicase.MultiCase.by_combining(cases, class_scheme=scheme)
+    if train:
+        c.train()
+        scheme.save()
+    # Load classification and plot centroids
+    c.load_classification()
+    fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue')
+    c.scatter_class_pca(plot3d=True)
+    fig_s, ax_s = plt.subplots()
+    c.plot_silhouette(ax=ax_s)
+    if save_plots:
+        savedir = ensure_join(RESULTS_DIR, 'classes_summary', c.class_scheme.name())
+        savefile = path.join(savedir, 'centroids.png')
+        fig.savefig(savefile, bbox_inches='tight')

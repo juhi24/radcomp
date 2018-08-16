@@ -8,6 +8,7 @@ from os import path
 from radcomp.vertical import multicase, classification, RESULTS_DIR
 from j24 import ensure_join
 
+
 plt.ion()
 plt.close('all')
 np.random.seed(1)
@@ -38,7 +39,6 @@ if __name__ == '__main__':
         scheme.save()
     # Load classification and plot centroids
     c.load_classification()
-    #order = c.clus_centroids()[0].ZH.iloc[0]
     fig_cc, axarr_cc, i = c.plot_cluster_centroids(#cmap='viridis',
                                                    colorful_bars='blue',
                                                    sortby=None)
