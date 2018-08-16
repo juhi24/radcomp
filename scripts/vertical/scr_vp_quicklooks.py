@@ -8,19 +8,20 @@ import matplotlib.pyplot as plt
 from os import path
 from datetime import timedelta
 from radcomp import USER_DIR
-from radcomp.vertical import case, multicase
+from radcomp.vertical import case, multicase, RESULTS_DIR
 from j24 import ensure_join
 
 
-interactive = True
+interactive = False
 
 
-def plot_quicklooks(cases, save=True, **kws):
+def plot_quicklooks(cases, save=True, saveid='everything', **kws):
     """Plot and save quicklooks."""
     params = ['ZH', 'zdr', 'kdp', 'RHO']
     if save:
-        savedir = ensure_join(case.DATA_DIR, 'quicklooks_viridis')
-    for _, c in cases.case.iteritems():
+        savedir = ensure_join(RESULTS_DIR, 'quicklooks', saveid)
+    for caseid, c in cases.case.iteritems():
+        print(caseid)
         fig, _ = c.plot(params=params, plot_fr=False, plot_t=True,
                         plot_azs=False, plot_snd=False, **kws)
         if save:
@@ -46,7 +47,7 @@ def write_dates(datelistfile):
 if __name__ == '__main__':
     plt.close('all')
     #casesname = 'daily_quicklooks'
-    casesname = 'mlt_test'
+    casesname = 'snow'
     casesfile = path.join(USER_DIR, 'cases', casesname + '.csv')
     datelistfile = path.join(case.DATA_DIR, 'date.list')
     #write_dates(datelistfile)
@@ -57,5 +58,5 @@ if __name__ == '__main__':
     else:
         plt.ioff()
         save = True
-    plot_quicklooks(cases, save=save, cmap='viridis')
+    plot_quicklooks(cases, save=save, cmap='viridis', saveid='snow')
 

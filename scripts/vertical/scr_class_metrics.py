@@ -4,6 +4,7 @@ __metaclass__ = type
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from os import path
 from radcomp.vertical import multicase, classification
 from j24.tools import notify
 from conf import SCHEME_ID_MELT, CASES_MELT, P1_FIG_DIR
@@ -65,7 +66,8 @@ if __name__ == '__main__':
     notify('Silhouette score', 'Score calculation finished.')
     fig, ax = plt.subplots(dpi=110, figsize=(5,4))
     plot_scores(scores, ax=ax)
-    fig.savefig()
+    savefile = path.join(P1_FIG_DIR, 'silh_score.svg')
+    fig.savefig(savefile, bbox_inches='tight')
     #scores.mean().plot()
     #cases.case.apply(lambda x: x.load_classification(scheme_id))
     #c = cases.case.iloc[0]

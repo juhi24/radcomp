@@ -15,16 +15,16 @@ np.random.seed(1)
 
 savefig = False
 
-cases = multicase.read_cases('14-16by_hand')
-basename = '14-16'
+cases = multicase.read_cases('snow')
+basename = 'snow'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (190, 10e3)
 n_eigens = 19
-n_clusters = 19
+n_clusters = 20
 reduced = True
 use_temperature = True
 t_weight_factor = 0.8
-radar_weight_factors = dict(zdr=0.5)
+radar_weight_factors = dict(zdr=0.7, kdp=1.1)
 
 scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
                             reduced=reduced, t_weight_factor=t_weight_factor,
@@ -43,6 +43,7 @@ name = c.class_scheme.name()
 print(name)
 c.load_classification(name)
 fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue')
+c.scatter_class_pca(plot3d=True)
 if savefig:
     savedir = ensure_join(RESULTS_DIR, 'classes_summary', name)
     savefile = path.join(savedir, 'centroids.png')
