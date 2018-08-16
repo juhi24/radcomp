@@ -2,16 +2,17 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, classification
 from j24.tools import notify
-from conf import SCHEME_ID_MELT, CASES_MELT, P1_FIG_DIR
+from conf import SCHEME_ID_MELT, SCHEME_ID_SNOW, CASES_MELT, CASES_SNOW, P1_FIG_DIR
 
 
-case_set = CASES_MELT
-scheme_id = SCHEME_ID_MELT
+case_set = CASES_SNOW
+scheme_id = SCHEME_ID_SNOW
 
 
 basename = 'mlt2'
@@ -56,24 +57,34 @@ def plot_scores(scores, ax=None, **kws):
     return ax
 
 
-if __name__ == '__main__':
-    plt.close('all')
-    cases = multicase.read_cases(case_set)
-    cases = cases[cases.ml_ok.astype(bool)]
-    cc = multicase.MultiCase.by_combining(cases, has_ml=True)
-    #cc.load_classification(scheme_id)
+def score_analysis(cc):
+    """Compute and plot silhouette scores per number of classes."""
     scores = silh_score_avgs(cc, n_iter=10, n_pc=3)
     notify('Silhouette score', 'Score calculation finished.')
     fig, ax = plt.subplots(dpi=110, figsize=(5,4))
     plot_scores(scores, ax=ax)
     savefile = path.join(P1_FIG_DIR, 'silh_score.svg')
     fig.savefig(savefile, bbox_inches='tight')
-    #scores.mean().plot()
-    #cases.case.apply(lambda x: x.load_classification(scheme_id))
-    #c = cases.case.iloc[0]
-    #order = cc.clus_centroids()[0].ZH.iloc[0]
-    #cc.plot_cluster_centroids(cmap='viridis', colorful_bars='blue', sortby=order)
-    #fig, ax = plt.subplots()
-    #cc.plot_silhouette(ax=ax)
 
 
+def occ_in_cases(cases, frac=True):
+    """class occurences per case"""
+    counts = []
+    for cl_id in cases.case[0].class_scheme.get_class_list():
+        count = 0
+        for _, c in cases.case.iteritems():
+            count += cl_id in c.classes.values
+        counts.append(count)
+    if frac:
+        return np.array(counts)/cases.shape[0]
+    return counts
+
+
+if __name__ == '__main__':
+    plt.close('all')
+    cases = multicase.read_cases(case_set)
+    #cases = cases[cases.ml_ok.astype(bool)]
+    cc = multicase.MultiCase.by_combining(cases, has_ml=False)
+    for _, c in cases.case.iteritems():
+        c.load_classification(scheme_id)
+    occ_cases = occ_in_cases(cases)
