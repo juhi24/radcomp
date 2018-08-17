@@ -2,7 +2,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from os import path
@@ -67,19 +66,6 @@ def score_analysis(cc):
     fig.savefig(savefile, bbox_inches='tight')
 
 
-def occ_in_cases(cases, frac=True):
-    """class occurences per case"""
-    counts = []
-    for cl_id in cases.case[0].class_scheme.get_class_list():
-        count = 0
-        for _, c in cases.case.iteritems():
-            count += cl_id in c.classes.values
-        counts.append(count)
-    if frac:
-        return np.array(counts)/cases.shape[0]
-    return counts
-
-
 if __name__ == '__main__':
     plt.close('all')
     cases = multicase.read_cases(case_set)
@@ -87,4 +73,3 @@ if __name__ == '__main__':
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
     for _, c in cases.case.iteritems():
         c.load_classification(scheme_id)
-    occ_cases = occ_in_cases(cases)
