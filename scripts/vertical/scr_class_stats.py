@@ -48,36 +48,42 @@ def streaks_table(g_counts):
     return count_df
 
 
+def class_streak_counts(cases):
+    """average consecutive occurrence streak per class"""
+    class_list = []
+    count_list = []
+    for i, c in cases.case.iteritems():
+        g = c.classes.groupby(consecutive_grouper(c.classes))
+        class_list.append(g.mean())
+        count_list.append(g.count())
+    classes = pd.concat(class_list)
+    counts = pd.concat(count_list)
+    counts.name = 'count'
+    g_class_counts = counts.groupby(classes)
+    return g_class_counts
+
+
 if __name__ == '__main__':
     plt.close('all')
     cases_r, cc_r = init_rain()
     cases_s, cc_s = init_snow()
     #
     for cases in (cases_r, cases_s):
-        precip_type = 'rain' if cases.case.iloc[0].has_ml else 'snow'
-        class_list = []
-        count_list = []
-        for i, c in cases.case.iteritems():
-            g = c.classes.groupby(consecutive_grouper(c.classes))
-            class_list.append(g.mean())
-            count_list.append(g.count())
-        classes = pd.concat(class_list)
-        counts = pd.concat(count_list)
-        counts.name = 'count'
-        g_class_counts = counts.groupby(classes)
+        c = cases.case.iloc[0]
         #
         fig, axarr, i = c.plot_cluster_centroids(plot_counts=False, n_extra_ax=1)
-        if precip_type=='rain':
+        if c.has_ml:
             axarr[0].set_ylabel('')
             axarr[1].set_ylabel('Height, km above ML top')
             axarr[2].set_ylabel('')
         ax = axarr[-1]
-        g_class_counts.mean().plot.bar(ax=ax)
+        class_streak_counts(cases).mean().plot.bar(ax=ax)
         plotting.bar_plot_colors(ax, i, class_color_fun=c.class_color, cm=plotting.cm_blue())
         ax.grid(axis='y')
         ax.set_ylabel('avg. occurrence\nstreak')
         ax.set_ylim(bottom=0, top=8)
-        savedir = ensure_join(RESULTS_DIR, 'erad18')
+        savedir = conf.P1_FIG_DIR
+        precip_type = 'rain' if cases.case.iloc[0].has_ml else 'snow'
         filename = 'centroids_streak_{}.png'.format(precip_type)
         savefile = path.join(savedir, filename)
         fig.savefig(savefile, bbox_inches='tight')
