@@ -388,59 +388,54 @@ class Case:
         top.plot(color='black', **common_kws)
         return ax
 
+    def plot_series(self, data, ax=None, **kws):
+        """Plot time series correctly shifted."""
+        ax = ax or plt.gca()
+        half_dt = self.mean_delta()/2
+        dat = data.shift(freq=half_dt)
+        plotting.plot_data(dat, ax=ax, **kws)
+        self.set_xlim(ax)
+        return ax
+
     def plot_t(self, ax, tmin=-20, tmax=10):
         """Plot temperature."""
-        # TODO: remove copy-pasta
-        half_dt = self.mean_delta()/2
-        t = self.ground_temperature().shift(freq=half_dt)
-        plotting.plot_data(t, ax=ax)
+        self.plot_series(self.ground_temperature(), ax=ax)
         ax.set_ylabel(plotting.LABELS['temp_mean'])
         ax.set_ylim([tmin, tmax])
         return ax
 
     def plot_lwe(self, ax, rmax=4):
         """plot LWE"""
-        half_dt = self.mean_delta()/2
-        i = self.lwe().shift(freq=half_dt)
-        plotting.plot_data(i, ax=ax, label=self.pluvio.name)
+        self.plot_series(self.lwe(), ax=ax, label=self.pluvio.name)
         ax.set_ylim(bottom=0, top=rmax)
         ax.set_ylabel(plotting.LABELS['intensity'])
-        self.set_xlim(ax)
         return ax
 
     def plot_fr(self, ax, frmin=-0.1, frmax=1):
         """Plot riming fraction."""
-        half_dt = self.mean_delta()/2
-        fr = self.fr().shift(freq=half_dt)
-        plotting.plot_data(fr, ax=ax, label='FR')
+        self.plot_series(self.fr(), ax=ax, label='FR')
         ax.set_ylim(bottom=frmin, top=frmax)
-        ax.set_ylabel(plotting.LABELS[fr.name])
-        self.set_xlim(ax)
+        ax.set_ylabel(plotting.LABELS[self.fr().name])
         return ax
 
     def plot_azs(self, ax, amin=10, amax=4000):
         """Plot prefactor of Z-S relation"""
-        half_dt = self.mean_delta()/2
-        azs = self.azs().shift(freq=half_dt)
+        azs = self.azs()
         label = plotting.LABELS[azs.name]
-        plotting.plot_data(azs, ax=ax, label=label)
+        self.plot_series(azs, ax=ax, label=label)
         ax.set_ylabel(plotting.LABELS[azs.name])
         ax.set_yscale('log')
         ax.set_ylim(bottom=amin, top=amax)
         ax.set_yticks([10, 100, 1000])
-        self.set_xlim(ax)
         return ax
 
     def plot_silh(self, ax=None):
         """Plot silhouette coefficient"""
-        ax = ax or plt.gca()
-        half_dt = self.mean_delta()/2
-        silh = self.silhouette_coef().shift(freq=half_dt)
-        plotting.plot_data(silh, ax=ax)
+        silh = self.silhouette_coef()
+        self.plot_series(silh, ax=ax)
         ax.set_ylabel('silhouette\ncoefficient')
         ax.set_ylim(bottom=-1, top=1)
         ax.set_yticks([-1, 0, 1])
-        self.set_xlim(ax)
         return ax
 
     def plot_snd(self, ax=None, var='TEMP', **kws):
