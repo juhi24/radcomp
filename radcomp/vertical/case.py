@@ -356,7 +356,8 @@ class Case:
             try:
                 self.plot_snd_growth_zones(ax=axarr[1])
             except TypeError:
-                print('{}: Could not plot sounding.'.format(self.name()))
+                warnfmt = '{}: Could not plot sounding temperature.'
+                print(warnfmt.format(self.name()))
         if plot_classes:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])

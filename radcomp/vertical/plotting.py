@@ -72,10 +72,10 @@ def mean_delta(t):
     return dt/(len(t)-1)
 
 
-def set_h_ax(ax, hlims=(0, 10000)):
+def set_h_ax(ax, hlims=(0, 10000), label='Height, km'):
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     ax.set_ylim(*hlims)
-    ax.set_ylabel('Height, km')
+    ax.set_ylabel(label)
 
 
 def nice_cb_ticks(cb, nbins=5, steps=(1, 5, 10), **kws):
@@ -166,7 +166,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         im = ax.pcolormesh(x, pn[field].index,
                            np.ma.masked_invalid(pn[field].values), cmap=cmap,
                            label=field, **kws)
-        set_h_ax(ax)
+        label = 'Height, km above ML top' if has_ml else 'Height, km'
+        set_h_ax(ax, label=label) if i==1 else set_h_ax(ax, label='')
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
     for j in range(n_extra_ax-n_ax_shift):
