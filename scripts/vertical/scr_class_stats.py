@@ -91,6 +91,7 @@ def occ_in_cases(cases, frac=True):
 
 
 def cl_frac_in_case(c, cl, frac=True):
+    """fraction or number of class occurrences in a case"""
     count = (c.classes==cl).sum()
     if frac:
         return count/c.classes.size

@@ -109,8 +109,8 @@ def _pn_scalekws(field, scaled, x_is_date, has_ml):
         cb_label = 'scaled {}'.format(field)
     elif fieldup in vis.LABELS:
         # custom limits
-        vmins = vis.VMINS
-        vmaxs = vis.VMAXS
+        vmins = vis.VMINS.copy()
+        vmaxs = vis.VMAXS.copy()
         vmins['ZDR'] = -0.5
         if not x_is_date: # if not a time series
             vmaxs['ZDR'] = 2.5
