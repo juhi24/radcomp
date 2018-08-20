@@ -64,20 +64,17 @@ def class_streak_counts(cases):
     return g_class_counts
 
 
-def plot_class_streak_counts(cases):
+def plot_class_streak_counts(cases, ax=None, order=None):
     c = cases.case.iloc[0]
-    fig, axarr, i = c.plot_cluster_centroids(plot_counts=False, n_extra_ax=1)
-    if c.has_ml:
-        axarr[0].set_ylabel('')
-        axarr[1].set_ylabel('Height, km above ML top')
-        axarr[2].set_ylabel('')
-    ax = axarr[-1]
+    if ax is None:
+        fig, axarr, order = c.plot_cluster_centroids(plot_counts=False, n_extra_ax=1)
+        ax = axarr[-1]
     class_streak_counts(cases).mean().plot.bar(ax=ax)
-    plotting.bar_plot_colors(ax, i, class_color_fun=c.class_color, cm=plotting.cm_blue())
+    plotting.bar_plot_colors(ax, order, class_color_fun=c.class_color, cm=plotting.cm_blue())
     ax.grid(axis='y')
     ax.set_ylabel('avg. occurrence\nstreak')
     ax.set_ylim(bottom=0, top=8)
-    return fig, axarr
+    return ax
 
 
 def occ_in_cases(cases, frac=True):
@@ -104,16 +101,16 @@ def frac_in_case_hist(cases, cl, log=True, ax=None, frac=True):
     """histogram of fraction of class occurrences in a case"""
     ax = ax or plt.gca()
     if frac:
-        bins = (0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)
+        bins = np.concatenate(([0.001],np.arange(0.1, 1, 0.1)))
     else:
-        bins = (1, 10, 20, 30, 40, 50, 60)
+        bins = np.concatenate(([1],range(5, 65, 5)))
     frac_per_case = cases.case.apply(lambda x: cl_frac_in_case(x, cl, frac=frac))
     zeros_count = (frac_per_case<0.01).sum()
     ax.stem([0], [zeros_count], markerfmt='o', label='class not present')
     frac_per_case.hist(log=log, bins=bins, ax=ax, label='class occurrence')
     if frac:
         ax.set_xlim(-0.03, 0.9)
-    ax.set_ylim(bottom=0.9, top=2e2)
+    ax.set_ylim(bottom=0.9, top=1e2)
     ax.set_title('Class {} occurrence histogram'.format(cl))
     word = 'Fraction' if frac else 'Number'
     ax.set_xlabel(word + ' of profiles per event')
@@ -122,25 +119,39 @@ def frac_in_case_hist(cases, cl, log=True, ax=None, frac=True):
     return ax
 
 
+def plot_occ_in_cases(cases, order, ax=None):
+    ax = ax or plt.gca()
+    c = cases.case.iloc[0]
+    ax.bar(order, occ_in_cases(cases)*100, width=0.5)
+    plotting.bar_plot_colors(ax, order, class_color_fun=c.class_color,
+                             cm=plotting.cm_blue())
+    ax.set_ylabel('Occurrence\nin % of events')
+    return ax
+
+
 if __name__ == '__main__':
+    save = False
     plt.close('all')
     cases_r, cc_r = init_rain()
     cases_s, cc_s = init_snow()
+    rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': True},
+                free_ax=3)
+    snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=4)
+    c_s = cases_s.case.iloc[0]
     savedir = conf.P1_FIG_DIR
-    for cases in (cases_r, cases_s):
-        fig, axarr = plot_class_streak_counts(cases)
-        precip_type = 'rain' if cases.case.iloc[0].has_ml else 'snow'
-        filename = 'centroids_streak_{}.png'.format(precip_type)
-        savefile = path.join(savedir, filename)
-        fig.savefig(savefile, bbox_inches='tight')
-    fig_s, axarr_s, i = cc_s.plot_cluster_centroids(colorful_bars='blue')
-    fig_r, axarr_r, i = cc_r.plot_cluster_centroids(colorful_bars='blue',
-                                                    plot_conv_occ=True)
-    axarr_r[0].set_ylabel('')
-    axarr_r[1].set_ylabel('Height, km above ML top')
-    axarr_r[2].set_ylabel('')
-    fig_s.savefig(path.join(savedir, 'clusters_s.png'), bbox_inches='tight')
-    fig_r.savefig(path.join(savedir, 'clusters_r.png'), bbox_inches='tight')
-    fig_h, ax_h = plt.subplots(dpi=150, figsize=(4,3))
-    frac_in_case_hist(cases, 16, log=True, frac=False, ax=ax_h)
-    fig_h.savefig(path.join(savedir, 'occ_hist.png'))
+    for d in (rain, snow):
+        cases = d['cases']
+        cc = d['cc']
+        kws = d['kws']
+        free_ax = d['free_ax']
+        fig, axarr, i = cc.plot_cluster_centroids(colorful_bars='blue',
+                                                  n_extra_ax=2, **kws)
+        plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
+        plot_occ_in_cases(cases, order=i, ax=axarr[free_ax+1])
+        fname = 'clusters_{}.png'.format(d['id'])
+        if save:
+            fig.savefig(path.join(savedir, fname), bbox_inches='tight')
+    fig_h, ax_h = plt.subplots(dpi=150, figsize=(4, 3))
+    frac_in_case_hist(cases, 15, log=False, frac=True, ax=ax_h)
+    if save:
+        fig_h.savefig(path.join(savedir, 'occ_hist.png'))
