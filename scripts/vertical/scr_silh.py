@@ -1,4 +1,5 @@
 # coding: utf-8
+"""silhouette score analysis script"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
@@ -8,10 +9,6 @@ from os import path
 from radcomp.vertical import multicase, classification
 from j24.tools import notify
 from conf import SCHEME_ID_MELT, SCHEME_ID_SNOW, CASES_MELT, CASES_SNOW, P1_FIG_DIR
-
-
-case_set = CASES_SNOW
-scheme_id = SCHEME_ID_SNOW
 
 
 vpc_conf_snow = dict(basename = 'snow',
@@ -72,12 +69,16 @@ def score_analysis(cc, **kws):
 
 
 if __name__ == '__main__':
+    case_set = CASES_SNOW
+    scheme_id = SCHEME_ID_SNOW
+    vpc_conf = vpc_conf_snow
     plt.close('all')
     cases = multicase.read_cases(case_set)
     #cases = cases[cases.ml_ok.astype(bool)]
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
     del(cases)
     fig, ax = plt.subplots()
-    score_analysis(cc, cols=(0, 1, 2))
-    savefile = path.join(P1_FIG_DIR, 'silh_score_{}.svg'.format(basename))
+    score_analysis(cc, cols=(0, 1, 2), vpc_conf=vpc_conf)
+    fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
+    savefile = path.join(P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')
