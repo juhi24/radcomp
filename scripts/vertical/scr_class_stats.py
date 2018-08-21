@@ -98,14 +98,16 @@ def cl_frac_in_case(c, cl, frac=True):
     return count
 
 
-def frac_in_case_hist(cases, cl, log=True, ax=None, frac=True):
+def frac_in_case_hist(cases, cl=-1, frac_per_case=None, log=True, ax=None, frac=True):
     """histogram of fraction of class occurrences in a case"""
     ax = ax or plt.gca()
     if frac:
         bins = np.concatenate(([0.001],np.arange(0.1, 1, 0.1)))
     else:
         bins = np.concatenate(([1],range(5, 65, 5)))
-    frac_per_case = cases.case.apply(lambda x: cl_frac_in_case(x, cl, frac=frac))
+    if frac_per_case is None:
+        agg_fun = lambda x: cl_frac_in_case(x, cl, frac=frac)
+        frac_per_case = cases.case.apply(agg_fun)
     zeros_count = (frac_per_case<0.01).sum()
     ax.stem([0], [zeros_count], markerfmt='o', label='class not present')
     frac_per_case.hist(log=log, bins=bins, ax=ax, label='class occurrence')
@@ -131,7 +133,7 @@ def plot_occ_in_cases(cases, order, ax=None):
 
 
 if __name__ == '__main__':
-    save = False
+    save = True
     plt.close('all')
     cases_r, cc_r = init_rain()
     cases_s, cc_s = init_snow()
