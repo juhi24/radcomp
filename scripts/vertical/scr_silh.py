@@ -14,23 +14,29 @@ case_set = CASES_SNOW
 scheme_id = SCHEME_ID_SNOW
 
 
-basename = 'mlt2'
-params = ['ZH', 'zdr', 'kdp']
-hlimits = (190, 10e3)
-n_eigens = 18
-reduced = True
-use_temperature = False
-radar_weight_factors = dict()
+vpc_conf_snow = dict(basename = 'snow',
+                     params=['ZH', 'zdr', 'kdp'],
+                     hlimits=(190, 10e3),
+                     n_eigens=19,
+                     reduced=True,
+                     use_temperature=True,
+                     t_weight_factor=0.8,
+                     radar_weight_factors=dict(zdr=0.7, kdp=1.1))
+
+vpc_conf_rain = dict(basename = 'mlt2',
+                     params=['ZH', 'zdr', 'kdp'],
+                     hlimits=(190, 10e3),
+                     n_eigens=18,
+                     reduced=True,
+                     use_temperature=False,
+                     radar_weight_factors=dict())
 
 
-def silh_score_avgs(cc, n_iter=10, **kws):
+def silh_score_avgs(cc, n_iter=10, vpc_conf=vpc_conf_snow, **kws):
     scores = pd.DataFrame()
     for i in range(n_iter):
-        for n_classes in range(8, 25):
-            scheme = classification.VPC(params=params, hlimits=hlimits,
-                                        n_eigens=n_eigens, reduced=reduced,
-                                        radar_weight_factors=radar_weight_factors,
-                                        basename=basename, n_clusters=n_classes)
+        for n_classes in range(10, 27):
+            scheme = classification.VPC(n_clusters=n_classes, **vpc_conf)
             cc.class_scheme = scheme
             cc.train(quiet=True)
             cc.classify()
@@ -56,14 +62,13 @@ def plot_scores(scores, ax=None, **kws):
     return ax
 
 
-def score_analysis(cc):
+def score_analysis(cc, **kws):
     """Compute and plot silhouette scores per number of classes."""
-    scores = silh_score_avgs(cc, n_iter=10, n_pc=3)
+    scores = silh_score_avgs(cc, n_iter=10, **kws)
     notify('Silhouette score', 'Score calculation finished.')
     fig, ax = plt.subplots(dpi=110, figsize=(5,4))
     plot_scores(scores, ax=ax)
-    savefile = path.join(P1_FIG_DIR, 'silh_score.svg')
-    fig.savefig(savefile, bbox_inches='tight')
+    return fig, ax
 
 
 if __name__ == '__main__':
@@ -71,5 +76,8 @@ if __name__ == '__main__':
     cases = multicase.read_cases(case_set)
     #cases = cases[cases.ml_ok.astype(bool)]
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
-    for _, c in cases.case.iteritems():
-        c.load_classification(scheme_id)
+    del(cases)
+    fig, ax = plt.subplots()
+    score_analysis(cc, cols=(0, 1, 2))
+    savefile = path.join(P1_FIG_DIR, 'silh_score_{}.svg'.format(basename))
+    fig.savefig(savefile, bbox_inches='tight')
