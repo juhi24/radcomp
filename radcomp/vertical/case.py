@@ -318,8 +318,9 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=True, plot_t=True, plot_azs=True, plot_silh=True,
-             plot_snd=True, plot_classes=True, **kws):
+             plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
+             plot_snd=True, plot_classes=True, plot_lwe=True, snd_lvls=None,
+             **kws):
         """Visualize the case."""
         if raw:
             data = self.data
@@ -331,7 +332,7 @@ class Case:
             else:
                 params = ['ZH', 'zdr', 'kdp']
         plot_classes = (self.classes is not None) and plot_classes
-        plot_lwe = self.pluvio is not None
+        plot_lwe = self.pluvio is not None and plot_lwe
         if plot_lwe:
             plot_lwe = not self.pluvio.data.empty
         plot_azs = plot_azs and (self.azs().size > 0)
@@ -343,18 +344,20 @@ class Case:
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, has_ml=self.has_ml,
                                      **kws)
-        plotfuns = {plot_silh: self.plot_silh,
-                    plot_lwe: self.plot_lwe,
-                    plot_azs: self.plot_azs,
-                    plot_fr: self.plot_fr,
-                    plot_t: self.plot_t}
-        for flag, plotfun in plotfuns.items():
+        plotfuns = {self.plot_silh: plot_silh,
+                    self.plot_lwe: plot_lwe,
+                    self.plot_azs: plot_azs,
+                    self.plot_fr: plot_fr,
+                    self.plot_t: plot_t}
+        for plotfun, flag in plotfuns.items():
             if flag:
+                print('#########################################')
+                print(plotfun.__name__, next_free_ax)
                 plotfun(ax=axarr[next_free_ax])
                 next_free_ax += 1
         if plot_snd:
             try:
-                self.plot_snd_growth_zones(ax=axarr[1])
+                self.plot_snd_growth_zones(ax=axarr[1], snd_lvls=snd_lvls)
             except TypeError:
                 warnfmt = '{}: Could not plot sounding temperature.'
                 print(warnfmt.format(self.name()))
@@ -438,20 +441,17 @@ class Case:
         ax.set_yticks([-1, 0, 1])
         return ax
 
-    def plot_snd(self, ax=None, var='TEMP', **kws):
-        """contour plot of interpolated sounding data"""
-        ax = ax or plt.gca()
-        x = self.snd(var=var)
-        ax.contour(x.columns, x.index, x, **kws)
-        return ax
-
-    def plot_snd_growth_zones(self, ax=None, var='TEMP', **kws):
+    def plot_snd_growth_zones(self, ax=None, var='TEMP', snd_lvls=('dend', 'hm'),
+                              **kws):
         """Plot interpolated sounding data on growth zone edges."""
         ax = ax or plt.gca()
         x = self.snd(var=var)
-        #ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
-        #ax.contour(x.columns, x.index, x, levels=[-20, -10], colors='dimgray')
-        ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
+        if 'hm' in snd_lvls:
+            ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
+        if 'dend' in snd_lvls:
+            ax.contour(x.columns, x.index, x, levels=[-20, -10], colors='dimgray')
+        if 'ml' in snd_lvls:
+            ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
         return ax
 
     def train(self, **kws):
