@@ -11,10 +11,10 @@ from j24 import ensure_join
 from warnings import warn
 import conf
 
-plt.ion()
+plt.ioff()
 plt.close('all')
 
-case_set = 'erad18_snow'
+case_set = 'snow'
 n_eigens = 19
 n_clusters = 19
 reduced = True
@@ -53,5 +53,4 @@ if __name__ == '__main__':
         if save:
             fname = path.join(results_dir, c.name()+'.png')
             fig.savefig(fname, bbox_inches='tight')
-            #plt.close(fig)
-
+            plt.close(fig)

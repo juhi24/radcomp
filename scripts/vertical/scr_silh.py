@@ -14,11 +14,11 @@ from conf import SCHEME_ID_MELT, SCHEME_ID_SNOW, CASES_MELT, CASES_SNOW, P1_FIG_
 vpc_conf_snow = dict(basename = 'snow',
                      params=['ZH', 'zdr', 'kdp'],
                      hlimits=(190, 10e3),
-                     n_eigens=19,
+                     n_eigens=22,
                      reduced=True,
                      use_temperature=True,
                      t_weight_factor=0.8,
-                     radar_weight_factors=dict(zdr=0.7, kdp=1.1))
+                     radar_weight_factors=dict(zdr=0.9, kdp=1.4))
 
 vpc_conf_rain = dict(basename = 'mlt2',
                      params=['ZH', 'zdr', 'kdp'],
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
     del(cases)
     fig, ax = plt.subplots()
-    score_analysis(cc, cols=(0, 1, 2), vpc_conf=vpc_conf)
+    score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
     fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
     savefile = path.join(P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')
