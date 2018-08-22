@@ -257,15 +257,14 @@ def scatter_class_pca(profiles_pca, classes, color_fun=class_color, plot3d=True)
     profs_pca = profiles_pca.copy()
     profs_pca['class'] = classes
     cg = profs_pca.groupby('class')
-    markers = ['d', 'o', 'v', '^', '<', '>', 's', 'p', '*', 'x', 'D', 'h', 's',
-               'o', 'v', '^', 's', 'p', '*', 'x']
+    markers = ['d', 'o', 'v', '^', 's', 'p', '>', '*', 'x', 'D', 'h', '<']
     fig = plt.figure()
     kws3d = {}
     if plot3d:
         kws3d['projection'] = '3d'
     ax = fig.add_subplot(111, **kws3d)
     for cl, eig in cg:
-        marker_kws = dict(color=color_fun(cl), marker=markers[cl-1])
+        marker_kws = dict(color=color_fun(cl), marker=markers[(cl-1) % len(markers)])
         if plot3d:
             ax.scatter(eig[0], eig[1], eig[2], **marker_kws)
             ax.set_zlabel('component 3')
