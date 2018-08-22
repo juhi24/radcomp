@@ -318,7 +318,7 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
+             plot_fr=False, plot_t=True, plot_azs=False, plot_silh=False,
              plot_snd=True, plot_classes=True, plot_lwe=True, snd_lvls=None,
              **kws):
         """Visualize the case."""
@@ -351,8 +351,6 @@ class Case:
                     self.plot_t: plot_t}
         for plotfun, flag in plotfuns.items():
             if flag:
-                print('#########################################')
-                print(plotfun.__name__, next_free_ax)
                 plotfun(ax=axarr[next_free_ax])
                 next_free_ax += 1
         if plot_snd:
