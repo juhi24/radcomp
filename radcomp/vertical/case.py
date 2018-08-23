@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from datetime import timedelta
 from scipy.io import loadmat
 from os import path
+from collections import OrderedDict
 from functools import partial
 from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
                               NAN_REPLACEMENT)
@@ -203,6 +204,7 @@ class Case:
         self.cl_data = cl_data
         self.cl_data_scaled = cl_data_scaled
         self.classes = classes # is this needed?
+        self.silh_score = None
         self.class_scheme = class_scheme
         self.temperature = temperature
         self.pluvio = None
@@ -306,19 +308,20 @@ class Case:
         if 'temp_mean' in self.class_scheme.params_extra:
             classify_kws['extra_df'] = self.ground_temperature()
         if self.cl_data_scaled is not None and self.class_scheme is not None:
-            classes = self.class_scheme.classify(self.cl_data_scaled, **classify_kws)
+            classes, silh = self.class_scheme.classify(self.cl_data_scaled, **classify_kws)
             classes.name = 'class'
             if save:
                 self.classes = classes
-            return classes
-        return None
+                self.silh_score = silh
+            return classes, silh
+        return None, None
 
     def plot_classes(self):
         """plot_classes wrapper"""
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=False, plot_t=True, plot_azs=False, plot_silh=False,
+             plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
              plot_snd=True, plot_classes=True, plot_lwe=True, snd_lvls=None,
              **kws):
         """Visualize the case."""
@@ -344,11 +347,12 @@ class Case:
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, has_ml=self.has_ml,
                                      **kws)
-        plotfuns = {self.plot_silh: plot_silh,
-                    self.plot_lwe: plot_lwe,
-                    self.plot_azs: plot_azs,
-                    self.plot_fr: plot_fr,
-                    self.plot_t: plot_t}
+        plotfuns = OrderedDict()
+        plotfuns[self.plot_t] = plot_t
+        plotfuns[self.plot_silh] = plot_silh
+        plotfuns[self.plot_lwe] = plot_lwe
+        plotfuns[self.plot_azs] = plot_azs
+        plotfuns[self.plot_fr] = plot_fr
         for plotfun, flag in plotfuns.items():
             if flag:
                 plotfun(ax=axarr[next_free_ax])
@@ -432,8 +436,7 @@ class Case:
 
     def plot_silh(self, ax=None):
         """Plot silhouette coefficient"""
-        silh = self.silhouette_coef()
-        self.plot_series(silh, ax=ax)
+        self.plot_series(self.silh_score, ax=ax)
         ax.set_ylabel('silhouette\ncoefficient')
         ax.set_ylim(bottom=-1, top=1)
         ax.set_yticks([-1, 0, 1])
@@ -754,10 +757,4 @@ class Case:
         count = self.classes.groupby(self.classes).count()
         count.name = 'count'
         return count
-
-    def silhouette_coef(self):
-        """silhouette coefficient of each profile"""
-        from sklearn.metrics import silhouette_samples
-        sh_arr = silhouette_samples(self.class_scheme.data, self.classes)
-        return pd.Series(index=self.classes.index, data=sh_arr)
 

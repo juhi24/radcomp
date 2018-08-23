@@ -7,6 +7,7 @@ from os import path
 from collections import OrderedDict
 from sklearn import decomposition
 from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_samples
 from radcomp import learn, USER_DIR
 from j24 import ensure_dir, limitslist
 from j24.learn import pca_stats
@@ -51,8 +52,8 @@ def train(data_df, pca, quiet=False, reduced=False, n_clusters=20):
         km = KMeans(init='k-means++', n_clusters=n_clusters, n_init=40, n_jobs=-1)
     else:
         km = KMeans(init=pca.components_, n_clusters=pca.n_components, n_init=1)
-    km.fit(data_df)
-    return km
+    classes_arr = km.fit_predict(data_df)
+    return km, classes_arr
 
 
 def pca_fit(data_df, whiten=False, **kws):
@@ -145,6 +146,8 @@ class VPC:
         self.basename = basename
         self.use_temperature = use_temperature
         self.mapping = None
+        self.training_data = None # archived training data
+        self.training_result = None # archived training data classes
         self._n_eigens = n_eigens
         self._n_clusters = n_clusters
 
@@ -207,21 +210,34 @@ class VPC:
         else:
             training_data = self.prepare_data(data, n_components=n_eigens,
                                               extra_df=extra_df)
-        km = train(training_data, self.pca, reduced=self.reduced,
-                   n_clusters=self.n_clusters, **kws)
-        self.km = km
+        self.training_data = training_data
+        self.km, cl_arr = train(training_data, self.pca, reduced=self.reduced,
+                                n_clusters=self.n_clusters, **kws)
+        self.training_result = self.prep_classes(cl_arr, data.major_axis)
+
+    def prep_classes(self, cl_arr, index):
+        """Map classes as Series"""
+        self.map_components()
+        classes = self.mapping[cl_arr].values
+        return pd.Series(data=classes, index=index)
 
     def classify(self, data_scaled, **kws):
         """classify scaled observations"""
         data = self.prepare_data(data_scaled, **kws)
-        self.clus_centroids_df()
-        classes = self.mapping[self.km.predict(data)].values
-        return pd.Series(data=classes, index=data_scaled.major_axis)
+        cl_arr = self.km.predict(data)
+        classes = self.prep_classes(cl_arr, data_scaled.major_axis)
+        tr = self.training_result
+        td = self.training_data
+        training_classes = tr.loc[tr.index.difference(classes.index)].copy()
+        training_data = td.loc[td.index.difference(data.index)].copy()
+        cl_silh = pd.concat((training_classes, classes))
+        data_silh = pd.concat((training_data, data))
+        silh = silhouette_samples(data_silh, cl_silh)
+        silh = pd.Series(data=silh, index=cl_silh.index).loc[classes.index]
+        return classes, silh
 
-    def clus_centroids_df(self):
-        """
-        cluster centroids in PCA space, extra parameters in separate DataFrame
-        """
+    def map_components(self):
+        """Set class mapping, return sorted components and extra parameters"""
         centroids = self.km.cluster_centers_
         n_extra = len(self.params_extra)
         if n_extra < 1:
@@ -230,19 +246,25 @@ class VPC:
         else:
             components = centroids[:, :-n_extra]
             extra = centroids[:, -n_extra:]/self.extra_weight_factor
-        if self.reduced:
-            components, self.mapping = sort_by_column(components, by=0)
-            centroids = self.pca.inverse_transform(components)
+        components, self.mapping = sort_by_column(components, by=0)
         extra_df = pd.DataFrame(extra, columns=self.params_extra)
-        # extra index order
         if not extra_df.empty:
             extra_df = extra_df.loc[self.mapping.sort_values().index]
             extra_df.reset_index(drop=True, inplace=True)
+        return components, extra_df
+
+    def clus_centroids_df(self):
+        """
+        cluster centroids DataFrame, extra parameters in separate DataFrame
+        """
+        components, extra_df = self.map_components()
+        if self.reduced:
+            centroids = self.pca.inverse_transform(components)
         return pd.DataFrame(centroids.T), extra_df
 
     def clus_centroids_pn(self):
         """
-        cluster centroids, extra parameters in separate DataFrame
+        cluster centroids Panel, extra parameters in separate DataFrame
         """
         clus_centroids, extra = self.clus_centroids_df()
         n_levels = clus_centroids.shape[0]
@@ -261,11 +283,12 @@ class VPC:
                 pn[field] = pn[field]/weight_factor
         return pn, extra
 
-    def prepare_data(self, data_scaled, extra_df=None, n_components=0, save=True):
+    def prepare_data(self, data, extra_df=None, n_components=0, save=True):
+        """prepare data for clustering or classification"""
+        data_scaled = data.copy()
         metadata = dict(fields=data_scaled.items.values,
                         hlimits=(data_scaled.minor_axis.min(),
                                  data_scaled.minor_axis.max()))
-        """prepare data for clustering or classification"""
         rw = self.radar_weight_factors
         if rw is not None:
             for field, weight_factor in rw.items():
