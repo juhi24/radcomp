@@ -14,26 +14,22 @@ train = True
 save_scheme = True
 
 cases = multicase.read_cases('snow')
-basename = 'snow'
-params = ['ZH', 'zdr', 'kdp']
-hlimits = (190, 10e3)
-n_eigens = 22
-n_clusters = 23
-reduced = True
-use_temperature = True
-t_weight_factor = 0.8
-radar_weight_factors = dict(kdp=1.3)
+vpc_params = dict(basename='snow',
+                  params=['ZH', 'zdr', 'kdp'],
+                  hlimits=(190, 10e3),
+                  n_eigens=22,
+                  n_clusters=23,
+                  reduced=True,
+                  use_temperature=True,
+                  t_weight_factor=0.8,
+                  radar_weight_factors=dict(kdp=1.3))
 
 
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
     np.random.seed(1)
-    scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
-                                reduced=reduced, t_weight_factor=t_weight_factor,
-                                radar_weight_factors=radar_weight_factors,
-                                basename=basename, n_clusters=n_clusters,
-                                use_temperature=use_temperature)
+    scheme = classification.VPC(**vpc_params)
     c = multicase.MultiCase.by_combining(cases, class_scheme=scheme)
     if train:
         c.train()

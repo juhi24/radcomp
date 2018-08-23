@@ -8,7 +8,7 @@ from radcomp.vertical import RESULTS_DIR
 
 
 #SCHEME_ID_SNOW = '14-16_t08_zdr05_19eig19clus_pca'
-SCHEME_ID_SNOW = 'snow_t08_zdr07_kdp11_19eig20clus_pca'
+SCHEME_ID_SNOW = 'snow_t08_kdp13_22eig23clus_pca'
 SCHEME_ID_MELT = 'mlt_18eig17clus_pca'
 
 CASES_SNOW = 'snow'
