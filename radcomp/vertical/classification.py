@@ -172,12 +172,14 @@ class VPC:
 
     @classmethod
     def load(cls, name):
+        """VPC object by loading a pickle"""
         obj = load(name)
         if isinstance(obj, cls):
             return obj
         raise Exception('Not a {} object.'.format(cls))
 
     def name(self):
+        """scheme name string"""
         if self.basename is None:
             raise TypeError('basename is not set')
         return scheme_name(basename=self.basename, n_eigens=self._n_eigens,
@@ -188,13 +190,16 @@ class VPC:
                            radar_weight_factors=self.radar_weight_factors)
 
     def get_class_list(self):
+        """class number range"""
         return range(self.n_clusters)
 
     def save(self, **kws):
+        """Save scheme to default location in pickle format."""
         with open(model_path(self.name(**kws)), 'wb') as f:
             pickle.dump(self, f)
 
     def train(self, data=None, n_eigens=None, extra_df=None, **kws):
+        """Perform clustering of the training data to initialize classes."""
         if n_eigens is None:
             n_eigens = self._n_eigens
         if data is None:
@@ -207,12 +212,16 @@ class VPC:
         self.km = km
 
     def classify(self, data_scaled, **kws):
+        """classify scaled observations"""
         data = self.prepare_data(data_scaled, **kws)
         self.clus_centroids_df()
         classes = self.mapping[self.km.predict(data)].values
         return pd.Series(data=classes, index=data_scaled.major_axis)
 
     def clus_centroids_df(self):
+        """
+        cluster centroids in PCA space, extra parameters in separate DataFrame
+        """
         centroids = self.km.cluster_centers_
         n_extra = len(self.params_extra)
         if n_extra < 1:
@@ -232,6 +241,9 @@ class VPC:
         return pd.DataFrame(centroids.T), extra_df
 
     def clus_centroids_pn(self):
+        """
+        cluster centroids, extra parameters in separate DataFrame
+        """
         clus_centroids, extra = self.clus_centroids_df()
         n_levels = clus_centroids.shape[0]
         n_radarparams = self.params.size
@@ -253,6 +265,7 @@ class VPC:
         metadata = dict(fields=data_scaled.items.values,
                         hlimits=(data_scaled.minor_axis.min(),
                                  data_scaled.minor_axis.max()))
+        """prepare data for clustering or classification"""
         rw = self.radar_weight_factors
         if rw is not None:
             for field, weight_factor in rw.items():
