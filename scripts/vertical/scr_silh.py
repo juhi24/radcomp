@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, classification
 from j24.tools import notify
-from conf import SCHEME_ID_MELT, SCHEME_ID_SNOW, CASES_MELT, CASES_SNOW, P1_FIG_DIR
+import conf
 
 
 vpc_conf_snow = dict(basename = 'snow',
@@ -23,7 +23,7 @@ vpc_conf_snow = dict(basename = 'snow',
 vpc_conf_rain = dict(basename = 'mlt2',
                      params=['ZH', 'zdr', 'kdp'],
                      hlimits=(190, 10e3),
-                     n_eigens=18,
+                     n_eigens=16,
                      reduced=True,
                      use_temperature=False,
                      radar_weight_factors=dict())
@@ -69,16 +69,13 @@ def score_analysis(cc, **kws):
 
 
 if __name__ == '__main__':
-    case_set = CASES_SNOW
-    scheme_id = SCHEME_ID_SNOW
-    vpc_conf = vpc_conf_snow
+    scheme_id = conf.SCHEME_ID_MELT
+    vpc_conf = vpc_conf_rain
     plt.close('all')
-    cases = multicase.read_cases(case_set)
-    #cases = cases[cases.ml_ok.astype(bool)]
+    cases = conf.init_cases(season='snow')
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
     del(cases)
-    fig, ax = plt.subplots()
-    score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
+    fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
     fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
-    savefile = path.join(P1_FIG_DIR, fname)
+    savefile = path.join(conf.P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')

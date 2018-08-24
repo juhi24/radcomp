@@ -12,8 +12,6 @@ from j24 import ensure_join
 save_plots = True
 train = True
 
-cases = multicase.read_cases('melting')
-cases = cases[cases.ml_ok.fillna(0).astype(bool)]
 basename = 'mlt2'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (290, 10e3)
@@ -32,6 +30,8 @@ if __name__ == '__main__':
                                 reduced=reduced,
                                 radar_weight_factors=radar_weight_factors,
                                 basename=basename, n_clusters=n_clusters)
+    cases = multicase.read_cases('melting')
+    cases = cases[cases.ml_ok.fillna(0).astype(bool)]
     c = multicase.MultiCase.by_combining(cases, class_scheme=scheme, has_ml=True)
     if train:
         c.train()

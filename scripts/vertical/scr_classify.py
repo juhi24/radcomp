@@ -18,10 +18,8 @@ if __name__ == '__main__':
     plt.close('all')
     case_set = conf.CASES_MELT
     name = conf.SCHEME_ID_MELT
-    cases = multicase.read_cases(case_set)
-    #cases = cases[cases.ml_ok.astype(bool)]
+    cases = conf.init_cases(cases_id=case_set)
     results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
-    #c = cases.case['140303']
     for i, c in cases.case.iteritems():
         print(i)
         try:
@@ -41,3 +39,4 @@ if __name__ == '__main__':
             fname = path.join(results_dir, c.name()+'.png')
             fig.savefig(fname, bbox_inches='tight')
             plt.close(fig)
+            del(c)
