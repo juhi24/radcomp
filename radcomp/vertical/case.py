@@ -758,3 +758,8 @@ class Case:
         count.name = 'count'
         return count
 
+    def silhouette_coef(self):
+        """silhouette coefficient of each profile"""
+        from sklearn.metrics import silhouette_samples
+        sh_arr = silhouette_samples(self.class_scheme.data, self.classes)
+        return pd.Series(index=self.classes.index, data=sh_arr)
