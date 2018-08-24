@@ -73,7 +73,9 @@ def plot_class_streak_counts(cases, ax=None, order=None):
     plotting.bar_plot_colors(ax, order, class_color_fun=c.class_color, cm=plotting.cm_blue())
     ax.grid(axis='y')
     ax.set_ylabel('avg. occurrence\nstreak')
-    ax.set_ylim(bottom=0, top=8)
+    ax.set_ylim(bottom=1, top=5)
+    ax.set_yticks((1,2,3,4,5))
+    ax.set_yticklabels((1,'',3,'',5))
     return ax
 
 
@@ -129,14 +131,18 @@ def plot_occ_in_cases(cases, order, ax=None):
     plotting.bar_plot_colors(ax, order, class_color_fun=c.class_color,
                              cm=plotting.cm_blue())
     ax.set_ylabel('Occurrence\nin % of events')
+    ax.grid(axis='y')
+    ax.set_ylim(bottom=0, top=100)
+    ax.set_yticks((0, 25, 50, 75, 100))
+    ax.set_yticklabels((0, '', 50, '', 100))
     return ax
 
 
 if __name__ == '__main__':
     save = True
     plt.close('all')
-    cases_r, cc_r = init_rain()
-    cases_s, cc_s = init_snow()
+    #cases_r, cc_r = init_rain()
+    #cases_s, cc_s = init_snow()
     rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': True},
                 free_ax=3)
     snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=4)

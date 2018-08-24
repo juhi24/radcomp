@@ -10,14 +10,14 @@ from j24 import ensure_join
 
 
 save_plots = True
-train = False
+train = True
 
 cases = multicase.read_cases('melting')
 cases = cases[cases.ml_ok.fillna(0).astype(bool)]
 basename = 'mlt2'
 params = ['ZH', 'zdr', 'kdp']
 hlimits = (290, 10e3)
-n_eigens = 18
+n_eigens = 16
 n_clusters = 17
 reduced = True
 use_temperature = False

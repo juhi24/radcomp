@@ -14,10 +14,10 @@ save = True
 
 
 if __name__ == '__main__':
-    plt.ion()
+    plt.ioff()
     plt.close('all')
-    case_set = 'erad18_snow'
-    name = conf.SCHEME_ID_SNOW
+    case_set = conf.CASES_MELT
+    name = conf.SCHEME_ID_MELT
     cases = multicase.read_cases(case_set)
     #cases = cases[cases.ml_ok.astype(bool)]
     results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
