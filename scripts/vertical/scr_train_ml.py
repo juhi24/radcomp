@@ -7,29 +7,18 @@ import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, classification, RESULTS_DIR
 from j24 import ensure_join
+from conf import VPC_PARAMS_RAIN
 
 
 save_plots = True
-train = True
-
-basename = 'mlt2'
-params = ['ZH', 'zdr', 'kdp']
-hlimits = (290, 10e3)
-n_eigens = 16
-n_clusters = 17
-reduced = True
-use_temperature = False
-radar_weight_factors = dict()
+train = False
 
 
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
     np.random.seed(1)
-    scheme = classification.VPC(params=params, hlimits=hlimits, n_eigens=n_eigens,
-                                reduced=reduced,
-                                radar_weight_factors=radar_weight_factors,
-                                basename=basename, n_clusters=n_clusters)
+    scheme = classification.VPC(**VPC_PARAMS_RAIN)
     cases = multicase.read_cases('melting')
     cases = cases[cases.ml_ok.fillna(0).astype(bool)]
     c = multicase.MultiCase.by_combining(cases, class_scheme=scheme, has_ml=True)

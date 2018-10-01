@@ -7,29 +7,20 @@ import matplotlib.pyplot as plt
 from os import path
 from radcomp.vertical import multicase, classification, RESULTS_DIR
 from j24 import ensure_join
+from conf import VPC_PARAMS_SNOW
 
 
 save_plots = True
 train = True
 save_scheme = True
 
-cases = multicase.read_cases('snow')
-vpc_params = dict(basename='snow',
-                  params=['ZH', 'zdr', 'kdp'],
-                  hlimits=(190, 10e3),
-                  n_eigens=22,
-                  n_clusters=23,
-                  reduced=True,
-                  use_temperature=True,
-                  t_weight_factor=0.8,
-                  radar_weight_factors=dict(kdp=1.3))
-
 
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
     np.random.seed(1)
-    scheme = classification.VPC(**vpc_params)
+    cases = multicase.read_cases('snow')
+    scheme = classification.VPC(**VPC_PARAMS_SNOW)
     c = multicase.MultiCase.by_combining(cases, class_scheme=scheme)
     if train:
         c.train()

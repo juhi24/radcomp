@@ -11,29 +11,13 @@ from j24.tools import notify
 import conf
 
 
-vpc_conf_snow = dict(basename = 'snow',
-                     params=['ZH', 'zdr', 'kdp'],
-                     hlimits=(190, 10e3),
-                     n_eigens=22,
-                     reduced=True,
-                     use_temperature=True,
-                     t_weight_factor=0.8,
-                     radar_weight_factors=dict(zdr=0.9, kdp=1.4))
-
-vpc_conf_rain = dict(basename = 'mlt2',
-                     params=['ZH', 'zdr', 'kdp'],
-                     hlimits=(190, 10e3),
-                     n_eigens=16,
-                     reduced=True,
-                     use_temperature=False,
-                     radar_weight_factors=dict())
-
-
-def silh_score_avgs(cc, n_iter=10, vpc_conf=vpc_conf_snow, **kws):
+def silh_score_avgs(cc, n_iter=10, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
     scores = pd.DataFrame()
+    vconf = vpc_conf.copy()
+    vconf.pop('n_clusters')
     for i in range(n_iter):
         for n_classes in range(10, 27):
-            scheme = classification.VPC(n_clusters=n_classes, **vpc_conf)
+            scheme = classification.VPC(n_clusters=n_classes, **vconf)
             cc.class_scheme = scheme
             cc.train(quiet=True)
             cc.classify()
@@ -69,13 +53,13 @@ def score_analysis(cc, **kws):
 
 
 if __name__ == '__main__':
-    scheme_id = conf.SCHEME_ID_MELT
-    vpc_conf = vpc_conf_rain
+    scheme_id = conf.SCHEME_ID_SNOW
+    vpc_conf = conf.VPC_PARAMS_SNOW
     plt.close('all')
     cases = conf.init_cases(season='snow')
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
     del(cases)
-    fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
+    fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
     fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
     savefile = path.join(conf.P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')

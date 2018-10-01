@@ -14,6 +14,25 @@ SCHEME_ID_MELT = 'mlt2_16eig17clus_pca'
 CASES_SNOW = 'snow'
 CASES_MELT = 'melting'
 
+VPC_PARAMS_SNOW = dict(basename='snow',
+                       params=['ZH', 'zdr', 'kdp'],
+                       hlimits=(190, 10e3),
+                       n_eigens=22,
+                       n_clusters=23,
+                       reduced=True,
+                       use_temperature=True,
+                       t_weight_factor=0.8,
+                       radar_weight_factors=dict(kdp=1.3))
+
+VPC_PARAMS_RAIN = dict(basename='mlt2',
+                       params=['ZH', 'zdr', 'kdp'],
+                       hlimits=(290, 10e3),
+                       n_eigens=16,
+                       n_clusters=17,
+                       reduced=True,
+                       use_temperature=False,
+                       radar_weight_factors=dict())
+
 P1_FIG_DIR = path.join(RESULTS_DIR, 'paper1')
 
 
