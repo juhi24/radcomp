@@ -15,32 +15,33 @@ from os import path
 from datetime import datetime
 
 
-def main(pathIn, pathOut):
+def calibration(radar, field_name, addition):
+    """change radar object calibration by adding a constant value"""
+    field = radar.fields[field_name].copy()
+    field['data'] += addition
+    radar.fields.update({field_name: field})
+
+
+def main(pathIn, pathOut, hmax=15000):
     """Extract profiles and save as mat."""
     file_indx = 0
     files = np.sort(glob.glob(path.join(pathIn, "*RHI_HV*.raw")))
     nfile = len(files)
-
-    zh_vp    = np.zeros([nfile, 300])
-    zdr_vp   = np.zeros([nfile, 300])
-    kdp_vp   = np.zeros([nfile, 300])
-    rho_vp   = np.zeros([nfile, 300])
-    dp_vp    = np.zeros([nfile, 300])
+    n_hbins = 301
+    zh_vp    = np.zeros([nfile, n_hbins])
+    zdr_vp   = np.zeros([nfile, n_hbins])
+    kdp_vp   = np.zeros([nfile, n_hbins])
+    rho_vp   = np.zeros([nfile, n_hbins])
+    dp_vp    = np.zeros([nfile, n_hbins])
     ObsTime  = []
-    height   = np.linspace(0,15000,300)
+    height   = np.linspace(0, hmax, n_hbins)
     for filename in files:
         try: ## reading radar data
             radar = pyart.io.read(filename)
 
-            ### Fixing Zdr calibration
-            zdr= copy.deepcopy(radar.fields['differential_reflectivity'])
-            zdr['data'] = zdr['data'] + 0.5
-            radar.fields.update({'differential_reflectivity': zdr})
-
-            ### Fixing calibration of Zh
-            zh= copy.deepcopy(radar.fields['reflectivity'])
-            zh['data'] = zh['data'] + 3
-            radar.fields.update({'reflectivity': zh})
+            ### Fixing calibration of ZDR ad ZH
+            calibration(radar, 'differential_reflectivity', 0.5)
+            calibration(radar, 'reflectivity', 3)
 
             # correcting for the antenna transition
             if radar.elevation['data'][0] > 90.0:
