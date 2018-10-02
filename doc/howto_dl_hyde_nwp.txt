@@ -1,0 +1,2 @@
+
+http://cloudnet.fmi.fi/cgi-bin/cloudnetdata.cgi?date=20160316&type=model&product=icon-iglo-12-23&site=hyytiala
