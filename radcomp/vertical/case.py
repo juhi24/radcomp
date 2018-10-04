@@ -223,6 +223,13 @@ class Case:
         pn = dt2pn(t0, t1, kdpmax=kdpmax)
         return cls(data=pn, **kws)
 
+    @classmethod
+    def from_mat(cls, matfile, **kws):
+        """Case object from a single mat file"""
+        pn = vprhimat2pn(matfile)
+        data = prepare_pn(pn)
+        return cls(data=data, **kws)
+
     def name(self, **kws):
         """date range based id"""
         return case_id_fmt(self.t_start(), self.t_end(), **kws)
