@@ -46,7 +46,29 @@ def interp(h_target, h_orig, var, agg_fun=np.nanmedian):
     return np.interp(h_target, h_orig, var_agg)
 
 
-def main(pathIn, pathOut, hmax=15000):
+def fix_elevation(radar):
+    """Correct elevation for antenna transition."""
+    if radar.elevation['data'][0] > 90.0:
+       radar.elevation['data'][0] = 0.0
+    if radar.elevation['data'][1] > 90.0:
+       radar.elevation['data'][1] = 0.0
+
+
+def extract_radar_vars(radar, recalculate_kdp=True):
+    """Extract radar variables."""
+    ZH  = radar.fields['reflectivity'].copy()['data']
+    ZDR = radar.fields['differential_reflectivity'].copy()['data']
+    RHO = radar.fields['cross_correlation_ratio'].copy()['data']
+    DP = radar.fields['differential_phase'].copy()['data']
+    if recalculate_kdp:
+        kdp_m = pyart.retrieve.kdp_maesaka(radar)
+        KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=ZH.mask)
+    else:
+        KDP = radar.fields['specific_differential_phase'].copy()['data']
+    return dict(zh=ZH, zdr=ZDR, kdp=KDP, rho=RHO, dp=DP)
+
+
+def main(pathIn, pathOut, hmax=15000, r_agg=1e3):
     """Extract profiles and save as mat."""
     file_indx = 0
     files = np.sort(glob(path.join(pathIn, "*RHI_HV*.raw")))
@@ -63,75 +85,48 @@ def main(pathIn, pathOut, hmax=15000):
         try: ## reading radar data
             print(filename)
             radar = pyart.io.read(filename)
-
-            ### Fixing calibration of ZDR ad ZH
             calibration(radar, 'differential_reflectivity', 0.5)
             calibration(radar, 'reflectivity', 3)
-
-            # correcting for the antenna transition
-            if radar.elevation['data'][0] > 90.0:
-               radar.elevation['data'][0] = 0.0
-
-            if radar.elevation['data'][1] > 90.0:
-               radar.elevation['data'][1] = 0.0
+            fix_elevation(radar)
         except:
-            print("print could not read data")
+            print("could not read data")
             continue
-        try:
-            # Slant range
-            #r = np.sqrt(np.power(display.x,2) + np.power(display.y,2))
-            r = radar.gate_x['data']
-            r_hyde = R_IKA_HYDE
-            margin = 1e3
-            rmin = r_hyde - margin
-            rmax = r_hyde + margin
+        rdr_vars = extract_radar_vars(radar)
 
-            # Extracting radar variables
-            ZH  = radar.fields['reflectivity'].copy()['data']
-            ZDR = radar.fields['differential_reflectivity'].copy()['data']
-            #KDP = radar.fields['specific_differential_phase'].copy()['data']
-            RHO = radar.fields['cross_correlation_ratio'].copy()['data']
-            DP = radar.fields['differential_phase'].copy()['data']
-            kdp_m = pyart.retrieve.kdp_maesaka(radar)
-            KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=ZH.mask)
-            for var in [ZH, ZDR, KDP, RHO]:
-                var.set_fill_value(np.nan)
-                var.mask[r<=rmin] = True
-                var.mask[r>=rmax] = True
-            ZH = ZH.filled()
-            ZDR = ZDR.filled()
-            KDP = KDP.filled()
-            RHO = RHO.filled()
-            DP = DP.filled()
+        r = radar.gate_x['data'] # horizontal range
+        r_hyde = R_IKA_HYDE
+        rmin = r_hyde - r_agg
+        rmax = r_hyde + r_agg
+        for key in ['zh', 'zdr', 'kdp', 'rho']:
+            var = rdr_vars[key]
+            var.set_fill_value(np.nan)
+            var.mask[r<=rmin] = True
+            var.mask[r>=rmax] = True
+            rdr_vars.update({key: var.filled()})
 
-            diff_r = np.abs(r[0,:] - r_hyde)
-            indx = diff_r.argmin()
-            #hght = display.z[:,indx]
-            hght = radar.gate_z['data'][:, indx]
-            #dr = np.abs(r-r_hyde)
-            #ix = dr.argmin(axis=1)
-            #hght = radar.gate_z['data'][range(ix.size),ix]
+        diff_r = np.abs(r[0,:] - r_hyde)
+        indx = diff_r.argmin()
+        hght = radar.gate_z['data'][:, indx]
+        #dr = np.abs(r-r_hyde)
+        #ix = dr.argmin(axis=1)
+        #hght = radar.gate_z['data'][range(ix.size),ix]
 
-            agg_fun = np.nanmedian
-            def agg_fun_db(x, **kws):
-                if agg_fun == np.nanmedian:
-                    return agg_fun(x, **kws)
-                return lin_agg(x, agg_fun=agg_fun, **kws)
-            zh_vp[file_indx,:]  = interp(height, hght, ZH, agg_fun_db)
-            zdr_vp[file_indx,:] = interp(height, hght, ZDR, agg_fun_db)
-            kdp_vp[file_indx,:] = interp(height, hght, KDP, agg_fun)
-            rho_vp[file_indx,:] = interp(height, hght, RHO, agg_fun)
-            dp_vp[file_indx,:]  = interp(height, hght, DP, agg_fun)
+        agg_fun = np.nanmedian
+        def agg_fun_db(x, **kws):
+            """aggregation of db-scale variables"""
+            if agg_fun == np.nanmedian:
+                return agg_fun(x, **kws)
+            return lin_agg(x, agg_fun=agg_fun, **kws)
+        zh_vp[file_indx,:]  = interp(height, hght, rdr_vars['zh'], agg_fun_db)
+        zdr_vp[file_indx,:] = interp(height, hght, rdr_vars['zdr'], agg_fun_db)
+        kdp_vp[file_indx,:] = interp(height, hght, rdr_vars['kdp'], agg_fun)
+        rho_vp[file_indx,:] = interp(height, hght, rdr_vars['rho'], agg_fun)
+        dp_vp[file_indx,:]  = interp(height, hght, rdr_vars['dp'], agg_fun)
 
-            tstr = path.basename(filename)[0:12]
-            ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
-            file_indx += 1
-        except Exception as error:
-            print(str(error))
-            print("print could not plot data")
-            raise error
-            continue
-    fname_supl = 'IKA_vprhi_1km_median_maesaka'
+        tstr = path.basename(filename)[0:12]
+        ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
+        file_indx += 1
+    fname_supl = 'IKA_vprhi_1km_median_m'
     time_filename = path.basename(filename)[0:8]
     fileOut = path.join(pathOut, time_filename + '_' + fname_supl + '.mat')
     print(fileOut)

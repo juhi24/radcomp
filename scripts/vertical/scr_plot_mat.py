@@ -14,10 +14,11 @@ if __name__ == '__main__':
     #datadir = path.expanduser('~/DATA/IKA/test')
     vpdir = path.expanduser('~/results/radcomp/vertical/vp_dmitri')
     vpfiles = []
-    vpfiles.append(path.join(vpdir, '20160818_IKA_VP_from_RHI.mat'))
-    vpfiles.append(path.join(vpdir, '20160818_IKA_VP_from_RHI_1km_median.mat'))
-    vpfiles.append(path.join(vpdir, '20160818_IKA_VP_from_RHI_1km_mean.mat'))
+    #vpfiles.append(path.join(vpdir, '20160818_IKA_VP_from_RHI.mat'))
+    #vpfiles.append(path.join(vpdir, '20160818_IKA_VP_from_RHI_1km_median.mat'))
+    #vpfiles.append(path.join(vpdir, '20160818_IKA_VP_from_RHI_1km_mean.mat'))
     vpfiles.append(path.join(vpdir, '20160818_IKA_VP_from_RHI_1km_median_maesaka.mat'))
+    vpfiles.append(path.join(vpdir, '20160818_IKA_vprhi_1km_median_m.mat'))
     for vpfile in vpfiles:
         c = case.Case.from_mat(vpfile)
         figc, axarrc = c.plot(params=['ZH', 'KDP', 'kdp', 'ZDR', 'zdr', 'RHO'],
