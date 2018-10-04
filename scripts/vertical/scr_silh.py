@@ -53,13 +53,14 @@ def score_analysis(cc, **kws):
 
 
 if __name__ == '__main__':
-    scheme_id = conf.SCHEME_ID_SNOW
-    vpc_conf = conf.VPC_PARAMS_SNOW
+    scheme_id = conf.SCHEME_ID_MELT
+    vpc_conf = conf.VPC_PARAMS_RAIN
     plt.close('all')
     cases = conf.init_cases(season='snow')
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
     del(cases)
-    fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
+    #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
+    fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
     fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
     savefile = path.join(conf.P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')

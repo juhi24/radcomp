@@ -20,8 +20,13 @@ def equalize_ker_zmin(nc0, nc1):
 
 
 def db2lin(db):
-    """Decibels to linear scale."""
-    return 10.**(db/10.)
+    """decibels to linear scale"""
+    return np.power(10, db/10)
+
+
+def lin2db(lin):
+    """linear to decibel scale"""
+    return 10*np.log10(lin)
 
 
 class RADXgrid:

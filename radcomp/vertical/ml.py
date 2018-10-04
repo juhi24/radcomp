@@ -111,7 +111,7 @@ def fltr_ml_limits(limits, rho):
     """filter ml range"""
     lims = []
     for lim in limits:
-        lim = filtering.fltr_rolling_median_thresh(lim, threshold=800)
+        lim = filtering.fltr_rolling_median_thresh(lim, threshold=800) # free param
         lim = filtering.fltr_no_hydrometeors(lim, rho)
         lims.append(lim)
     return lims
