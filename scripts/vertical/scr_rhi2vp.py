@@ -1,7 +1,7 @@
 # coding: utf-8
 """Extract vertical profiles over Hyytiälä from IKA RHI.
 
-Adapted from a script by Dmitri Moisseev.
+Authors: Dmitri Moisseev and Jussi Tiira
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
@@ -68,7 +68,8 @@ def extract_radar_vars(radar, recalculate_kdp=True):
     return dict(zh=ZH, zdr=ZDR, kdp=KDP, rho=RHO, dp=DP)
 
 
-def main(pathIn, pathOut, hmax=15000, r_agg=1e3):
+def main(pathIn, pathOut, hmax=15000, agg_fun=np.nanmedian, r_agg=1e3,
+         fname_supl='IKA_vprhi'):
     """Extract profiles and save as mat."""
     file_indx = 0
     files = np.sort(glob(path.join(pathIn, "*RHI_HV*.raw")))
@@ -111,7 +112,6 @@ def main(pathIn, pathOut, hmax=15000, r_agg=1e3):
         #ix = dr.argmin(axis=1)
         #hght = radar.gate_z['data'][range(ix.size),ix]
 
-        agg_fun = np.nanmedian
         def agg_fun_db(x, **kws):
             """aggregation of db-scale variables"""
             if agg_fun == np.nanmedian:
@@ -126,7 +126,6 @@ def main(pathIn, pathOut, hmax=15000, r_agg=1e3):
         tstr = path.basename(filename)[0:12]
         ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
         file_indx += 1
-    fname_supl = 'IKA_vprhi_1km_median_m'
     time_filename = path.basename(filename)[0:8]
     fileOut = path.join(pathOut, time_filename + '_' + fname_supl + '.mat')
     print(fileOut)
