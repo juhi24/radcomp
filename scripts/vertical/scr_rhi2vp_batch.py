@@ -28,9 +28,11 @@ def read_filelist(listfile):
 
 if __name__ == '__main__':
     home = path.expanduser('~')
+    datapath = path.join(home, 'mnt')
     resultsdir = path.join(home, 'DATA1', 'vprhi')
     listfile = path.join(home, 'ika_rhi.list')
     files = read_filelist(listfile)
     for dirname in files.dirname.unique():
-        rhi2vp(dirname, resultsdir)
+        datadir = path.join(datapath, dirname)
+        rhi2vp(datadir, resultsdir)
 
