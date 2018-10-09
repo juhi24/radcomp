@@ -102,7 +102,7 @@ setup(
     },
 
     dependency_links=[
-        'git+https://github.com/juhi24/j24py.git'
+        'git+github.com/juhi24/j24py.git'
     ],
 
     # If there are data files included in your packages that need to be
