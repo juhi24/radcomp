@@ -30,7 +30,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version='0.1.0',
 
-    description='Collection of winter precipitation data analysis tools',
+    description='Collection of precipitation data analysis tools',
     long_description=long_description,
 
     # The project's main homepage.
@@ -41,7 +41,7 @@ setup(
     author_email='jussi@j24.fi',
 
     # Choose your license
-    license='All rights reserved',
+    license='MIT',
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -56,7 +56,7 @@ setup(
         'Topic :: Scientific/Engineering :: Atmospheric Science',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: Other/Proprietary License',
+        'License :: OSI Approved :: MIT License',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
@@ -87,7 +87,8 @@ setup(
         #'scikit-learn',
         #'scipy',
         #'matplotlib',
-        'numpy'
+        'numpy',
+        'j24py'
         #'netCDF4'
     ],
 
@@ -99,6 +100,10 @@ setup(
         'dev': [],
         'test': [],
     },
+
+    dependency_links=[
+        'git+https://github.com/juhi24/j24py.git'
+    ],
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
