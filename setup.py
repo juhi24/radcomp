@@ -83,12 +83,12 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'pandas',
-        'scikit-learn',
-        'scipy',
-        'matplotlib',
-        'numpy',
-        'netCDF4'
+        #'pandas',
+        #'scikit-learn',
+        #'scipy',
+        #'matplotlib',
+        'numpy'
+        #'netCDF4'
     ],
 
     # List additional groups of dependencies here (e.g. development
