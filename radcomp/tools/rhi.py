@@ -41,10 +41,9 @@ def _interp(h_target, h_orig, var, agg_fun=np.nanmedian):
 
 def fix_elevation(radar):
     """Correct elevation for antenna transition."""
-    if radar.elevation['data'][0] > 90.0:
-       radar.elevation['data'][0] = 0.0
-    if radar.elevation['data'][1] > 90.0:
-       radar.elevation['data'][1] = 0.0
+    for i in [0, 1]:
+        if radar.elevation['data'][i] > 90.0:
+           radar.elevation['data'][i] = 0.0
 
 
 def extract_radar_vars(radar, recalculate_kdp=True):
@@ -72,16 +71,16 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
     zh_vp, zdr_vp, kdp_vp, rho_vp, dp_vp = (init.copy() for i in range(5))
     ObsTime  = []
     for file_indx, filename in enumerate(files):
-        try: ## reading radar data
-            print(filename)
+        print(filename)
+        try: # reading radar data
             radar = pyart.io.read(filename)
-            calibration(radar, 'differential_reflectivity', 0.5)
-            calibration(radar, 'reflectivity', 3)
-            fix_elevation(radar)
         except Exception as e:
             eprint('{fname} [read error] {e}'.format(fname=filename, e=e))
             continue
-        try:
+        calibration(radar, 'differential_reflectivity', 0.5)
+        calibration(radar, 'reflectivity', 3)
+        fix_elevation(radar)
+        try: # extracting variables
             rdr_vars = extract_radar_vars(radar)
         except Exception as e:
             eprint('{fname} [extract error] {e}'.format(fname=filename, e=e))
