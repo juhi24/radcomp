@@ -81,8 +81,11 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
         except Exception as e:
             eprint('{fname} [read error] {e}'.format(fname=filename, e=e))
             continue
-        rdr_vars = extract_radar_vars(radar)
-
+        try:
+            rdr_vars = extract_radar_vars(radar)
+        except Exception as e:
+            eprint('{fname} [extract error] {e}'.format(fname=filename, e=e))
+            continue
         r = radar.gate_x['data'] # horizontal range
         rmin = r_hyde - r_agg
         rmax = r_hyde + r_agg
