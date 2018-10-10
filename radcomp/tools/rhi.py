@@ -13,6 +13,7 @@ from glob import glob
 from os import path
 from datetime import datetime
 from radcomp.tools import db2lin, lin2db
+from j24 import eprint
 
 
 R_IKA_HYDE = 64450 # m
@@ -60,29 +61,25 @@ def extract_radar_vars(radar, recalculate_kdp=True):
     return dict(zh=ZH, zdr=ZDR, kdp=KDP, rho=RHO, dp=DP)
 
 
-def rhi2vp(pathIn, pathOut, hmax=15000, agg_fun=np.nanmedian, r_agg=1e3,
+def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
          fname_supl='IKA_vprhi', r_hyde=R_IKA_HYDE):
     """Extract profiles and save as mat."""
-    file_indx = 0
+    n_hbins = 297
+    hbins = hbins or np.linspace(200, 15000, n_hbins)
     files = np.sort(glob(path.join(pathIn, "*RHI_HV*.raw")))
     nfile = len(files)
-    n_hbins = 301
-    zh_vp    = np.zeros([nfile, n_hbins])
-    zdr_vp   = np.zeros([nfile, n_hbins])
-    kdp_vp   = np.zeros([nfile, n_hbins])
-    rho_vp   = np.zeros([nfile, n_hbins])
-    dp_vp    = np.zeros([nfile, n_hbins])
+    init = np.zeros([nfile, n_hbins])
+    zh_vp, zdr_vp, kdp_vp, rho_vp, dp_vp = (init.copy() for i in range(5))
     ObsTime  = []
-    height   = np.linspace(0, hmax, n_hbins)
-    for filename in files:
+    for file_indx, filename in enumerate(files):
         try: ## reading radar data
             print(filename)
             radar = pyart.io.read(filename)
             calibration(radar, 'differential_reflectivity', 0.5)
             calibration(radar, 'reflectivity', 3)
             fix_elevation(radar)
-        except:
-            print("could not read data")
+        except Exception as e:
+            eprint('{fname} [read error] {e}'.format(fname=filename, e=e))
             continue
         rdr_vars = extract_radar_vars(radar)
 
@@ -95,7 +92,6 @@ def rhi2vp(pathIn, pathOut, hmax=15000, agg_fun=np.nanmedian, r_agg=1e3,
             var.mask[r<=rmin] = True
             var.mask[r>=rmax] = True
             rdr_vars.update({key: var.filled()})
-
         #diff_r = np.abs(r[0,:] - r_hyde)
         #indx = diff_r.argmin()
         #hght = radar.gate_z['data'][:, indx]
@@ -108,17 +104,17 @@ def rhi2vp(pathIn, pathOut, hmax=15000, agg_fun=np.nanmedian, r_agg=1e3,
             if agg_fun == np.nanmedian:
                 return agg_fun(x, **kws)
             return lin_agg(x, agg_fun=agg_fun, **kws)
-        zh_vp[file_indx,:]  = _interp(height, hght, rdr_vars['zh'], agg_fun_db)
-        zdr_vp[file_indx,:] = _interp(height, hght, rdr_vars['zdr'], agg_fun_db)
-        kdp_vp[file_indx,:] = _interp(height, hght, rdr_vars['kdp'], agg_fun)
-        rho_vp[file_indx,:] = _interp(height, hght, rdr_vars['rho'], agg_fun)
-        dp_vp[file_indx,:]  = _interp(height, hght, rdr_vars['dp'], agg_fun)
+        zh_vp[file_indx,:]  = _interp(hbins, hght, rdr_vars['zh'], agg_fun_db)
+        zdr_vp[file_indx,:] = _interp(hbins, hght, rdr_vars['zdr'], agg_fun_db)
+        kdp_vp[file_indx,:] = _interp(hbins, hght, rdr_vars['kdp'], agg_fun)
+        rho_vp[file_indx,:] = _interp(hbins, hght, rdr_vars['rho'], agg_fun)
+        dp_vp[file_indx,:]  = _interp(hbins, hght, rdr_vars['dp'], agg_fun)
 
         tstr = path.basename(filename)[0:12]
         ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
-        file_indx += 1
     time_filename = path.basename(filename)[0:8]
     fileOut = path.join(pathOut, time_filename + '_' + fname_supl + '.mat')
     print(fileOut)
-    VP_RHI = {'ObsTime': ObsTime, 'ZH': zh_vp, 'ZDR': zdr_vp, 'KDP': kdp_vp, 'RHO': rho_vp, 'DP': dp_vp, 'height': height}
+    VP_RHI = {'ObsTime': ObsTime, 'ZH': zh_vp, 'ZDR': zdr_vp, 'KDP': kdp_vp,
+              'RHO': rho_vp, 'DP': dp_vp, 'height': hbins}
     sio.savemat(fileOut, {'VP_RHI':VP_RHI})
