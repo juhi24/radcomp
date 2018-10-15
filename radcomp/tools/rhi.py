@@ -53,7 +53,11 @@ def extract_radar_vars(radar, recalculate_kdp=True):
     RHO = radar.fields['cross_correlation_ratio'].copy()['data']
     DP = radar.fields['differential_phase'].copy()['data']
     if recalculate_kdp:
-        kdp_m = pyart.retrieve.kdp_maesaka(radar)
+        try:
+            kdp_m = pyart.retrieve.kdp_maesaka(radar)
+        except IndexError:
+            # outlier checking sometimes causes trouble (with weak kdp?)
+            kdp_m = pyart.retrieve.kdp_maesaka(radar, check_outliers=False)
         KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=ZH.mask)
     else:
         KDP = radar.fields['specific_differential_phase'].copy()['data']
@@ -61,7 +65,7 @@ def extract_radar_vars(radar, recalculate_kdp=True):
 
 
 def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
-         fname_supl='IKA_vprhi', r_hyde=R_IKA_HYDE):
+           fname_supl='IKA_vprhi', r_hyde=R_IKA_HYDE, overwrite=False):
     """Extract profiles and save as mat."""
     n_hbins = 297
     hbins = hbins or np.linspace(200, 15000, n_hbins)
@@ -70,6 +74,11 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
     init = np.zeros([nfile, n_hbins])
     zh_vp, zdr_vp, kdp_vp, rho_vp, dp_vp = (init.copy() for i in range(5))
     ObsTime  = []
+    time_filename = path.basename(files[0])[0:8]
+    fileOut = path.join(pathOut, time_filename + '_' + fname_supl + '.mat')
+    if path.exists(fileOut) and not overwrite:
+        print('{} [notice] file already exists, skipping.')
+        return
     for file_indx, filename in enumerate(files):
         print(filename)
         try: # reading radar data
@@ -114,8 +123,6 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
 
         tstr = path.basename(filename)[0:12]
         ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
-    time_filename = path.basename(filename)[0:8]
-    fileOut = path.join(pathOut, time_filename + '_' + fname_supl + '.mat')
     print(fileOut)
     VP_RHI = {'ObsTime': ObsTime, 'ZH': zh_vp, 'ZDR': zdr_vp, 'KDP': kdp_vp,
               'RHO': rho_vp, 'DP': dp_vp, 'height': hbins}
