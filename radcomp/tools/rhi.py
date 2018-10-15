@@ -53,7 +53,11 @@ def extract_radar_vars(radar, recalculate_kdp=True):
     RHO = radar.fields['cross_correlation_ratio'].copy()['data']
     DP = radar.fields['differential_phase'].copy()['data']
     if recalculate_kdp:
-        kdp_m = pyart.retrieve.kdp_maesaka(radar)
+        try:
+            kdp_m = pyart.retrieve.kdp_maesaka(radar)
+        except IndexError:
+            # outlier checking sometimes causes trouble (with weak kdp?)
+            kdp_m = pyart.retrieve.kdp_maesaka(radar, check_outliers=False)
         KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=ZH.mask)
     else:
         KDP = radar.fields['specific_differential_phase'].copy()['data']
