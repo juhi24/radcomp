@@ -12,7 +12,7 @@ from conf import VPC_PARAMS_SNOW
 
 save_plots = True
 train = True
-save_scheme = True
+save_scheme = False
 
 
 if __name__ == '__main__':

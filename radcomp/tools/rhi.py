@@ -77,7 +77,7 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
     time_filename = path.basename(files[0])[0:8]
     fileOut = path.join(pathOut, time_filename + '_' + fname_supl + '.mat')
     if path.exists(fileOut) and not overwrite:
-        print('{} [notice] file already exists, skipping.')
+        print('{} [notice] file already exists, skipping.'.format(fileOut))
         return
     for file_indx, filename in enumerate(files):
         print(filename)
