@@ -256,10 +256,11 @@ class Case:
         """data end time"""
         return self.data.minor_axis[-1]
 
-    def timestamps(self, round_index=False):
-        """data timestamps as Series"""
+    def timestamps(self, fill_value=None, round_index=False):
+        """Data timestamps as Series. Optionally filled with fill_value."""
         t = self.data.minor_axis
-        ts = pd.Series(index=t, data=t)
+        data = t if fill_value is None else np.full(t.size, fill_value)
+        ts = pd.Series(index=t, data=data)
         if round_index:
             return round_time_index(ts)
         return ts
@@ -301,6 +302,9 @@ class Case:
 
     def ml_limits(self, interpolate=True):
         """ML top using peak detection"""
+        if self.class_scheme is None:
+            nans = self.timestamps(fill_value=np.nan)
+            return nans.copy(), nans.copy()
         if 'MLI' not in self.data:
             self.prepare_mli(save=True)
         bot, top = ml.ml_limits(self.data['MLI'], self.data['RHO'])
