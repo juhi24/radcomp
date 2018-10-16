@@ -88,8 +88,8 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
             continue
         calibration(radar, 'differential_reflectivity', 0.5)
         calibration(radar, 'reflectivity', 3)
-        fix_elevation(radar)
         try: # extracting variables
+            fix_elevation(radar)
             rdr_vars = extract_radar_vars(radar)
         except Exception as e:
             eprint('{fname} [extract error] {e}'.format(fname=filename, e=e))
