@@ -14,7 +14,9 @@ from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
 from radcomp import arm, azs
 from j24 import home, daterange2str
 
-DATA_DIR = path.join(home(), 'DATA', 'vprhi')
+DATA_DIR = path.join(home(), 'DATA', 'vprhi2')
+#DATA_FILE_FMT = '%Y%m%d_IKA_VP_from_RHI.mat'
+DATA_FILE_FMT = '%Y%m%d_IKA_vprhi.mat'
 SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 
@@ -35,7 +37,7 @@ def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
 
 
 def dt2path(dt, datadir):
-    return path.join(datadir, dt.strftime('%Y%m%d_IKA_VP_from_RHI.mat'))
+    return path.join(datadir, dt.strftime(DATA_FILE_FMT))
 
 
 def vprhimat2pn(datapath):
@@ -61,7 +63,10 @@ def vprhimat2pn(datapath):
         if data_dict['ZH'].shape[1] == 96:
             # manouver to set correct timestamps when data missing
             t1 = t[0] + timedelta(hours=23, minutes=45)
-            dt = t1-t1.replace(hour=0, minute=0)
+            midnight = t1.replace(hour=0, minute=0)
+            if midnight <= t[0]:
+                midnight += timedelta(hours=24)
+            dt = t1-midnight
             dt_extra = timedelta(minutes=15-(dt.total_seconds()/60)%15)
             dt = dt + dt_extra
             t = pd.date_range(t[0]-dt, t1-dt, freq='15min')
