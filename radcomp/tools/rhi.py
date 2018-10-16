@@ -71,7 +71,7 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
     hbins = hbins or np.linspace(200, 15000, n_hbins)
     files = np.sort(glob(path.join(pathIn, "*RHI_HV*.raw")))
     nfile = len(files)
-    init = np.zeros([nfile, n_hbins])
+    init = np.full([nfile, n_hbins], np.nan)
     zh_vp, zdr_vp, kdp_vp, rho_vp, dp_vp = (init.copy() for i in range(5))
     ObsTime  = []
     time_filename = path.basename(files[0])[0:8]
