@@ -54,7 +54,21 @@ def vprhimat2pn(datapath):
     data_dict = {}
     for field in fields:
         data_dict[field] = data[field][0][0].T
-    return pd.Panel(data_dict, major_axis=h, minor_axis=t)
+    try:
+        return pd.Panel(data_dict, major_axis=h, minor_axis=t)
+    # sometimes t does not have all values
+    except ValueError as e:
+        if data_dict['ZH'].shape[1] == 96:
+            # manouver to set correct timestamps when data missing
+            t1 = t[0] + timedelta(hours=23, minutes=45)
+            dt = t1-t1.replace(hour=0, minute=0)
+            dt_extra = timedelta(minutes=15-(dt.total_seconds()/60)%15)
+            dt = dt + dt_extra
+            t = pd.date_range(t[0]-dt, t1-dt, freq='15min')
+            print('ObsTime missing values! Replacing with generated timestamps.')
+            return pd.Panel(data_dict, major_axis=h, minor_axis=t)
+        else:
+            raise e
 
 
 def fname_range(dt_start, dt_end):
