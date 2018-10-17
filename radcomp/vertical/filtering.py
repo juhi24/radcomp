@@ -8,7 +8,7 @@ from radcomp.vertical import NAN_REPLACEMENT
 
 # CONFIG
 MEDIAN_WINDOW_KDP = (20, 1)
-MEDIAN_WINDOW_ZDR = (5, 1)
+MEDIAN_WINDOW_ZDR = (10, 1)
 
 
 def dict_keys_lower(d):
