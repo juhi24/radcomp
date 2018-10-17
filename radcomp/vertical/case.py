@@ -19,6 +19,7 @@ DATA_DIR = path.join(home(), 'DATA', 'vprhi2')
 DATA_FILE_FMT = '%Y%m%d_IKA_vprhi.mat'
 SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
+DEFAULT_PARAMS = ['zh', 'zdr', 'kdp']
 
 
 def case_id_fmt(t_start, t_end=None, dtformat='{year}{month}{day}{hour}',
@@ -98,7 +99,7 @@ def data_range(dt_start, dt_end):
     return pd.concat(pns_out, axis=2).loc[:, :, dt_start:dt_end]
 
 
-def prepare_pn(pn, kdpmax=1):
+def prepare_pn(pn, kdpmax=np.nan):
     """Filter data and calculate extra parameters."""
     dr = pd.Series(pn.major_axis.values, index=pn.major_axis).diff().bfill()
     dr_km = dr/1000
@@ -110,9 +111,9 @@ def prepare_pn(pn, kdpmax=1):
     # remove extreme KDP values in the panel using a view
     kdp[kdp > kdpmax] = 0
     kdp[kdp<0] = 0
-    pn_new = filtering.fltr_zdr_using_rhohv(pn_new)
     pn_new = filtering.fltr_median(pn_new)
-    pn_new = filtering.fltr_ground_clutter_median(pn_new)
+    pn_new = filtering.fltr_nonmet(pn_new)
+    #pn_new = filtering.fltr_ground_clutter_median(pn_new)
     return pn_new
 
 
@@ -133,7 +134,7 @@ def fillna(dat, field=''):
     return data
 
 
-def prepare_data(pn, fields=['ZH', 'ZDR', 'kdp'], hlimits=(190, 10e3), kdpmax=None):
+def prepare_data(pn, fields=DEFAULT_PARAMS, hlimits=(190, 10e3), kdpmax=None):
     """Prepare data for classification. Scaling has do be done separately."""
     data = pn[fields, hlimits[0]:hlimits[1], :].transpose(0,2,1)
     if kdpmax is not None:
@@ -235,10 +236,11 @@ class Case:
     @classmethod
     def from_dtrange(cls, t0, t1, **kws):
         """Create a case from data between a time range."""
-        kdpmax = 0.5
+        #kdpmax = 0.5
+        kdpmax = 1
         if 'has_ml' in kws:
             if kws['has_ml']:
-                kdpmax = 1.2
+                kdpmax = 2
         pn = dt2pn(t0, t1, kdpmax=kdpmax)
         return cls(data=pn, **kws)
 
@@ -269,6 +271,12 @@ class Case:
         if round_index:
             return round_time_index(ts)
         return ts
+
+    def mask(self, raw=False):
+        """common data mask"""
+        if raw:
+            return self.data['ZH'].isnull()
+        return self.data['zh'].isnull()
 
     def load_classification(self, name=None, **kws):
         """Load a classification scheme based on its id, and classify."""
@@ -321,7 +329,7 @@ class Case:
         """Prepare melting layer indicator."""
         cl_data_scaled = self.scale_cl_data(force_no_crop=True)
         zdr = cl_data_scaled['zdr'].T
-        z = cl_data_scaled['ZH'].T
+        z = cl_data_scaled['zh'].T
         rho = self.data['RHO'].loc[z.index]
         mli = ml.indicator(zdr, z, rho)
         if save:
@@ -363,7 +371,7 @@ class Case:
             if self.class_scheme is not None:
                 params = self.class_scheme.params
             else:
-                params = ['ZH', 'zdr', 'kdp']
+                params = DEFAULT_PARAMS
         plot_classes = (self.classes is not None) and plot_classes
         plot_lwe = self.pluvio is not None and plot_lwe
         if plot_lwe:
@@ -638,7 +646,7 @@ class Case:
     def precip_classes(self):
         """select potentially precipitating classes"""
         pn = self.clus_centroids()[0]
-        zmean = pn.loc['ZH'].mean()
+        zmean = pn.loc['zh'].mean()
         return zmean[zmean>-9].index
 
     def precip_selection(self):

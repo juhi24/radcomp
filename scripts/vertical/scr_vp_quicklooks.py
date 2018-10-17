@@ -19,11 +19,11 @@ interactive = False
 
 
 def plot_quicklooks(cases_iterator, save=True, saveid='everything',
-                    params=None, **kws):
+                    params=None, savedir=None, **kws):
     """Plot and save quicklooks."""
-    params = params or ['ZH', 'zdr', 'kdp', 'RHO']
+    params = params or ['zh', 'zdr', 'kdp', 'RHO']
     if save:
-        savedir = ensure_join(RESULTS_DIR, 'quicklooks', saveid)
+        savedir = savedir or ensure_join(RESULTS_DIR, 'quicklooks', saveid)
     for caseid, c in cases_iterator:
         print(caseid)
         fig, _ = c.plot(params=params, plot_fr=False, plot_t=True,
@@ -76,6 +76,7 @@ if __name__ == '__main__':
     #write_dates(datelistfile, 'daily_quicklooks')
     #iterator = iterate_cases(casesname)
     datadir = path.expanduser('~/DATA/vprhi2')
+    savedir = ensure_join(datadir, 'quicklooks', 'viridis')
     iterator = iterate_mat2case(datadir)
     if interactive:
         plt.ion()
@@ -84,5 +85,5 @@ if __name__ == '__main__':
         plt.ioff()
         save = True
     plot_quicklooks(iterator, save=save, params=params, cmap='viridis',
-                    saveid='test15')
+                    savedir=savedir)
 

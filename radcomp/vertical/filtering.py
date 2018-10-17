@@ -7,9 +7,9 @@ from radcomp.vertical import NAN_REPLACEMENT
 
 
 # CONFIG
-MEDIAN_WINDOWS = {'KDP': (20, 1),
-                  'ZDR': (10, 1),
-                  'RHO': (10, 1)}
+MEDIAN_WINDOWS = {'KDP': (19, 1),
+                  'ZDR': (11, 1),
+                  'RHO': (25, 1)} # for rho filtering
 
 
 def dict_keys_lower(d):
@@ -41,7 +41,7 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
     for field in keys:
         view = pn_new[field].iloc[:heigth_px]
         fltrd = median_filter_df(view, param=field, fill=True,
-                                 nullmask=pn.ZH.isnull(), size=size)
+                                 nullmask=pn['zh'].isnull(), size=size)
         new_values = fltrd.iloc[:crop_px]
         selection = pn_new[field]>ground_threshold[field.upper()]
         selection.loc[:, selection.iloc[crop_px]] = False # not clutter
@@ -67,15 +67,12 @@ def fltr_median(pn, sizes=MEDIAN_WINDOWS):
     return pn_out
 
 
-def fltr_zdr_using_rhohv(pn):
-    """Filter high ZDR values where rhohv is low."""
-    pn_out = create_filtered_fields_if_missing(pn, ['ZDR'])
-    high_zdr = pn['ZDR'] > 3
-    low_rhohv = pn['RHO'] < 0.8
-    #high_zdr2 = pn['ZDR'] > 2
-    #low_rhohv2 = pn['RHO'] < 0.7
-    cond = (high_zdr & low_rhohv)# | (high_zdr2 & low_rhohv2)
-    pn_out['zdr'][cond] = np.nan
+def fltr_nonmet(pn, fields=['ZH', 'ZDR', 'KDP'], rholim=0.8):
+    """Filter nonmeteorological echoes based on rhohv."""
+    pn_out = create_filtered_fields_if_missing(pn, fields)
+    cond = pn_out['rho']<0.8
+    for field in fields:
+        pn_out[field.lower()] = pn_out[field.lower()].mask(cond)
     return pn_out
 
 

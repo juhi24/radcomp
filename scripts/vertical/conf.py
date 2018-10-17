@@ -14,8 +14,10 @@ SCHEME_ID_MELT = 'mlt2_16eig17clus_pca'
 CASES_SNOW = 'snow'
 CASES_MELT = 'melting'
 
+PARAMS = ['zh', 'zdr', 'kdp']
+
 VPC_PARAMS_SNOW = dict(basename='snow',
-                       params=['ZH', 'zdr', 'kdp'],
+                       params=PARAMS,
                        hlimits=(190, 10e3),
                        n_eigens=0.8,
                        n_clusters=23,
@@ -25,7 +27,7 @@ VPC_PARAMS_SNOW = dict(basename='snow',
                        radar_weight_factors=dict(kdp=1.3))
 
 VPC_PARAMS_RAIN = dict(basename='mlt2',
-                       params=['ZH', 'zdr', 'kdp'],
+                       params=PARAMS,
                        hlimits=(290, 10e3),
                        n_eigens=0.8,
                        n_clusters=17,
