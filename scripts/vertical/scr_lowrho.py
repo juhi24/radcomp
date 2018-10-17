@@ -8,7 +8,7 @@ from radcomp.vertical import multicase
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
-    params = ['ZH', 'ZDR', 'KDP', 'RHO']
+    params = ['ZH', 'ZDR', 'KDP', 'RHO', 'rho']
     cases = multicase.read_cases('lowrho')
     for cid, c in cases.case.iteritems():
         fig, _ = c.plot(plot_fr=False, plot_t=False, plot_azs=False,

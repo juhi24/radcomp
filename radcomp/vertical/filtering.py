@@ -7,8 +7,9 @@ from radcomp.vertical import NAN_REPLACEMENT
 
 
 # CONFIG
-MEDIAN_WINDOW_KDP = (20, 1)
-MEDIAN_WINDOW_ZDR = (10, 1)
+MEDIAN_WINDOWS = {'KDP': (20, 1),
+                  'ZDR': (10, 1),
+                  'RHO': (10, 1)}
 
 
 def dict_keys_lower(d):
@@ -52,11 +53,9 @@ def fltr_ground_clutter_median(pn, heigth_px=35, crop_px=20, size=(22, 2)):
     return pn_new
 
 
-def fltr_median(pn, window_kdp=MEDIAN_WINDOW_KDP,
-                window_zdr=MEDIAN_WINDOW_ZDR):
-    """Apply median filter on ZDR and KDP."""
+def fltr_median(pn, sizes=MEDIAN_WINDOWS):
+    """Apply median filter on selected fields."""
     pn_out = pn.copy()
-    sizes = {'ZDR': window_zdr, 'KDP': window_kdp} # filter window sizes
     # filtered field names are same as originals but in lower case
     keys = dict_keys_lower(sizes)
     new = create_filtered_fields_if_missing(pn_out, sizes.keys())[keys]
