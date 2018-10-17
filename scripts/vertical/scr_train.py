@@ -12,7 +12,9 @@ from conf import VPC_PARAMS_SNOW
 
 save_plots = True
 train = True
-save_scheme = False
+save_scheme = True
+
+VPC_PARAMS_SNOW.update({'n_clusters': 10, 'n_eigens': 3})
 
 
 if __name__ == '__main__':

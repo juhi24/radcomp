@@ -303,6 +303,7 @@ class VPC:
         data.index = data.index.round('1min')
         if extra_df is not None:
             data = pd.concat([data, extra_df*self.extra_weight_factor], axis=1)
+            data.dropna(inplace=True)
         if save:
             self.data = data
             self.params = metadata['fields']

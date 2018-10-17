@@ -11,8 +11,9 @@ from conf import VPC_PARAMS_RAIN
 
 
 save_plots = True
-train = False
+train = True
 
+VPC_PARAMS_RAIN.update({'n_clusters': 10, 'n_eigens': 3})
 
 if __name__ == '__main__':
     plt.ion()
