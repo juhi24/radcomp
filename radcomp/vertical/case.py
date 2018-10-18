@@ -14,9 +14,14 @@ from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
 from radcomp import arm, azs
 from j24 import home, daterange2str
 
-DATA_DIR = path.join(home(), 'DATA', 'vprhi2')
-#DATA_FILE_FMT = '%Y%m%d_IKA_VP_from_RHI.mat'
-DATA_FILE_FMT = '%Y%m%d_IKA_vprhi.mat'
+USE_LEGACY_DATA = False
+
+if USE_LEGACY_DATA:
+    DATA_DIR = path.join(home(), 'DATA', 'vprhi')
+    DATA_FILE_FMT = '%Y%m%d_IKA_VP_from_RHI.mat'
+else:
+    DATA_DIR = path.join(home(), 'DATA', 'vprhi2')
+    DATA_FILE_FMT = '%Y%m%d_IKA_vprhi.mat'
 SCALING_LIMITS = {'ZH': (-10, 30), 'zh': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 DEFAULT_PARAMS = ['zh', 'zdr', 'kdp']
@@ -113,6 +118,8 @@ def prepare_pn(pn, kdpmax=np.nan):
     kdp[kdp<0] = 0
     pn_new = filtering.fltr_median(pn_new)
     pn_new = filtering.fltr_nonmet(pn_new)
+    # ensure all small case keys are in place
+    pn_new = filtering.create_filtered_fields_if_missing(pn_new, DEFAULT_PARAMS)
     #pn_new = filtering.fltr_ground_clutter_median(pn_new)
     return pn_new
 
@@ -277,6 +284,11 @@ class Case:
         if raw:
             return self.data['ZH'].isnull()
         return self.data['zh'].isnull()
+
+    def param_label(self, param):
+        if param.lower() in self.class_scheme.params:
+            return param.lower()
+        return param.upper()
 
     def load_classification(self, name=None, **kws):
         """Load a classification scheme based on its id, and classify."""
@@ -649,7 +661,7 @@ class Case:
     def precip_classes(self):
         """select potentially precipitating classes"""
         pn = self.clus_centroids()[0]
-        zmean = pn.loc['zh'].mean()
+        zmean = pn.loc[self.param_label('zh')].mean()
         return zmean[zmean>-9].index
 
     def precip_selection(self):
