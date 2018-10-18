@@ -14,12 +14,14 @@ save_plots = True
 train = True
 save_scheme = True
 
-VPC_PARAMS_SNOW.update({'n_clusters': 10, 'n_eigens': 3})
+VPC_PARAMS_SNOW.update({'n_clusters': 10,
+                        'n_eigens': 3})#,
+                        #'params': ['ZH', 'ZDR', 'kdp']})
 
 
 if __name__ == '__main__':
     plt.ion()
-    plt.close('all')
+    #plt.close('all')
     np.random.seed(1)
     cases = multicase.read_cases('snow')
     scheme = classification.VPC(**VPC_PARAMS_SNOW)
@@ -31,7 +33,10 @@ if __name__ == '__main__':
     # Load classification and plot centroids
     c.load_classification()
     fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue')
-    c.scatter_class_pca(plot3d=True)
+    ax_sca = c.scatter_class_pca(plot3d=True)
+    ax_sca.set_xlim(-5, 20)
+    ax_sca.set_ylim(-5, 20)
+    ax_sca.set_zlim(-5, 20)
     fig_s, ax_s = plt.subplots()
     c.plot_silhouette(ax=ax_s, cols=(0, 1, 2))#, 'temp_mean'))
     if save_plots:
