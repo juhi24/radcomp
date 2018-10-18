@@ -17,7 +17,7 @@ from j24 import home, daterange2str
 DATA_DIR = path.join(home(), 'DATA', 'vprhi2')
 #DATA_FILE_FMT = '%Y%m%d_IKA_VP_from_RHI.mat'
 DATA_FILE_FMT = '%Y%m%d_IKA_vprhi.mat'
-SCALING_LIMITS = {'ZH': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
+SCALING_LIMITS = {'ZH': (-10, 30), 'zh': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
                   'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 DEFAULT_PARAMS = ['zh', 'zdr', 'kdp']
 
@@ -329,7 +329,10 @@ class Case:
         """Prepare melting layer indicator."""
         cl_data_scaled = self.scale_cl_data(force_no_crop=True)
         zdr = cl_data_scaled['zdr'].T
-        z = cl_data_scaled['zh'].T
+        try:
+            z = cl_data_scaled['zh'].T
+        except KeyError:
+            z = cl_data_scaled['ZH'].T
         rho = self.data['RHO'].loc[z.index]
         mli = ml.indicator(zdr, z, rho)
         if save:
@@ -360,7 +363,7 @@ class Case:
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
-             plot_snd=True, plot_classes=True, plot_lwe=True, snd_lvls=None,
+             plot_snd=False, plot_classes=True, plot_lwe=True, snd_lvls=None,
              **kws):
         """Visualize the case."""
         if raw:
