@@ -213,7 +213,7 @@ class VPC:
         self.training_data = training_data
         self.km, cl_arr = train(training_data, self.pca, reduced=self.reduced,
                                 n_clusters=self.n_clusters, **kws)
-        self.training_result = self.prep_classes(cl_arr, data.major_axis)
+        self.training_result = self.prep_classes(cl_arr, training_data.index)
 
     def prep_classes(self, cl_arr, index):
         """Map classes as Series"""
@@ -225,7 +225,7 @@ class VPC:
         """classify scaled observations"""
         data = self.prepare_data(data_scaled, **kws)
         cl_arr = self.km.predict(data)
-        classes = self.prep_classes(cl_arr, data_scaled.major_axis)
+        classes = self.prep_classes(cl_arr, data.index)
         tr = self.training_result
         td = self.training_data
         training_classes = tr.loc[tr.index.difference(classes.index)].copy()
@@ -304,6 +304,7 @@ class VPC:
         if extra_df is not None:
             data = pd.concat([data, extra_df*self.extra_weight_factor], axis=1)
             data.dropna(inplace=True)
+            data = data[~data.index.duplicated()]
         if save:
             self.data = data
             self.params = metadata['fields']
