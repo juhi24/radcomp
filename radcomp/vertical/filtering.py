@@ -7,9 +7,10 @@ from radcomp.vertical import NAN_REPLACEMENT
 
 
 # CONFIG
-MEDIAN_WINDOWS = {'KDP': (19, 1),
+MEDIAN_WINDOWS = {'ZH': (7, 1),
+                  'KDP': (19, 1),
                   'ZDR': (11, 1),
-                  'RHO': (25, 1)} # for rho filtering
+                  'RHO': (25, 1)} # for nonmet filtering
 
 
 def dict_keys_lower(d):
