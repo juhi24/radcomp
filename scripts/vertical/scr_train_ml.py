@@ -13,7 +13,7 @@ from conf import VPC_PARAMS_RAIN
 save_plots = True
 train = True
 
-#VPC_PARAMS_RAIN.update({'n_clusters': 10, 'n_eigens': 3})
+VPC_PARAMS_RAIN.update({'n_clusters': 15, 'radar_weight_factors': {'kdp': 0.8}, 'n_eigens': 18})
 
 if __name__ == '__main__':
     plt.ion()
@@ -33,9 +33,6 @@ if __name__ == '__main__':
                                                    sortby=None)
 
     ax_sca = c.scatter_class_pca(plot3d=True)
-    #ax_sca.set_xlim(-5, 20)
-    #ax_sca.set_ylim(-5, 20)
-    #ax_sca.set_zlim(-5, 20)
     fig_s, ax_s = plt.subplots()
     c.plot_silhouette(ax=ax_s)
     if save_plots:

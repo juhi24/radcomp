@@ -280,7 +280,7 @@ class VPC:
         rw = self.radar_weight_factors
         if rw is not None:
             for field, weight_factor in rw.items():
-                pn[field] = pn[field]/weight_factor
+                pn[field] /= weight_factor
         return pn, extra
 
     def prepare_data(self, data, extra_df=None, n_components=0, save=True):
@@ -292,7 +292,7 @@ class VPC:
         rw = self.radar_weight_factors
         if rw is not None:
             for field, weight_factor in rw.items():
-                data_scaled[field] = data_scaled[field]*weight_factor
+                data_scaled[field] *= weight_factor
         data_df = learn.pn2df(data_scaled)
         if self.pca is None:
             self.pca = pca_fit(data_df, n_components=n_components)

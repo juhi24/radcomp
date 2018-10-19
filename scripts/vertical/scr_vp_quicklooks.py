@@ -55,9 +55,9 @@ def iterate_cases(casesname):
     return cases.case.iteritems()
 
 
-def iterate_mat2case(datadir):
+def iterate_mat2case(datadir, fname_glob='*.mat'):
     """iterator over case objects from data files in a directory"""
-    datafiles = glob(path.join(datadir, '*.mat'))
+    datafiles = glob(path.join(datadir, fname_glob))
     for datafile in datafiles:
         cid = path.basename(datafile)[:8]
         try:
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     #iterator = iterate_cases(casesname)
     datadir = path.expanduser('~/DATA/vprhi2')
     savedir = ensure_join(datadir, 'quicklooks', 'viridis')
-    iterator = iterate_mat2case(datadir)
+    iterator = iterate_mat2case(datadir)#, fname_glob='201501*.mat')
     if interactive:
         plt.ion()
         save = False
