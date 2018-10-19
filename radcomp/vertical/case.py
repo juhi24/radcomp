@@ -114,7 +114,8 @@ def prepare_pn(pn, kdpmax=np.nan):
     pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
     kdp = pn_new['KDP'] # a view
     # remove extreme KDP values in the panel using a view
-    kdp[kdp > kdpmax] = 0
+    if USE_LEGACY_DATA:
+        kdp[kdp > kdpmax] = 0
     kdp[kdp<0] = 0
     pn_new = filtering.fltr_median(pn_new)
     pn_new = filtering.fltr_nonmet(pn_new)
@@ -243,11 +244,10 @@ class Case:
     @classmethod
     def from_dtrange(cls, t0, t1, **kws):
         """Create a case from data between a time range."""
-        #kdpmax = 0.5
-        kdpmax = 1
+        kdpmax = 0.5
         if 'has_ml' in kws:
             if kws['has_ml']:
-                kdpmax = 2
+                kdpmax = 1.3
         pn = dt2pn(t0, t1, kdpmax=kdpmax)
         return cls(data=pn, **kws)
 
