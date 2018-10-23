@@ -4,29 +4,9 @@ __metaclass__ = type
 
 from os import path
 
-import numpy as np
 import matplotlib.pyplot as plt
-import xarray as xr
 
 from radcomp.vertical import multicase
-
-
-def load_model_data(datafile, heights, times=None, variable='temperature'):
-    """"
-    Load model data from netcdf file and interpolate to given resolution
-    """
-    ds = xr.open_dataset(fname)
-    xh = ds['height']
-    xvar = ds[variable]
-    hmap = np.empty((xh.shape[0], heights.size))
-    for i, hrow in enumerate(xh):
-        hmap[i] = np.interp(heights, hrow, ds.level)
-    coords = {'time': ds.time, 'h': heights}
-    xmap = xr.DataArray(hmap, dims=['time', 'h'], coords=coords)
-    xvar_interp = xvar.interp(level=xmap, time=ds.time)
-    if times is not None:
-        xvar_interp = xvar_interp.interp(time=times)
-    return xvar_interp.to_dataframe()[variable].unstack().T
 
 
 if __name__ == '__main__':
