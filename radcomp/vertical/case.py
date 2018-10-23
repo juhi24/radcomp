@@ -42,7 +42,8 @@ def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
                          month_fmt=month_fmt, year_fmt=year_fmt)
 
 
-def dt2path(dt, datadir):
+def dt2path(dt, datadir=DATA_DIR):
+    """data file path by datetime"""
     return path.join(datadir, dt.strftime(DATA_FILE_FMT))
 
 
