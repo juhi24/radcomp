@@ -6,6 +6,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 
+from radcomp.tools import cloudnet
 from radcomp.vertical import multicase
 
 
@@ -14,9 +15,7 @@ if __name__ == '__main__':
     plt.close('all')
     cases = multicase.read_cases('t_model')
     c = cases.case[0]
-    fname = path.expanduser('~/DATA/hyde_model/gdas1/20140612_hyytiala_gdas1.nc')
-    df_t = load_model_data(fname, c.data.major_axis, c.data.minor_axis)
-    c.data['T'] = df_t-273.15
+    c.load_model_temperature()
     params = ['zh', 'zdr', 'kdp', 'T']
     fig, axarr = c.plot(plot_fr=False, plot_t=False, plot_azs=False,
                         plot_snd=False, cmap='viridis', params=params)

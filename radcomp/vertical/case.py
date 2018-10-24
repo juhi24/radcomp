@@ -8,10 +8,10 @@ from datetime import timedelta
 from scipy.io import loadmat
 from os import path
 from collections import OrderedDict
-from functools import partial
 from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
                               NAN_REPLACEMENT)
 from radcomp import arm, azs
+from radcomp.tools import strftime_date_range, cloudnet
 from j24 import home, daterange2str
 
 USE_LEGACY_DATA = False
@@ -40,11 +40,6 @@ def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
     """daterange2str wrapper for US human readable date range format"""
     return daterange2str(t_start, t_end, dtformat=dtformat, day_fmt=day_fmt,
                          month_fmt=month_fmt, year_fmt=year_fmt)
-
-
-def dt2path(dt, datadir=DATA_DIR):
-    """data file path by datetime"""
-    return path.join(datadir, dt.strftime(DATA_FILE_FMT))
 
 
 def vprhimat2pn(datapath):
@@ -83,12 +78,6 @@ def vprhimat2pn(datapath):
             raise e
 
 
-def fname_range(dt_start, dt_end):
-    dt_range = pd.date_range(dt_start.date(), dt_end.date())
-    dt2path_map = partial(dt2path, datadir=DATA_DIR)
-    return map(dt2path_map, dt_range)
-
-
 def kdp2phidp(kdp, dr_km):
     kdp_filled = kdp.fillna(0)
     return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
@@ -96,7 +85,8 @@ def kdp2phidp(kdp, dr_km):
 
 def data_range(dt_start, dt_end):
     """read raw VP data between datetimes"""
-    fnames = fname_range(dt_start, dt_end)
+    filepath_fmt = path.join(DATA_DIR, DATA_FILE_FMT)
+    fnames = strftime_date_range(dt_start, dt_end, filepath_fmt)
     pns = map(vprhimat2pn, fnames)
     pns_out = []
     for pn in pns:
@@ -753,6 +743,16 @@ class Case:
         """load_pluvio wrapper"""
         self.pluvio = insitu.load_pluvio(start=self.t_start(),
                                          end=self.t_end(), **kws)
+
+    def load_model_data(self, variable='temperature'):
+        self.data[variable] = cloudnet.load_as_df(self.data.major_axis,
+                                                  self.data.minor_axis,
+                                                  variable=variable)
+
+    def load_model_temperature(self):
+        self.data['T'] = cloudnet.load_as_df(self.data.major_axis,
+                                             self.data.minor_axis,
+                                             variable='temperature') - 273.15
 
     def lwe(self):
         """liquid water equivalent precipitation rate"""
