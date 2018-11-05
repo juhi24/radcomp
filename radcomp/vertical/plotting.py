@@ -177,11 +177,15 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         axarr[-1].set_xlabel('Time, UTC')
         axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         axarr[0].set_title(str(pn[field].columns[0].date()))
-        for ax in axarr:
-            ax.format_coord = format_coord_xtime
-    else:
-        for ax in axarr:
-            ax.format_coord = format_coord
+    # coordinate string formatting
+    coords = list(fields)
+    # always include T in coords if available
+    if ('T' in pn) and ('T' not in fields):
+        coords += ['T']
+    for ax in axarr:
+        fmt_coord = lambda x, y: format_coord_pn(x, y, pn.loc[coords, :, :],
+                                                 x_is_date=x_is_date)
+        ax.format_coord = fmt_coord
     # Hide xticks for all but last.
     for ax in axarr[:-1]:
         plt.setp(ax.get_xticklabels(), visible=False)
@@ -314,6 +318,17 @@ def plot_growth_zones(x, ax=None, var='TEMP', levels=('ml'), **kws):
     return ax
 
 
+def dict2coord(d):
+    """dictionary as key=value string"""
+    return ', '.join('{0}={1:.2f}'.format(*x) for x in d.items())
+
+
+def num2tstr(num):
+    """datenumber to datetime string representation"""
+    t = mpl.dates.num2date(num).replace(tzinfo=None)
+    return t.strftime('%Y-%m-%d %H:%M')
+
+
 def format_coord(x, y):
     """coordinate formatter replacement"""
     return 'x={x:.2f}, y={y:.2f}'.format(x=x, y=y)
@@ -321,6 +336,19 @@ def format_coord(x, y):
 
 def format_coord_xtime(x, y):
     """coordinate formatter replacement when x is time"""
-    t = mpl.dates.num2date(x).replace(tzinfo=None)
-    tstr = t.strftime('%Y-%m-%d %H:%M')
-    return 'x={x}, y={y:.0f}'.format(x=tstr, y=y)
+    return 'x={x}, y={y:.0f}'.format(x=num2tstr(x), y=y)
+
+
+def format_coord_pn(x, y, data, x_is_date=False):
+    """coordinate formatter replacement with data display"""
+    values = {}
+    for label in data.items:
+        t = mpl.dates.num2date(x).replace(tzinfo=None)
+        ix = data.minor_axis.get_loc(t, method='nearest')
+        iy = data.major_axis.get_loc(y, method='nearest')
+        values[label] = data[label].iloc[iy, ix]
+    if x_is_date:
+        xystr = format_coord_xtime(x, y)
+    else:
+        xystr = format_coord(x, y)
+    return ', '.join([xystr, dict2coord(values)])

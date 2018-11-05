@@ -16,7 +16,7 @@ if __name__ == '__main__':
     cases = multicase.read_cases('t_model')
     c = cases.case[0]
     c.load_model_temperature()
-    params = ['zh', 'zdr', 'kdp', 'T']
+    params = ['zh', 'zdr', 'kdp']
     fig, axarr = c.plot(plot_fr=False, plot_t=False, plot_azs=False,
                         plot_t_contour=True, cmap='viridis', params=params,
                         t_levels=('ml'))
