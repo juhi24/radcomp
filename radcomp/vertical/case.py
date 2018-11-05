@@ -366,8 +366,8 @@ class Case:
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
-             plot_snd=False, plot_classes=True, plot_lwe=True, snd_lvls=None,
-             **kws):
+             plot_t_contour=False, plot_classes=True, plot_lwe=True,
+             t_levels=('ml'), **kws):
         """Visualize the case."""
         if raw:
             data = self.data
@@ -401,11 +401,11 @@ class Case:
             if flag:
                 plotfun(ax=axarr[next_free_ax])
                 next_free_ax += 1
-        if plot_snd:
+        if plot_t_contour:
             try:
-                self.plot_snd_growth_zones(ax=axarr[1], snd_lvls=snd_lvls)
+                self.plot_growth_zones(ax=axarr[1], levels=t_levels)
             except TypeError:
-                warnfmt = '{}: Could not plot sounding temperature.'
+                warnfmt = '{}: Could not plot temperature contours.'
                 print(warnfmt.format(self.name()))
         if plot_classes:
             for iax in range(len(axarr)-1):
@@ -426,6 +426,10 @@ class Case:
         axarr[0].set_title(date_us_fmt(self.t_start(), self.t_end()))
         axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         return fig, axarr
+
+    def plot_growth_zones(self, **kws):
+        self.load_model_temperature()
+        plotting.plot_growth_zones(self.data['T'], **kws)
 
     def plot_ml(self, linestyle='', marker='_', ax=None):
         """Plot melting layer highlighting interpolated parts."""
@@ -484,19 +488,6 @@ class Case:
         ax.set_ylabel('silhouette\ncoefficient')
         ax.set_ylim(bottom=-1, top=1)
         ax.set_yticks([-1, 0, 1])
-        return ax
-
-    def plot_snd_growth_zones(self, ax=None, var='TEMP', snd_lvls=('dend', 'hm'),
-                              **kws):
-        """Plot interpolated sounding data on growth zone edges."""
-        ax = ax or plt.gca()
-        x = self.snd(var=var)
-        if 'hm' in snd_lvls:
-            ax.contour(x.columns, x.index, x, levels=[-8, -3], colors='red')
-        if 'dend' in snd_lvls:
-            ax.contour(x.columns, x.index, x, levels=[-20, -10], colors='dimgray')
-        if 'ml' in snd_lvls:
-            ax.contour(x.columns, x.index, x, levels=[0], colors='orange')
         return ax
 
     def train(self, **kws):
@@ -745,11 +736,15 @@ class Case:
                                          end=self.t_end(), **kws)
 
     def load_model_data(self, variable='temperature'):
+        """Load interpolated model data."""
         self.data[variable] = cloudnet.load_as_df(self.data.major_axis,
                                                   self.data.minor_axis,
                                                   variable=variable)
 
-    def load_model_temperature(self):
+    def load_model_temperature(self, overwrite=False):
+        """Load interpolated model temperature if not already loaded."""
+        if 'T' in self.data and not overwrite:
+            return
         self.data['T'] = cloudnet.load_as_df(self.data.major_axis,
                                              self.data.minor_axis,
                                              variable='temperature') - 273.15

@@ -18,7 +18,8 @@ if __name__ == '__main__':
     c.load_model_temperature()
     params = ['zh', 'zdr', 'kdp', 'T']
     fig, axarr = c.plot(plot_fr=False, plot_t=False, plot_azs=False,
-                        plot_snd=False, cmap='viridis', params=params)
-    x = c.data['T']
-    for ax in axarr:
-        ax.contour(x.columns, x.index, x, levels=[0], colors='dimgray')
+                        plot_t_contour=True, cmap='viridis', params=params,
+                        t_levels=('ml', 'hm'))
+#    x = c.data['T']
+#    for ax in axarr:
+#        ax.contour(x.columns, x.index, x, levels=[0], colors='dimgray')

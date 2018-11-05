@@ -287,3 +287,23 @@ def bar_plot_colors(ax, classes, class_color_fun=class_color, **cmkw):
     for i, p in enumerate(pa):
         color = class_color_fun(classes[i], default=(1, 1, 1, 0), **cmkw)
         p.set_color(color)
+
+
+def plot_growth_zones(x, ax=None, var='TEMP', levels=('ml'), **kws):
+    """Plot interpolated sounding data on growth zone edges."""
+    ax = ax or plt.gca()
+    contours = []
+    args = (x.columns, x.index, x)
+    kws['linewidths'] = 1
+    if 'hm' in levels:
+        con = ax.contour(*args, levels=[-8, -3], colors='red', **kws)
+        contours.append(con)
+    if 'dend' in levels:
+        con = ax.contour(*args, levels=[-20, -10], colors='dimgray', **kws)
+        contours.append(con)
+    if 'ml' in levels:
+        con = ax.contour(*args, levels=[0], colors='orange', **kws)
+        contours.append(con)
+    for con in contours:
+        plt.clabel(con, fontsize=6, fmt='%1.0f')
+    return ax
