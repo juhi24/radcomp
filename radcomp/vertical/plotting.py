@@ -177,6 +177,11 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         axarr[-1].set_xlabel('Time, UTC')
         axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         axarr[0].set_title(str(pn[field].columns[0].date()))
+        for ax in axarr:
+            ax.format_coord = format_coord_xtime
+    else:
+        for ax in axarr:
+            ax.format_coord = format_coord
     # Hide xticks for all but last.
     for ax in axarr[:-1]:
         plt.setp(ax.get_xticklabels(), visible=False)
@@ -307,3 +312,15 @@ def plot_growth_zones(x, ax=None, var='TEMP', levels=('ml'), **kws):
     for con in contours:
         plt.clabel(con, fontsize=6, fmt='%1.0f')
     return ax
+
+
+def format_coord(x, y):
+    """coordinate formatter replacement"""
+    return 'x={x:.2f}, y={y:.2f}'.format(x=x, y=y)
+
+
+def format_coord_xtime(x, y):
+    """coordinate formatter replacement when x is time"""
+    t = mpl.dates.num2date(x).replace(tzinfo=None)
+    tstr = t.strftime('%Y-%m-%d %H:%M')
+    return 'x={x}, y={y:.0f}'.format(x=tstr, y=y)
