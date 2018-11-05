@@ -231,6 +231,7 @@ class Case:
         self.is_convective = is_convective
         self._cl_ax = None
         self._dt_ax = None
+        self.cursor = None
 
     @classmethod
     def from_dtrange(cls, t0, t1, **kws):
@@ -414,9 +415,9 @@ class Case:
             for i in range(len(params)):
                 self.plot_ml(ax=axarr[i])
         if interactive:
-            for ax in axarr:
-                # TODO: cursor not showing
-                mpl.widgets.Cursor(ax, horizOn=False, color='red', linewidth=2)
+            self.cursor = mpl.widgets.MultiCursor(fig.canvas, axarr,
+                                                  color='black', horizOn=True,
+                                                  vertOn=True, lw=0.5)
             on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params)
             fig.canvas.mpl_connect('button_press_event', on_click_fun)
         for ax in axarr:
