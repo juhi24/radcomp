@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 from radcomp.tools import cloudnet
 from radcomp.vertical import multicase
 
+import conf
+
 
 if __name__ == '__main__':
     plt.ion()
@@ -16,10 +18,8 @@ if __name__ == '__main__':
     cases = multicase.read_cases('t_model')
     c = cases.case[0]
     c.load_model_temperature()
+    #c.load_classification(conf.SCHEME_ID_MELT)
     params = ['zh', 'zdr', 'kdp']
     fig, axarr = c.plot(plot_fr=False, plot_t=False, plot_azs=False,
                         plot_t_contour=True, cmap='viridis', params=params,
-                        t_levels=('ml'))
-#    x = c.data['T']
-#    for ax in axarr:
-#        ax.contour(x.columns, x.index, x, levels=[0], colors='dimgray')
+                        t_levels=(-20, -8))

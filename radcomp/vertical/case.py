@@ -368,7 +368,7 @@ class Case:
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
              plot_t_contour=False, plot_classes=True, plot_lwe=True,
-             t_levels=('ml'), **kws):
+             t_levels=[0], contour_ax_n=[0], **kws):
         """Visualize the case."""
         if raw:
             data = self.data
@@ -404,7 +404,8 @@ class Case:
                 next_free_ax += 1
         if plot_t_contour:
             try:
-                self.plot_growth_zones(ax=axarr[1], levels=t_levels)
+                for i in contour_ax_n:
+                    self.plot_growth_zones(ax=axarr[i], levels=t_levels)
             except TypeError:
                 warnfmt = '{}: Could not plot temperature contours.'
                 print(warnfmt.format(self.name()))

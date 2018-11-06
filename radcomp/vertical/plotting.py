@@ -166,7 +166,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         im = ax.pcolormesh(x, pn[field].index,
                            np.ma.masked_invalid(pn[field].values), cmap=cmap,
                            label=field, **kws)
-        label = 'Height, km above ML top' if has_ml else 'Height, km'
+        use_ml_label = has_ml and not x_is_date
+        label = 'Height, km above ML top' if use_ml_label else 'Height, km'
         set_h_ax(ax, label=label) if i==1 else set_h_ax(ax, label='')
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
@@ -304,22 +305,28 @@ def plot_growth_zones(x, ax=None, var='TEMP', levels=('ml'), **kws):
     contours = []
     args = (x.columns, x.index, x)
     kws['linewidths'] = 1
-    if 'hm' in levels:
-        con = ax.contour(*args, levels=[-8, -3], colors='red', **kws)
+    kws['linestyles'] = 'solid'
+    try:
+        np.array(levels).astype(float) # check if numeric
+        con = ax.contour(*args, levels=levels, colors='red', **kws)
         contours.append(con)
-    if 'dend' in levels:
-        con = ax.contour(*args, levels=[-20, -10], colors='dimgray', **kws)
-        contours.append(con)
-    if 'ml' in levels:
-        con = ax.contour(*args, levels=[0], colors='orange', **kws)
-        contours.append(con)
+    except ValueError:
+        if 'hm' in levels:
+            con = ax.contour(*args, levels=[-8, -3], colors='red', **kws)
+            contours.append(con)
+        if 'dend' in levels:
+            con = ax.contour(*args, levels=[-20, -10], colors='dimgray', **kws)
+            contours.append(con)
+        if 'ml' in levels:
+            con = ax.contour(*args, levels=[0], colors='orange', **kws)
+            contours.append(con)
     for con in contours:
         plt.clabel(con, fontsize=6, fmt='%1.0f')
     return ax
 
 
 def dict2coord(d):
-    """dictionary as key=value string"""
+    """dictionary as 'key1=value1, key2=value2, ...' string"""
     return ', '.join('{0}={1:.2f}'.format(*x) for x in d.items())
 
 
