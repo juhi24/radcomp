@@ -9,7 +9,7 @@ from radcomp.vertical import multicase, RESULTS_DIR
 
 #SCHEME_ID_SNOW = '14-16_t08_zdr05_19eig19clus_pca'
 SCHEME_ID_SNOW = 'snow_t08_kdp13_22eig23clus_pca'
-SCHEME_ID_MELT = 'mlt2_16eig17clus_pca'
+SCHEME_ID_MELT = 'mlt2_kdp08_18eig15clus_pca'
 
 CASES_SNOW = 'snow'
 CASES_MELT = 'melting'

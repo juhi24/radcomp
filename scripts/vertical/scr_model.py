@@ -19,7 +19,8 @@ if __name__ == '__main__':
     c = cases.case[0]
     c.load_model_temperature()
     #c.load_classification(conf.SCHEME_ID_MELT)
-    params = ['zh', 'zdr', 'kdp']
+    c.load_model_data(variable='rh')
+    params = ['zh', 'zdr', 'kdp', 'rh']
     fig, axarr = c.plot(plot_fr=False, plot_t=False, plot_azs=False,
-                        plot_t_contour=True, cmap='viridis', params=params,
-                        t_levels=(-20, -8))
+                        t_contour_ax_ind=[0, 1, 2], cmap='viridis', params=params,
+                        t_levels=(-20, -8, 0))

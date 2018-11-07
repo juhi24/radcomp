@@ -9,28 +9,16 @@ from j24 import ensure_dir
 from conf import SCHEME_ID_MELT
 
 
-#name = SCHEME_ID_MELT
-name = 'mlt2_3eig10clus_pca'
-interactive = False
-
-
-def interpolate(mli):
-    mli.loc[0] = 0
-    mli.loc[0:310] = mli.loc[0:310].interpolate()
-
-
-def fltr_median(lim):
-    from scipy.ndimage.filters import median_filter
-    na = lim.isnull()
-    lim = pd.Series(index=lim.index, data=median_filter(lim.fillna(0), 7))
-    lim[na] = np.nan
+name = SCHEME_ID_MELT
+#name = 'mlt2_3eig10clus_pca'
+interactive = True
 
 
 if __name__ == '__main__':
     plt.close('all')
     plt.ion() if interactive else plt.ioff()
-    #cases = multicase.read_cases('mlt_test')
-    cases = multicase.read_cases('melting')
+    cases = multicase.read_cases('mlt_test')
+    #cases = multicase.read_cases('melting')
     #cases = cases[cases.ml_ok.isnull()]
     #cases = cases[~cases.ml_ok.astype(bool)]
     results_dir = ensure_dir(path.join(RESULTS_DIR, 'ml2'))
@@ -40,7 +28,8 @@ if __name__ == '__main__':
         c.load_classification(name)
         fig, axarr = c.plot(params=['zh', 'zdr', 'RHO', 'MLI'], cmap='viridis',
                             plot_fr=False, plot_t=False, plot_azs=False,
-                            plot_snd=False, plot_silh=False, plot_classes=False)
+                            plot_silh=True, plot_classes=False,
+                            t_contour_ax_ind=[0], t_levels=[0])
         if not interactive:
             fname = path.join(results_dir, c.name()+'.png')
             fig.savefig(fname, bbox_inches='tight')
