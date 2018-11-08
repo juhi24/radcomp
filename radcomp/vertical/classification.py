@@ -58,6 +58,8 @@ def train(data_df, pca, quiet=False, reduced=False, n_clusters=20):
 
 def pca_fit(data_df, whiten=False, **kws):
     pca = decomposition.PCA(whiten=whiten, **kws)
+    #pca = decomposition.KernelPCA(kernel='poly', n_jobs=-1, degree=2,
+    #                              fit_inverse_transform=True, **kws)
     pca.fit(data_df)
     return pca
 

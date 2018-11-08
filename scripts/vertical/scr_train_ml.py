@@ -13,7 +13,10 @@ from conf import VPC_PARAMS_RAIN
 save_plots = True
 train = True
 
-VPC_PARAMS_RAIN.update({'n_clusters': 15, 'radar_weight_factors': {'kdp': 0.8}, 'n_eigens': 18})
+VPC_PARAMS_RAIN.update({'n_clusters': 15,
+                        'radar_weight_factors': {'kdp': 0.8},
+                        'n_eigens': 18,
+                        'basename': 'kpca'})
 
 if __name__ == '__main__':
     plt.ion()
@@ -24,11 +27,11 @@ if __name__ == '__main__':
     cases = cases[cases.ml_ok.fillna(0).astype(bool)]
     c = multicase.MultiCase.by_combining(cases, class_scheme=scheme, has_ml=True)
     if train:
-        c.train()
+        c.train(quiet=True)
         scheme.save()
     # Load classification and plot centroids
     c.load_classification()
-    fig_cc, axarr_cc, i = c.plot_cluster_centroids(#cmap='viridis',
+    fig_cc, axarr_cc, i = c.plot_cluster_centroids(cmap='viridis',
                                                    colorful_bars='blue',
                                                    sortby=None)
 

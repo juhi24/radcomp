@@ -424,7 +424,7 @@ class Case:
                                                   vertOn=True, lw=0.5)
             on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params)
             fig.canvas.mpl_connect('button_press_event', on_click_fun)
-            fig.canvas.mpl_connect('motion_notify_event', self._on_move_show_values)
+            #fig.canvas.mpl_connect('motion_notify_event', self._on_move_show_values)
         for ax in axarr:
             ax.xaxis.grid(True)
             ax.yaxis.grid(True)
