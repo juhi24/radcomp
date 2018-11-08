@@ -149,9 +149,16 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
     gs = _pn_gs(fig_scale_factor, n_rows)
     axarr = []
     h = -1
+    # coordinate string formatting
+    coords = list(fields)
+    # always include T in coords if available
+    if ('T' in pn) and ('T' not in fields):
+        coords += ['T']
+    # top axes
     for h in range(n_ax_shift):
         ax = fig.add_subplot(gs[h, 0])
         axarr.append(ax)
+    # pcolormesh axes
     for i, field in enumerate(np.sort(fields)):
         subplot_kws = {}
         if i > 0:
@@ -166,11 +173,18 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         im = ax.pcolormesh(x, pn[field].index,
                            np.ma.masked_invalid(pn[field].values), cmap=cmap,
                            label=field, **kws)
+        # coordinate string formatting
+        fmt_coord = lambda x, y: format_coord_pn(x, y, pn.loc[coords, :, :],
+                                                 x_is_date=x_is_date)
+        ax.format_coord = fmt_coord
+        #
         use_ml_label = has_ml and not x_is_date
         label = 'Height, km above ML top' if use_ml_label else 'Height, km'
         set_h_ax(ax, label=label) if i==1 else set_h_ax(ax, label='')
+        ax.autoscale(False)
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
+    # bottom axes
     for j in range(n_extra_ax-n_ax_shift):
         ax = fig.add_subplot(gs[h+i+2+j, 0], sharex=axarr[0])
         axarr.append(ax)
@@ -178,15 +192,6 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         axarr[-1].set_xlabel('Time, UTC')
         axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
         axarr[0].set_title(str(pn[field].columns[0].date()))
-    # coordinate string formatting
-    coords = list(fields)
-    # always include T in coords if available
-    if ('T' in pn) and ('T' not in fields):
-        coords += ['T']
-    for ax in axarr:
-        fmt_coord = lambda x, y: format_coord_pn(x, y, pn.loc[coords, :, :],
-                                                 x_is_date=x_is_date)
-        ax.format_coord = fmt_coord
     # Hide xticks for all but last.
     for ax in axarr[:-1]:
         plt.setp(ax.get_xticklabels(), visible=False)

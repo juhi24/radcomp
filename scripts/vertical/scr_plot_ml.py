@@ -28,7 +28,7 @@ if __name__ == '__main__':
         c.load_classification(name)
         fig, axarr = c.plot(params=['zh', 'zdr', 'RHO', 'MLI'], cmap='viridis',
                             plot_fr=False, plot_t=False, plot_azs=False,
-                            plot_silh=True, plot_classes=False,
+                            plot_silh=False, plot_classes=False,
                             t_contour_ax_ind=[0], t_levels=[0])
         if not interactive:
             fname = path.join(results_dir, c.name()+'.png')

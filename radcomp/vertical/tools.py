@@ -10,7 +10,7 @@ import numpy as np
 
 def m2km(m, pos):
     '''formatting m in km'''
-    return '{:.0f}'.format(m*1e-3)
+    return '{:.1f}'.format(m*1e-3)
 
 
 def echo_top_h(z, zmin=-8):

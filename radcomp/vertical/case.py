@@ -440,11 +440,11 @@ class Case:
     def plot_ml(self, linestyle='', marker='_', ax=None):
         """Plot melting layer highlighting interpolated parts."""
         ax = ax or plt.gca()
-        common_kws = dict(linestyle=linestyle, marker=marker, ax=ax)
+        common_kws = dict(linestyle=linestyle, marker=marker)
         boti, topi = self.ml_limits(interpolate=True)
         bot, top = self.ml_limits(interpolate=False)
-        topi.plot(color='gray', **common_kws)
-        top.plot(color='black', **common_kws)
+        ax.plot(topi.index, topi.values, color='gray', zorder=5, **common_kws)
+        ax.plot(top.index, top.values, color='black', zorder=6, **common_kws)
         return ax
 
     def plot_series(self, data, ax=None, **kws):
