@@ -59,7 +59,7 @@ def peak_series(s, ilim=(None, None), **kws):
 
 
 def get_peaks(mli, hlim=(0, H_MAX), height=2, width=0, distance=20,
-              prominence=0.3, rel_height=0.7): # free params
+              prominence=0.3, rel_height=0.6): # free params
     """Apply peak detection to ML indicator."""
     limits = [find(mli.index, lim) for lim in hlim]
     peaksi = mli.apply(peak_series, ilim=limits, height=height, width=width,
