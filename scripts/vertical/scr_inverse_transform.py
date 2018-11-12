@@ -16,9 +16,5 @@ if __name__ == '__main__':
     cases = multicase.read_cases('t_model')
     c = cases.case[0]
     c.load_classification(conf.SCHEME_ID_MELT)
-    pn = c.class_scheme.inverse_transform()
-    pn.major_axis = c.cl_data_scaled.minor_axis
-    pn.minor_axis = c.data.minor_axis
-    decoded = case.scale_data(pn, reverse=True)
     c.plot(cmap='viridis', plot_silh=False, above_ml_only=True)
-    plotting.plotpn(decoded, cmap='viridis')
+    c.plot(cmap='viridis', plot_silh=False, inverse_transformed=True)

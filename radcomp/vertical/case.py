@@ -369,6 +369,13 @@ class Case:
             return classes, silh
         return None, None
 
+    def inverse_transform(self):
+        """inverse transformed classification data"""
+        pn = self.class_scheme.inverse_transform()
+        pn.major_axis = self.cl_data_scaled.minor_axis
+        pn.minor_axis = self.data.minor_axis
+        return scale_data(pn, reverse=True)
+
     def plot_classes(self):
         """plot_classes wrapper"""
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
@@ -376,7 +383,7 @@ class Case:
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
              t_contour_ax_ind=False, plot_classes=True, plot_lwe=True,
-             above_ml_only=False,
+             above_ml_only=False, inverse_transformed=False,
              t_levels=[0], **kws):
         """Visualize the case."""
         if raw:
@@ -385,6 +392,9 @@ class Case:
             data = self.cl_data.transpose(0,2,1)
         if above_ml_only:
             data = self.data_above_ml(data)
+        elif inverse_transformed:
+            above_ml_only = True
+            data = self.inverse_transform()
         if params is None:
             if self.class_scheme is not None:
                 params = self.class_scheme.params
