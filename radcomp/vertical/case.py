@@ -379,7 +379,7 @@ class Case:
 
     def inverse_transform(self):
         """inverse transformed classification data"""
-        pn = self.class_scheme.inverse_transform()
+        pn = self.class_scheme.inverse_data.copy()
         pn.major_axis = self.cl_data_scaled.minor_axis
         pn.minor_axis = self.data.minor_axis
         return scale_data(pn, reverse=True)
@@ -576,7 +576,9 @@ class Case:
         if params is not None:
             data = data[params]
         axarr = plotting.plot_vps(data, **kws)
-        if not above_ml_only:
+        if above_ml_only:
+            plotting.plot_vps(self.inverse_transform().iloc[:, :, i], axarr=axarr)
+        else:
             _, ml_top = self.ml_limits(interpolate=False)
             _, ml_top_i = self.ml_limits(interpolate=True)
             for ax in axarr:

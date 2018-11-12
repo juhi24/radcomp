@@ -5,7 +5,7 @@ __metaclass__ = type
 
 import matplotlib.pyplot as plt
 
-from radcomp.vertical import multicase, plotting, case
+from radcomp.vertical import multicase
 
 import conf
 

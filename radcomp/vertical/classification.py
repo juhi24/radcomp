@@ -152,6 +152,7 @@ class VPC:
         self.training_result = None # archived training data classes
         self._n_eigens = n_eigens
         self._n_clusters = n_clusters
+        self._inverse_data = None
 
     def __repr__(self):
         return '<VPC {}>'.format(self.name())
@@ -170,6 +171,13 @@ class VPC:
             self.km.n_clusters = n_clusters
         except AttributeError:
             pass
+
+    @property
+    def inverse_data(self):
+        """lazy loading of inverse transformed data"""
+        if self._inverse_data is None:
+            self._inverse_data = self.inverse_transform()
+        return self._inverse_data
 
     @classmethod
     def using_metadict(cls, metadata, **kws):
