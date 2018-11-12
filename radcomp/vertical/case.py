@@ -290,10 +290,10 @@ class Case:
         self.classify(**kws)
 
     def data_above_ml(self, data=None):
+        """Data above ml"""
         if data is None:
             data = self.data
         data = fillna(data)
-        """Data above ml"""
         top = self.ml_limits()[1]
         return data.apply(ml.collapse2top, axis=(2, 1), top=top)
 
@@ -444,7 +444,8 @@ class Case:
             self.cursor = mpl.widgets.MultiCursor(fig.canvas, axarr,
                                                   color='black', horizOn=True,
                                                   vertOn=True, lw=0.5)
-            on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params)
+            on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params,
+                                                                   above_ml_only=above_ml_only)
             fig.canvas.mpl_connect('button_press_event', on_click_fun)
             #fig.canvas.mpl_connect('motion_notify_event', self._on_move_show_values)
         for ax in axarr:
@@ -529,13 +530,14 @@ class Case:
         return self.class_scheme.train(data=self.cl_data_scaled,
                                        extra_df=extra_df, **kws)
 
-    def _on_click_plot_dt_cs(self, event, params=None):
+    def _on_click_plot_dt_cs(self, event, params=None, **kws):
         """on click plot profiles at a timestamp"""
         try:
             dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
         except TypeError: # clicked outside axes
             return
         ax, update, axkws = handle_ax(self._dt_ax)
+        axkws.update(kws)
         self._dt_ax = self.plot_data_at(dt, params=params, **axkws)
         if update:
             ax.get_figure().canvas.draw()
@@ -557,20 +559,21 @@ class Case:
     def _on_move_show_values(self, event):
         return
 
-    def plot_data_at(self, dt, params=None, **kws):
+    def plot_data_at(self, dt, params=None, above_ml_only=False, **kws):
         """Plot profiles at given timestamp."""
-        data_orig = self.data
+        data_orig = self.data_above_ml() if above_ml_only else self.data
         i = data_orig.minor_axis.get_loc(dt, method='nearest')
         dti = data_orig.minor_axis[i]
         data = data_orig.iloc[:, :, i]
         if params is not None:
             data = data[params]
         axarr = plotting.plot_vps(data, **kws)
-        _, ml_top = self.ml_limits(interpolate=False)
-        _, ml_top_i = self.ml_limits(interpolate=True)
-        for ax in axarr:
-            ax.axhline(ml_top_i.loc[dti], color='gray')
-            ax.axhline(ml_top.loc[dti], color='black')
+        if not above_ml_only:
+            _, ml_top = self.ml_limits(interpolate=False)
+            _, ml_top_i = self.ml_limits(interpolate=True)
+            for ax in axarr:
+                ax.axhline(ml_top_i.loc[dti], color='gray')
+                ax.axhline(ml_top.loc[dti], color='black')
         t = data_orig.minor_axis[i]
         axarr[1].set_title(str(t))
         return axarr
