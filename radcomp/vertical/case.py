@@ -289,6 +289,14 @@ class Case:
         self.class_scheme = classification.VPC.load(name)
         self.classify(**kws)
 
+    def data_above_ml(self, data=None):
+        if data is None:
+            data = self.data
+        data = fillna(data)
+        """Data above ml"""
+        top = self.ml_limits()[1]
+        return data.apply(ml.collapse2top, axis=(2, 1), top=top)
+
     def prepare_cl_data(self, save=True, force_no_crop=False):
         """Prepare unscaled classification data."""
         if self.data is not None:
@@ -368,12 +376,15 @@ class Case:
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
              t_contour_ax_ind=False, plot_classes=True, plot_lwe=True,
+             above_ml_only=False,
              t_levels=[0], **kws):
         """Visualize the case."""
         if raw:
             data = self.data
         else:
             data = self.cl_data.transpose(0,2,1)
+        if above_ml_only:
+            data = self.data_above_ml(data)
         if params is None:
             if self.class_scheme is not None:
                 params = self.class_scheme.params
@@ -415,7 +426,8 @@ class Case:
         if plot_classes:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])
-        if self.has_ml and (self.class_scheme is not None):
+        has_vpc = (self.class_scheme is not None)
+        if self.has_ml and has_vpc and not above_ml_only:
             for i in range(len(params)):
                 self.plot_ml(ax=axarr[i])
         if interactive:
