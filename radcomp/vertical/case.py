@@ -229,6 +229,7 @@ class Case:
         self.pluvio = None
         self.has_ml = has_ml
         self.is_convective = is_convective
+        self._data_above_ml = None
         self._cl_ax = None
         self._dt_ax = None
         self.cursor = None
@@ -249,6 +250,21 @@ class Case:
         pn = vprhimat2pn(matfile)
         data = prepare_pn(pn)
         return cls(data=data, **kws)
+
+    @property
+    def data_above_ml(self):
+        """lazy loading data above ml"""
+        if self._data_above_ml is None:
+            self._data_above_ml = self.only_data_above_ml()
+        return self._data_above_ml
+
+    def only_data_above_ml(self, data=None):
+        """Data above ml"""
+        if data is None:
+            data = self.data
+        data = fillna(data)
+        top = self.ml_limits()[1]
+        return data.apply(ml.collapse2top, axis=(2, 1), top=top)
 
     def name(self, **kws):
         """date range based id"""
@@ -288,14 +304,6 @@ class Case:
             name = self.class_scheme.name()
         self.class_scheme = classification.VPC.load(name)
         self.classify(**kws)
-
-    def data_above_ml(self, data=None):
-        """Data above ml"""
-        if data is None:
-            data = self.data
-        data = fillna(data)
-        top = self.ml_limits()[1]
-        return data.apply(ml.collapse2top, axis=(2, 1), top=top)
 
     def prepare_cl_data(self, save=True, force_no_crop=False):
         """Prepare unscaled classification data."""
@@ -391,7 +399,7 @@ class Case:
         else:
             data = self.cl_data.transpose(0,2,1)
         if above_ml_only:
-            data = self.data_above_ml(data)
+            data = self.data_above_ml if raw else self.only_data_above_ml(data)
         elif inverse_transformed:
             above_ml_only = True
             data = self.inverse_transform()
@@ -561,7 +569,7 @@ class Case:
 
     def plot_data_at(self, dt, params=None, above_ml_only=False, **kws):
         """Plot profiles at given timestamp."""
-        data_orig = self.data_above_ml() if above_ml_only else self.data
+        data_orig = self.data_above_ml if above_ml_only else self.data
         i = data_orig.minor_axis.get_loc(dt, method='nearest')
         dti = data_orig.minor_axis[i]
         data = data_orig.iloc[:, :, i]
