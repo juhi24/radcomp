@@ -255,6 +255,30 @@ class VPC:
             extra_df.reset_index(drop=True, inplace=True)
         return components, extra_df
 
+    def df2pn(self, data):
+        """inverse transformed DataFrame to Panel"""
+        n_levels = data.shape[0]
+        levels_per_var = int(n_levels/self.params.size)
+        lims = limitslist(np.arange(0, n_levels+1, levels_per_var))
+        dfs = OrderedDict()
+        for lim, param in zip(lims, self.params):
+            df = data.iloc[lim[0]:lim[1], :]
+            # we don't know row names here
+            df.index = pd.RangeIndex(stop=df.index.size)
+            dfs[param] = df
+        pn = pd.Panel(dfs)
+        rw = self.radar_weight_factors
+        if rw is not None:
+            for field, weight_factor in rw.items():
+                pn[field] /= weight_factor
+        return pn
+
+    def inverse_transform(self, pc=None):
+        """inverse transform from PCA to radar variable space"""
+        pc = pc or self.data
+        normal = pd.DataFrame(self.pca.inverse_transform(pc).T)
+        return self.df2pn(normal)
+
     def clus_centroids_df(self):
         """
         cluster centroids DataFrame, extra parameters in separate DataFrame
@@ -269,20 +293,7 @@ class VPC:
         cluster centroids Panel, extra parameters in separate DataFrame
         """
         clus_centroids, extra = self.clus_centroids_df()
-        n_levels = clus_centroids.shape[0]
-        n_radarparams = self.params.size
-        lims = limitslist(np.arange(0, n_levels+1, int(n_levels/n_radarparams)))
-        dfs = OrderedDict()
-        for lim, param in zip(lims, self.params):
-            df = clus_centroids.iloc[lim[0]:lim[1], :]
-            # we don't know row names here
-            df.index = pd.RangeIndex(stop=df.index.size)
-            dfs[param] = df
-        pn = pd.Panel(dfs)
-        rw = self.radar_weight_factors
-        if rw is not None:
-            for field, weight_factor in rw.items():
-                pn[field] /= weight_factor
+        pn = self.df2pn(clus_centroids)
         return pn, extra
 
     def prepare_data(self, data, extra_df=None, n_components=0, save=True):
