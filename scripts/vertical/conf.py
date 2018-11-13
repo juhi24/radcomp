@@ -23,7 +23,7 @@ VPC_PARAMS_SNOW = dict(basename='snow',
                        n_eigens=0.8,
                        n_clusters=23,
                        reduced=True,
-                       t_weight_factor=0.8,
+                       extra_weight=0.8,
                        radar_weights=dict(kdp=1.3))
 
 VPC_PARAMS_RAIN = dict(basename='mlt2',

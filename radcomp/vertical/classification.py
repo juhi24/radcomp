@@ -150,6 +150,7 @@ class VPC:
         self._n_eigens = n_eigens
         self._n_clusters = n_clusters
         self._inverse_data = None
+        self._inverse_extra = None
 
     def __repr__(self):
         return '<VPC {}>'.format(self.name())
@@ -173,8 +174,8 @@ class VPC:
     def inverse_data(self):
         """lazy loading of inverse transformed data"""
         if self._inverse_data is None:
-            self._inverse_data = self.inverse_transform()
-        return self._inverse_data
+            self._inverse_data, self._inverse_extra = self.inverse_transform()
+        return self._inverse_data.copy()
 
     @classmethod
     def using_metadict(cls, metadata, **kws):
@@ -280,8 +281,14 @@ class VPC:
     def inverse_transform(self, pc=None):
         """inverse transform from PCA to radar variable space"""
         pc = pc or self.data
+        n_extra = len(self.params_extra)
+        if n_extra < 1:
+            extra = []
+        else:
+            pc = pc.iloc[:, :-n_extra]
+            extra = pc.iloc[:, -n_extra:]/self.extra_weight
         normal = pd.DataFrame(self.pca.inverse_transform(pc).T)
-        return self.df2pn(normal)
+        return self.df2pn(normal), extra
 
     def clus_centroids_df(self):
         """

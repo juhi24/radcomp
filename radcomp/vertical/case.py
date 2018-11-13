@@ -379,7 +379,7 @@ class Case:
 
     def inverse_transform(self):
         """inverse transformed classification data"""
-        pn = self.class_scheme.inverse_data.copy()
+        pn = self.class_scheme.inverse_data
         pn.major_axis = self.cl_data_scaled.minor_axis
         pn.minor_axis = self.data.minor_axis
         return scale_data(pn, reverse=True)
@@ -403,7 +403,8 @@ class Case:
         if above_ml_only:
             data = self.data_above_ml if raw else self.only_data_above_ml(data)
         elif inverse_transformed:
-            above_ml_only = True
+            if self.has_ml:
+                above_ml_only = True
             data = self.inverse_transform()
         if params is None:
             if self.class_scheme is not None:
@@ -455,6 +456,7 @@ class Case:
                                                   color='black', horizOn=True,
                                                   vertOn=True, lw=0.5)
             on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params,
+                                                                   inverse_transformed=inverse_transformed,
                                                                    above_ml_only=above_ml_only)
             fig.canvas.mpl_connect('button_press_event', on_click_fun)
             #fig.canvas.mpl_connect('motion_notify_event', self._on_move_show_values)
@@ -569,7 +571,8 @@ class Case:
     def _on_move_show_values(self, event):
         return
 
-    def plot_data_at(self, dt, params=None, above_ml_only=False, **kws):
+    def plot_data_at(self, dt, params=None, inverse_transformed=False,
+                     above_ml_only=False, **kws):
         """Plot profiles at given timestamp."""
         data_orig = self.data_above_ml if above_ml_only else self.data
         i = data_orig.minor_axis.get_loc(dt, method='nearest')
@@ -578,9 +581,9 @@ class Case:
         if params is not None:
             data = data[params]
         axarr = plotting.plot_vps(data, **kws)
-        if above_ml_only:
+        if inverse_transformed:
             plotting.plot_vps(self.inverse_transform().iloc[:, :, i], axarr=axarr)
-        else:
+        if not above_ml_only and self.has_ml:
             _, ml_top = self.ml_limits(interpolate=False)
             _, ml_top_i = self.ml_limits(interpolate=True)
             for ax in axarr:

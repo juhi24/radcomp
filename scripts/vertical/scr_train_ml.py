@@ -13,9 +13,7 @@ from conf import VPC_PARAMS_RAIN
 save_plots = True
 train = True
 
-VPC_PARAMS_RAIN.update({'n_clusters': 15,
-                        'radar_weight_factors': {'kdp': 0.8},
-                        'n_eigens': 30})
+VPC_PARAMS_RAIN.update({'n_clusters': 15})
 
 if __name__ == '__main__':
     plt.ion()

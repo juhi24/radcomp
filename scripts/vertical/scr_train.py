@@ -14,7 +14,9 @@ save_plots = True
 train = True
 save_scheme = True
 
-VPC_PARAMS_SNOW.update({'n_clusters': 19, 'radar_weight_factors': {'kdp': 1.7}, 'n_eigens': 18})
+VPC_PARAMS_SNOW.update({'n_clusters': 19,
+                        'radar_weights': {'kdp': 1.7},
+                        'n_eigens': 30})
 
 
 if __name__ == '__main__':

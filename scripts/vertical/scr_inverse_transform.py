@@ -10,12 +10,19 @@ from radcomp.vertical import multicase, case, plotting
 import conf
 
 
+def load_case(rain=True):
+    cases_name = 't_model' if rain else 'feb15'
+    scheme_id = conf.SCHEME_ID_MELT if rain else conf.SCHEME_ID_SNOW
+    cases = multicase.read_cases(cases_name)
+    c = cases.case[0]
+    c.load_classification(scheme_id)
+    return c
+
+
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
-    cases = multicase.read_cases('t_model')
-    c = cases.case[0]
-    c.load_classification(conf.SCHEME_ID_MELT)
+    c = load_case(rain=False)
     c.plot(cmap='viridis', plot_silh=False, above_ml_only=True)
     c.plot(cmap='viridis', plot_silh=False, inverse_transformed=True)
     # difference
