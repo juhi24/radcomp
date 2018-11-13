@@ -22,17 +22,16 @@ def weight_factor_str(param, value):
         out += str(value).replace('.', '')
     return out
 
-def scheme_name(basename='baecc+1415', n_eigens=30, n_clusters=20,
-                reduced=True, use_temperature=False, t_weight_factor=1,
-                radar_weight_factors=None):
+def scheme_name(basename='', n_eigens=30, n_clusters=20,
+                reduced=True, extra_weight=0, radar_weights=None):
     if reduced:
         qualifier = '_pca'
     else:
         qualifier = ''
-    if use_temperature:
-        basename += weight_factor_str('t', t_weight_factor)
-    if radar_weight_factors:
-        for field, factor in radar_weight_factors.items():
+    if extra_weight:
+        basename += weight_factor_str('t', extra_weight)
+    if radar_weights:
+        for field, factor in radar_weights.items():
             if factor==1:
                 continue
             basename += weight_factor_str(field, factor)
@@ -124,17 +123,16 @@ class VPC:
         reduced (bool): if True, dimension reduction is used
         kdpmax
         data
-        extra_weight_factor (float, optional): temperature weight factor
+        extra_weight (float, optional): temperature weight factor
             in clustering, 1 if unspecified
-        radar_weight_factors (dict of {str: float} pairs, optional):
+        radar_weights (dict of {str: float} pairs, optional):
             radar variable relative weight factors in clustering, 1 if unspecified
         basename (str): base name for the scheme id
     """
 
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None, n_clusters=None,
-                 t_weight_factor=1, radar_weight_factors=None, basename=None,
-                 use_temperature=False):
+                 extra_weight=None, radar_weights=None, basename=None):
         self.pca = pca
         self.km = km  # k means
         self.hlimits = hlimits
@@ -143,10 +141,9 @@ class VPC:
         self.reduced = reduced
         self.kdpmax = None
         self.data = None  # training or classification data
-        self.extra_weight_factor = t_weight_factor
-        self.radar_weight_factors = radar_weight_factors
+        self.extra_weight = extra_weight
+        self.radar_weights = radar_weights
         self.basename = basename
-        self.use_temperature = use_temperature
         self.mapping = None
         self.training_data = None # archived training data
         self.training_result = None # archived training data classes
@@ -198,9 +195,8 @@ class VPC:
         return scheme_name(basename=self.basename, n_eigens=self._n_eigens,
                            n_clusters=self.n_clusters,
                            reduced=self.reduced,
-                           use_temperature=self.use_temperature,
-                           t_weight_factor=self.extra_weight_factor,
-                           radar_weight_factors=self.radar_weight_factors)
+                           extra_weight=self.extra_weight,
+                           radar_weights=self.radar_weights)
 
     def get_class_list(self):
         """class number range"""
@@ -255,7 +251,7 @@ class VPC:
             extra = []
         else:
             components = centroids[:, :-n_extra]
-            extra = centroids[:, -n_extra:]/self.extra_weight_factor
+            extra = centroids[:, -n_extra:]/self.extra_weight
         components, self.mapping = sort_by_column(components, by=0)
         extra_df = pd.DataFrame(extra, columns=self.params_extra)
         if not extra_df.empty:
@@ -275,7 +271,7 @@ class VPC:
             df.index = pd.RangeIndex(stop=df.index.size)
             dfs[param] = df
         pn = pd.Panel(dfs)
-        rw = self.radar_weight_factors
+        rw = self.radar_weights
         if rw is not None:
             for field, weight_factor in rw.items():
                 pn[field] /= weight_factor
@@ -310,7 +306,7 @@ class VPC:
         metadata = dict(fields=data_scaled.items.values,
                         hlimits=(data_scaled.minor_axis.min(),
                                  data_scaled.minor_axis.max()))
-        rw = self.radar_weight_factors
+        rw = self.radar_weights
         if rw is not None:
             for field, weight_factor in rw.items():
                 data_scaled[field] *= weight_factor
@@ -323,7 +319,7 @@ class VPC:
             data = data_df
         data.index = data.index.round('1min')
         if extra_df is not None:
-            data = pd.concat([data, extra_df*self.extra_weight_factor], axis=1)
+            data = pd.concat([data, extra_df*self.extra_weight], axis=1)
             data.dropna(inplace=True)
             data = data[~data.index.duplicated()]
         if save:

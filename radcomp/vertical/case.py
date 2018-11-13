@@ -394,6 +394,8 @@ class Case:
              above_ml_only=False, inverse_transformed=False,
              t_levels=[0], **kws):
         """Visualize the case."""
+        if not self.has_ml:
+            above_ml_only = False
         if raw:
             data = self.data
         else:
@@ -529,7 +531,7 @@ class Case:
 
     def train(self, **kws):
         """Train a classification scheme with scaled classification data."""
-        if self.class_scheme.use_temperature:
+        if self.class_scheme.extra_weight:
             extra_df = self.ground_temperature()
         else:
             extra_df = None
@@ -595,7 +597,7 @@ class Case:
         data = cen.minor_xs(n)
         axarr = plotting.plot_vps(data, **kws)
         titlestr = 'Class {} centroid'.format(n)
-        if self.class_scheme.use_temperature:
+        if self.class_scheme.extra_weight:
             titlestr += ', $T_{{s}}={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])
         axarr[1].set_title(titlestr)
         return axarr
