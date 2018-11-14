@@ -16,7 +16,7 @@ def silh_score_avgs(cc, n_iter=10, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
     vconf = vpc_conf.copy()
     vconf.pop('n_clusters')
     for i in range(n_iter):
-        for n_classes in range(10, 27):
+        for n_classes in range(5, 25):
             scheme = classification.VPC(n_clusters=n_classes, **vconf)
             cc.class_scheme = scheme
             cc.train(quiet=True)
@@ -60,7 +60,8 @@ if __name__ == '__main__':
     cc = multicase.MultiCase.by_combining(cases, has_ml=False)
     del(cases)
     #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
-    fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
+    #fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
+    fig, ax = score_analysis(cc, cols='all', vpc_conf=vpc_conf)
     fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
     savefile = path.join(conf.P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')

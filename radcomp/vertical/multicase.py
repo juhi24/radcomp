@@ -127,7 +127,10 @@ class MultiCase(case.Case):
         """silhouette score"""
         #selection = self.precip_selection()
         #round_selection = round_time_index(self.precip_selection())
-        class_data = self.class_scheme.data.loc[:, cols]*weights
+        if cols == 'all':
+            class_data = self.class_scheme.data*weights
+        else:
+            class_data = self.class_scheme.data.loc[:, cols]*weights
         return silhouette_score(class_data, self.classes)
 
     def plot_silhouette(self, ax=None, **kws):
