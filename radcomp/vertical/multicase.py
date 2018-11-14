@@ -128,6 +128,12 @@ class MultiCase(case.Case):
         #selection = self.precip_selection()
         #round_selection = round_time_index(self.precip_selection())
         if cols == 'all':
+            if self.has_ml:
+                weights = 1
+            else:
+                weights = np.ones(self.class_scheme.data.shape[1])
+                ew = self.class_scheme.extra_weight
+                weights[:-1] = ew
             class_data = self.class_scheme.data*weights
         else:
             class_data = self.class_scheme.data.loc[:, cols]*weights
