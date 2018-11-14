@@ -3,11 +3,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
+from os import path
+
 import pandas as pd
 import matplotlib.pyplot as plt
-from os import path
+from matplotlib.ticker import MaxNLocator
+
 from radcomp.vertical import multicase, classification
 from j24.tools import notify
+
 import conf
 
 
@@ -16,7 +20,7 @@ def silh_score_avgs(cc, n_iter=10, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
     vconf = vpc_conf.copy()
     vconf.pop('n_clusters')
     for i in range(n_iter):
-        for n_classes in range(5, 25):
+        for n_classes in range(5, 27):
             scheme = classification.VPC(n_clusters=n_classes, **vconf)
             cc.class_scheme = scheme
             cc.train(quiet=True)
@@ -49,15 +53,16 @@ def score_analysis(cc, **kws):
     notify('Silhouette score', 'Score calculation finished.')
     fig, ax = plt.subplots(dpi=110, figsize=(5,4))
     plot_scores(scores, ax=ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     return fig, ax
 
 
 if __name__ == '__main__':
-    scheme_id = conf.SCHEME_ID_MELT
-    vpc_conf = conf.VPC_PARAMS_RAIN
     plt.close('all')
-    cases = conf.init_cases(season='snow')
-    cc = multicase.MultiCase.by_combining(cases, has_ml=False)
+    season = 'rain'
+    vpc_conf = conf.VPC_PARAMS_RAIN if season=='rain' else conf.VPC_PARAMS_SNOW
+    cases = conf.init_cases(season=season)
+    cc = multicase.MultiCase.by_combining(cases, has_ml=(season == 'rain'))
     del(cases)
     #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
     #fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)

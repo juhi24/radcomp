@@ -20,11 +20,11 @@ PARAMS = ['zh', 'zdr', 'kdp']
 VPC_PARAMS_SNOW = dict(basename='snow',
                        params=PARAMS,
                        hlimits=(190, 10e3),
-                       n_eigens=0.8,
+                       n_eigens=30,
                        n_clusters=23,
                        reduced=True,
                        extra_weight=0.8,
-                       radar_weights=dict(kdp=1.3))
+                       radar_weights=dict(kdp=1.7))
 
 VPC_PARAMS_RAIN = dict(basename='mlt2',
                        params=PARAMS,
