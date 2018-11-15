@@ -580,9 +580,10 @@ class Case:
         data = data_orig.iloc[:, :, i]
         if params is not None:
             data = data[params]
-        axarr = plotting.plot_vps(data, **kws)
+        axarr = plotting.plot_vps(data, has_ml=self.has_ml, **kws)
         if inverse_transformed:
-            plotting.plot_vps(self.inverse_transform().iloc[:, :, i], axarr=axarr)
+            plotting.plot_vps(self.inverse_transform().iloc[:, :, i],
+                              has_ml=self.has_ml, axarr=axarr)
         if not above_ml_only and self.has_ml:
             _, ml_top = self.ml_limits(interpolate=False)
             _, ml_top_i = self.ml_limits(interpolate=True)
@@ -598,7 +599,7 @@ class Case:
         # TODO move to VPC
         cen, t = self.clus_centroids()
         data = cen.minor_xs(n)
-        axarr = plotting.plot_vps(data, **kws)
+        axarr = plotting.plot_vps(data, has_ml=self.has_ml, **kws)
         titlestr = 'Class {} centroid'.format(n)
         if self.class_scheme.extra_weight:
             titlestr += ', $T_{{s}}={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])

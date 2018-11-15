@@ -37,7 +37,8 @@ def plot_vp(data, ax=None, **kws):
     return ax.plot(data.values, data.index, **kws)
 
 
-def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5, 3)}, **kws):
+def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5, 3)},
+             has_ml=False, **kws):
     """plot DataFrame of vertical profile parameters"""
     ncols = df.shape[1]
     if axarr is None:
@@ -48,6 +49,8 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5, 3)}, **kws):
         ax = axarr[i]
         plot_vp(data, ax=ax, **kws)
         search_name = name.upper()
+        if has_ml and (search_name == 'KDP'):
+            search_name = 'KDP_R'
         if search_name in vis.LABELS:
             ax.set_xlabel(vis.LABELS[search_name])
             ax.set_xlim(left=vis.VMINS[search_name], right=vis.VMAXS[search_name])
