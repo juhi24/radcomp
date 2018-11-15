@@ -18,7 +18,7 @@ if __name__ == '__main__':
     plt.close('all')
     plt.ion() if interactive else plt.ioff()
     #cases = multicase.read_cases('mlt_test')
-    cases = multicase.read_cases('melting')
+    cases = multicase.read_cases('rain')
     #cases = cases[cases.ml_ok.isnull()]
     #cases = cases[~cases.ml_ok.astype(bool)]
     results_dir = ensure_dir(path.join(RESULTS_DIR, 'ml2'))
