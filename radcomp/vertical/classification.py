@@ -144,13 +144,14 @@ class VPC:
         self.extra_weight = extra_weight
         self.radar_weights = radar_weights
         self.basename = basename
-        self.mapping = None
+        self._mapping = None
         self.training_data = None # archived training data
         self.training_result = None # archived training data classes
         self._n_eigens = n_eigens
         self._n_clusters = n_clusters
         self._inverse_data = None
         self._inverse_extra = None
+        self.invalid_classes = []
 
     def __repr__(self):
         return '<VPC {}>'.format(self.name())
@@ -225,7 +226,7 @@ class VPC:
     def prep_classes(self, cl_arr, index):
         """Map classes as Series"""
         self.map_components()
-        classes = self.mapping[cl_arr].values
+        classes = self._mapping[cl_arr].values
         return pd.Series(data=classes, index=index)
 
     def classify(self, data_scaled, **kws):
@@ -243,6 +244,12 @@ class VPC:
         silh = pd.Series(data=silh, index=cl_silh.index).loc[classes.index]
         return classes, silh
 
+    def valid_classes(self):
+        valid = list(self.get_class_list())
+        for i in sorted(self.invalid_classes, reverse=True):
+            del valid[i]
+        return valid
+
     def map_components(self):
         """Set class mapping, return sorted components and extra parameters"""
         centroids = self.km.cluster_centers_
@@ -253,10 +260,11 @@ class VPC:
         else:
             components = centroids[:, :-n_extra]
             extra = centroids[:, -n_extra:]/self.extra_weight
-        components, self.mapping = sort_by_column(components, by=0)
+        # sort classes by first pca component
+        components, self._mapping = sort_by_column(components, by=0)
         extra_df = pd.DataFrame(extra, columns=self.params_extra)
         if not extra_df.empty:
-            extra_df = extra_df.loc[self.mapping.sort_values().index]
+            extra_df = extra_df.loc[self._mapping.sort_values().index]
             extra_df.reset_index(drop=True, inplace=True)
         return components, extra_df
 
@@ -290,20 +298,21 @@ class VPC:
         normal = pd.DataFrame(self.pca.inverse_transform(pc).T)
         return self.df2pn(normal), extra
 
-    def clus_centroids_df(self):
+    def _clus_centroids_df(self):
         """
         cluster centroids DataFrame, extra parameters in separate DataFrame
         """
         components, extra_df = self.map_components()
         if self.reduced:
             centroids = self.pca.inverse_transform(components)
-        return pd.DataFrame(centroids.T), extra_df
+        cen = pd.DataFrame(centroids.T).loc[:, self.valid_classes()]
+        return cen, extra_df
 
     def clus_centroids_pn(self):
         """
         cluster centroids Panel, extra parameters in separate DataFrame
         """
-        clus_centroids, extra = self.clus_centroids_df()
+        clus_centroids, extra = self._clus_centroids_df()
         pn = self.df2pn(clus_centroids)
         return pn, extra
 
