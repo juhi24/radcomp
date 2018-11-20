@@ -3,10 +3,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 """Radar plotting functions and common variables."""
 
-VMINS = {'ZH': -10, 'ZDR': -1, 'RHO': 0.8, 'KDP': 0, 'KDP_R': 0, 'DP': 0, 'PHIDP': 0,
+VMINS = {'ZH': -10, 'ZDR': -0.25, 'RHO': 0.8, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
          'R': 0.05, 'MLI': 0, 'ML': 0, 'RH': 0.9}
-VMAXS = {'ZH': 35, 'ZDR': 3, 'RHO': 1, 'KDP': 0.25, 'DP': 360, 'PHIDP': 30,
-         'R': 16, 'MLI': 10, 'ML': 1, 'KDP_R': 0.5, 'RH': 1}
+VMAXS = {'ZH': 35, 'ZDR': 2, 'RHO': 1, 'KDP': 0.25, 'DP': 360, 'PHIDP': 30,
+         'R': 16, 'MLI': 10, 'ML': 1, 'RH': 1}
+VMINS_RAIN = {}
+VMAXS_RAIN = {'ZH': 40, 'KDP': 0.5, 'ZDR': 3}
+VMINS_NARROW = {}
+VMAXS_NARROW = {}
 LABELS = {'ZH': '$Z_{e}$, dBZ',
           'ZDR': '$Z_{dr}$, dB',
           'RHO': '$\\rho_{hv}$',
@@ -44,6 +48,15 @@ def plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,
     cb = fig.colorbar(im, **cbkws)
     cb.set_label(cblabel)
     return fig, ax
+
+
+def vlims(has_ml=False, narrow=False):
+    """value limits for radar data visualization"""
+    vmins, vmaxs = VMINS.copy(), VMAXS.copy()
+    if has_ml:
+        vmins.update(VMINS_RAIN)
+        vmaxs.update(VMAXS_RAIN)
+    return vmins, vmaxs
 
 
 def _plotmeta(key):

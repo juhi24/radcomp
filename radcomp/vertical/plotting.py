@@ -49,11 +49,10 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5, 3)},
         ax = axarr[i]
         plot_vp(data, ax=ax, **kws)
         search_name = name.upper()
-        if has_ml and (search_name == 'KDP'):
-            search_name = 'KDP_R'
         if search_name in vis.LABELS:
             ax.set_xlabel(vis.LABELS[search_name])
-            ax.set_xlim(left=vis.VMINS[search_name], right=vis.VMAXS[search_name])
+            vmins, vmaxs = vis.vlims(has_ml=has_ml)
+            ax.set_xlim(left=vmins[search_name], right=vmaxs[search_name])
         else:
             ax.set_xlabel(name)
     set_h_ax(axarr[0])
@@ -111,15 +110,7 @@ def _pn_scalekws(field, scaled, x_is_date, has_ml):
         scalekws = {'vmin': 0, 'vmax': 1}
         cb_label = 'scaled {}'.format(field)
     elif fieldup in vis.LABELS:
-        # custom limits
-        vmins = vis.VMINS.copy()
-        vmaxs = vis.VMAXS.copy()
-        vmins['ZDR'] = -0.5
-        if not x_is_date: # if not a time series
-            vmaxs['ZDR'] = 2.5
-        if has_ml: # ML present
-            vmaxs['KDP'] = vmaxs['KDP_R'] # increase saturation limit
-        ##
+        vmins, vmaxs = vis.vlims(has_ml=has_ml)
         scalekws = {'vmin': vmins[fieldup],
                     'vmax': vmaxs[fieldup]}
         cb_label = vis.LABELS[fieldup]
@@ -346,7 +337,7 @@ def num2tstr(num):
 
 def format_coord(x, y):
     """coordinate formatter replacement"""
-    return 'x={x:.2f}, y={y:.2f}'.format(x=x, y=y)
+    return 'x={x}, y={y:.2f}'.format(x=x, y=y)
 
 
 def format_coord_xtime(x, y):
@@ -358,8 +349,11 @@ def format_coord_pn(x, y, data, x_is_date=False):
     """coordinate formatter replacement with data display"""
     values = {}
     for label in data.items:
-        t = mpl.dates.num2date(x).replace(tzinfo=None)
-        ix = data.minor_axis.get_loc(t, method='nearest')
+        if x_is_date:
+            x = mpl.dates.num2date(x).replace(tzinfo=None)
+        else:
+            x = round(x)
+        ix = data.minor_axis.get_loc(x, method='nearest')
         iy = data.major_axis.get_loc(y, method='nearest')
         values[label] = data[label].iloc[iy, ix]
     if x_is_date:
