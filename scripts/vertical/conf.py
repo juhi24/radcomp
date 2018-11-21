@@ -9,11 +9,11 @@ from radcomp.vertical import multicase, RESULTS_DIR
 
 #SCHEME_ID_SNOW = '14-16_t08_zdr05_19eig19clus_pca'
 #SCHEME_ID_SNOW = 'snow_t08_kdp13_22eig23clus_pca'
-SCHEME_ID_SNOW = 'snow_t08_kdp17_30eig19clus_pca'
-SCHEME_ID_MELT = 'mlt2_kdp08_30eig15clus_pca'
+SCHEME_ID_SNOW = 'snow_t08_kdp17_30eig12clus_pca'
+SCHEME_ID_MELT = 'mlt2_kdp08_30eig10clus_pca'
 
 CASES_SNOW = 'snow'
-CASES_MELT = 'melting'
+CASES_MELT = 'rain'
 
 PARAMS = ['zh', 'zdr', 'kdp']
 
@@ -21,7 +21,7 @@ VPC_PARAMS_SNOW = dict(basename='snow',
                        params=PARAMS,
                        hlimits=(190, 10e3),
                        n_eigens=30,
-                       n_clusters=23,
+                       n_clusters=12,
                        reduced=True,
                        extra_weight=0.8,
                        radar_weights=dict(kdp=1.7))
@@ -30,7 +30,7 @@ VPC_PARAMS_RAIN = dict(basename='mlt2',
                        params=PARAMS,
                        hlimits=(290, 10e3),
                        n_eigens=30,
-                       n_clusters=17,
+                       n_clusters=10,
                        reduced=True,
                        radar_weights=dict(kdp=0.8))
 

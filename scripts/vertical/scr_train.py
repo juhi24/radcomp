@@ -10,8 +10,8 @@ from j24 import ensure_join
 from conf import VPC_PARAMS_SNOW, VPC_PARAMS_RAIN
 
 
-VPC_PARAMS_SNOW.update({'n_clusters': 14})
-VPC_PARAMS_RAIN.update({'n_clusters': 10})
+VPC_PARAMS_SNOW.update({'n_clusters': 12})
+VPC_PARAMS_RAIN.update({'n_clusters': 10, 'invalid_classes': [9]})
 
 
 def training(c, train=True, save_scheme=True):
@@ -23,7 +23,8 @@ def training(c, train=True, save_scheme=True):
 
 
 def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True):
-    fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue', cmap='viridis')
+    fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue',
+                                             fig_scale_factor=0.8)#, cmap='viridis')
     ax_sca = c.scatter_class_pca(plot3d=True) if plt_sca else None
     if plt_silh:
         fig_s, ax_s = plt.subplots()
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     plt.ion()
     plt.close('all')
     np.random.seed(1)
-    cases_id = 'rain'
+    cases_id = 'snow'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)
@@ -67,4 +68,5 @@ if __name__ == '__main__':
             plot_kws = dict(plt_silh=False, plt_sca=False)
             workflow(c, vpc_params, plot_kws=plot_kws)
     else:
-        workflow(c, vpc_params)
+        kws = dict(save_plots=True)
+        workflow(c, vpc_params, plot_kws=kws)
