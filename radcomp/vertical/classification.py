@@ -132,7 +132,8 @@ class VPC:
 
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None, n_clusters=None,
-                 extra_weight=None, radar_weights=None, basename=None):
+                 extra_weight=None, radar_weights=None, basename=None,
+                 invalid_classes=[]):
         self.pca = pca
         self.km = km  # k means
         self.hlimits = hlimits
@@ -151,7 +152,7 @@ class VPC:
         self._n_clusters = n_clusters
         self._inverse_data = None
         self._inverse_extra = None
-        self.invalid_classes = []
+        self.invalid_classes = invalid_classes
 
     def __repr__(self):
         return '<VPC {}>'.format(self.name())
@@ -306,6 +307,10 @@ class VPC:
         if self.reduced:
             centroids = self.pca.inverse_transform(components)
         cen = pd.DataFrame(centroids.T).loc[:, self.valid_classes()]
+        try:
+            extra_df = extra_df.loc[:, self.valid_classes()]
+        except KeyError:
+            pass
         return cen, extra_df
 
     def clus_centroids_pn(self):
