@@ -6,7 +6,7 @@ __metaclass__ = type
 import matplotlib.pyplot as plt
 from warnings import warn
 
-from radcomp.vertical.cases_plotter import CasesPlotter
+from radcomp.vertical.cases_plotter import ProfileMarker
 
 import conf
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
             warn(str(e))
             raise e
             continue
-    cp = CasesPlotter(cases)
+    cp = ProfileMarker(cases)
     cp.plot(n_extra_ax=0, plot_t=plot_t, plot_silh=False,
             t_contour_ax_ind='all', t_levels=[-20, -8, -3],
             plot_lwe=False, fig_scale_factor=0.8, cmap='viridis', interactive=False)

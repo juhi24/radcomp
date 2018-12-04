@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 #import pandas as pd
+import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -329,9 +330,18 @@ def dict2coord(d):
     return ', '.join('{0}={1:.2f}'.format(*x) for x in d.items())
 
 
+def num2date(num):
+    """num2date wrapper"""
+    return mpl.dates.num2date(num).replace(tzinfo=None)
+
+
 def num2tstr(num):
     """datenumber to datetime string representation"""
-    t = mpl.dates.num2date(num).replace(tzinfo=None)
+    try:
+        t = num2date(num)
+    except TypeError:
+        # already a datetime?
+        t = num
     return t.strftime('%Y-%m-%d %H:%M')
 
 
@@ -350,7 +360,11 @@ def format_coord_pn(x, y, data, x_is_date=False):
     values = {}
     for label in data.items:
         if x_is_date:
-            x = mpl.dates.num2date(x).replace(tzinfo=None)
+            try:
+                x = num2date(x)
+            except TypeError:
+                # let's hope it's already a datetime
+                pass
         else:
             x = round(x)
         ix = data.minor_axis.get_loc(x, method='nearest')

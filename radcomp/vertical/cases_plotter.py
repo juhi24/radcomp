@@ -2,19 +2,27 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from radcomp.vertical import plotting
 
-class CasesPlotter:
-    """Interactively visualize a DataFrame of cases"""
 
+class CasesBase:
+    """"""
     def __init__(self, cases):
         self.cases = cases
+
+
+class CasesPlotter(CasesBase):
+    """Interactively visualize a DataFrame of cases"""
+
+    def __init__(self, *args, **kws):
+        super().__init__(*args, **kws)
         self.fig = None
         self.axarr = None
         self.i_active = 0
         self.plot_kws = {}
+        self.press = self.press_nav
 
     @property
     def n_cases(self):
@@ -47,9 +55,9 @@ class CasesPlotter:
         """Plot current active case."""
         self.plot_kws = kws
         self.fig, self.axarr = self.active_case().plot(**kws)
-        self.fig.canvas.mpl_connect('key_press_event', self._press)
+        self.fig.canvas.mpl_connect('key_press_event', self.press)
 
-    def _press(self, event):
+    def press_nav(self, event):
         """key press logic"""
         print(event.key)
         if event.key == 'right':
@@ -58,3 +66,19 @@ class CasesPlotter:
             self.prev_case()
         plt.close(self.fig)
         self.plot(**self.plot_kws)
+
+
+class ProfileMarker(CasesPlotter):
+    def __init__(self, *args, **kws):
+        super().__init__(*args, **kws)
+
+    def click_select(self, event):
+        print(plotting.num2tstr(event.xdata))
+
+    def release_select(self, event):
+        print(plotting.num2tstr(event.xdata))
+
+    def plot(self, **kws):
+        super().plot(**kws)
+        self.fig.canvas.mpl_connect('button_press_event', self.click_select)
+        self.fig.canvas.mpl_connect('button_release_event', self.release_select)
