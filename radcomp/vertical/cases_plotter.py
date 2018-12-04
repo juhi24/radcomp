@@ -19,7 +19,7 @@ class CasesPlotter:
         return self.cases.shape[0]
 
     def next_case(self):
-        if self.i_active >= self.n_cases:
+        if self.i_active > self.n_cases-2:
             return self.i_active
         self.i_active += 1
         return self.i_active
