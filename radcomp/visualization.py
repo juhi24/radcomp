@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 """Radar plotting functions and common variables."""
 
 VMINS = {'ZH': -10, 'ZDR': -0.25, 'RHO': 0.8, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
-         'R': 0.05, 'MLI': 0, 'ML': 0, 'RH': 0.9}
+         'R': 0.05, 'MLI': 0, 'ML': 0, 'RH': 0.9, 'LR': -0.5}
 VMAXS = {'ZH': 35, 'ZDR': 2, 'RHO': 1, 'KDP': 0.25, 'DP': 360, 'PHIDP': 30,
-         'R': 16, 'MLI': 10, 'ML': 1, 'RH': 1}
+         'R': 16, 'MLI': 10, 'ML': 1, 'RH': 1, 'LR': 0.5}
 VMINS_RAIN = {}
 VMAXS_RAIN = {'ZH': 40, 'KDP': 0.5, 'ZDR': 3}
 VMINS_NARROW = {}
@@ -20,7 +20,8 @@ LABELS = {'ZH': '$Z_{e}$, dBZ',
           'R': 'rainrate, mm$\,$h$^{-1}$',
           'MLI': 'ML indicator',
           'ML': 'detected ML',
-          'RH': 'RH'}
+          'RH': 'RH',
+          'LR': 'lapse rate'}
 
 
 def plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,

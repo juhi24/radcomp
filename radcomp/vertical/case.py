@@ -389,11 +389,11 @@ class Case:
         return plotting.plot_classes(self.cl_data_scaled, self.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             plot_fr=False, plot_t=True, plot_azs=False, plot_silh=True,
-             t_contour_ax_ind=False, plot_classes=True, plot_lwe=True,
-             above_ml_only=False, inverse_transformed=False,
-             t_levels=[0], **kws):
+             t_contour_ax_ind=False, above_ml_only=False, t_levels=[0],
+             inverse_transformed=False,
+             plot_extras=['ts', 'silh', 'cl', 'lwe'], **kws):
         """Visualize the case."""
+        self.load_model_temperature()
         if not self.has_ml:
             above_ml_only = False
         if raw:
@@ -411,19 +411,24 @@ class Case:
                 params = self.class_scheme.params
             else:
                 params = DEFAULT_PARAMS
-        plot_classes = (self.classes is not None) and plot_classes
-        plot_lwe = self.pluvio is not None and plot_lwe
+        plot_classes = ('cl' in plot_extras) and (self.classes is not None)
+        plot_lwe = ('lwe' in plot_extras) and (self.pluvio is not None)
         if plot_lwe:
             plot_lwe = not self.pluvio.data.empty
-        plot_azs = plot_azs and (self.azs().size > 0)
-        plot_fr = plot_fr and (self.fr().size > 0)
-        plot_t = plot_t and (self.ground_temperature().size > 0)
-        plot_silh = plot_silh and (self.classes is not None)
+        plot_azs = ('azs' in plot_extras) and (self.azs().size > 0)
+        plot_fr = ('fr' in plot_extras) and (self.fr().size > 0)
+        plot_t = ('ts' in plot_extras) and (self.ground_temperature().size > 0)
+        plot_silh = ('silh' in plot_extras) and (self.classes is not None)
+        plot_lr = ('lr' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
+        cmap_override = {'LR': 'seismic'}
+        if plot_lr:
+            data['LR'] = data['T'].diff()
+            params = np.append(params, 'LR')
         fig, axarr = plotting.plotpn(data, fields=params,
                                      n_extra_ax=n_extra_ax, has_ml=self.has_ml,
-                                     **kws)
+                                     cmap_override=cmap_override, **kws)
         plotfuns = OrderedDict()
         plotfuns[self.plot_t] = plot_t
         plotfuns[self.plot_silh] = plot_silh
@@ -491,7 +496,7 @@ class Case:
         return ax
 
     def plot_t(self, ax, tmin=-20, tmax=10):
-        """Plot temperature."""
+        """Plot surface temperature."""
         self.plot_series(self.ground_temperature(), ax=ax)
         ax.set_ylabel(plotting.LABELS['temp_mean'])
         ax.set_ylim([tmin, tmax])
@@ -797,9 +802,9 @@ class Case:
         """Load interpolated model temperature if not already loaded."""
         if 'T' in self.data and not overwrite:
             return
-        self.data['T'] = cloudnet.load_as_df(self.data.major_axis,
-                                             self.data.minor_axis,
-                                             variable='temperature') - 273.15
+        t = cloudnet.load_as_df(self.data.major_axis, self.data.minor_axis,
+                                variable='temperature') - 273.15
+        self.data['T'] = t
 
     def lwe(self):
         """liquid water equivalent precipitation rate"""

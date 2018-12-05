@@ -136,7 +136,7 @@ def _pn_x(df, x_is_date):
 
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150},
-           n_ax_shift=0, has_ml=False, **kws):
+           n_ax_shift=0, has_ml=False, cmap_override={}, **kws):
     """Plot Panel of VPs"""
     if fields is None:
         fields = pn.items
@@ -156,6 +156,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         axarr.append(ax)
     # pcolormesh axes
     for i, field in enumerate(np.sort(fields)):
+        cm = cmap if field not in cmap_override else cmap_override[field]
         subplot_kws = {}
         if i > 0:
             subplot_kws['sharex'] = axarr[0]
@@ -167,7 +168,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         kws.update(scalekws)
         x = _pn_x(pn[field], x_is_date)
         im = ax.pcolormesh(x, pn[field].index,
-                           np.ma.masked_invalid(pn[field].values), cmap=cmap,
+                           np.ma.masked_invalid(pn[field].values), cmap=cm,
                            label=field, **kws)
         # coordinate string formatting
         fmt_coord = lambda x, y: format_coord_pn(x, y, pn.loc[coords, :, :],
