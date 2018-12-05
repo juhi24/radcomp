@@ -14,6 +14,7 @@ import pyart # for colormaps
 from mpl_toolkits.mplot3d import Axes3D
 
 
+DATETIME_FMT_CSV = '%Y-%m-%d %H:%M'
 DISPLACEMENT_FACTOR = 0.5
 LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               intensity='LWE, mm$\,$h$^{-1}$',
@@ -342,7 +343,7 @@ def num2tstr(num):
     except TypeError:
         # already a datetime?
         t = num
-    return t.strftime('%Y-%m-%d %H:%M')
+    return t.strftime(DATETIME_FMT_CSV)
 
 
 def format_coord(x, y):

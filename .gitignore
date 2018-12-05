@@ -96,3 +96,5 @@ ENV/
 .vscode/
 .pytest_cache/
 nogit/
+*.swp
+

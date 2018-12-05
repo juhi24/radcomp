@@ -459,7 +459,6 @@ class Case:
                                                                    inverse_transformed=inverse_transformed,
                                                                    above_ml_only=above_ml_only)
             fig.canvas.mpl_connect('button_press_event', on_click_fun)
-            #fig.canvas.mpl_connect('motion_notify_event', self._on_move_show_values)
         for ax in axarr:
             ax.xaxis.grid(True)
             ax.yaxis.grid(True)
@@ -545,7 +544,7 @@ class Case:
     def _on_click_plot_dt_cs(self, event, params=None, **kws):
         """on click plot profiles at a timestamp"""
         try:
-            dt = mpl.dates.num2date(event.xdata).replace(tzinfo=None)
+            dt = plotting.num2date(event.xdata)
         except TypeError: # clicked outside axes
             return
         ax, update, axkws = handle_ax(self._dt_ax)
@@ -568,13 +567,16 @@ class Case:
         if update:
             ax.get_figure().canvas.draw()
 
-    def _on_move_show_values(self, event):
-        return
+    def nearest_datetime(self, dt, method='nearest', **kws):
+        """Round datetime to nearest data timestamp."""
+        i = self.data.minor_axis.get_loc(dt, method=method, **kws)
+        return self.data.minor_axis[i]
 
     def plot_data_at(self, dt, params=None, inverse_transformed=False,
                      above_ml_only=False, **kws):
         """Plot profiles at given timestamp."""
         data_orig = self.data_above_ml if above_ml_only else self.data
+        # integer location
         i = data_orig.minor_axis.get_loc(dt, method='nearest')
         dti = data_orig.minor_axis[i]
         data = data_orig.iloc[:, :, i]

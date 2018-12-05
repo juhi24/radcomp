@@ -73,10 +73,15 @@ class ProfileMarker(CasesPlotter):
         super().__init__(*args, **kws)
 
     def click_select(self, event):
-        print(plotting.num2tstr(event.xdata))
+        dt = plotting.num2tstr(event.xdata)
+        dt_floor = self.active_case().nearest_datetime(dt)
+        dtstr = dt_floor.strftime(plotting.DATETIME_FMT_CSV)
+        print('{},'.format(dtstr), end='')
 
     def release_select(self, event):
-        print(plotting.num2tstr(event.xdata))
+        dt = plotting.num2tstr(event.xdata)
+        dt_ceil = self.active_case().nearest_datetime(dt)
+        print(dt_ceil.strftime(plotting.DATETIME_FMT_CSV))
 
     def plot(self, **kws):
         super().plot(**kws)
