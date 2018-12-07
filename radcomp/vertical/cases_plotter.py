@@ -72,16 +72,21 @@ class ProfileMarker(CasesPlotter):
     def __init__(self, *args, **kws):
         super().__init__(*args, **kws)
 
+    def _select(self, xdata):
+        try:
+            dt = plotting.num2tstr(xdata)
+        except AttributeError: # clicked outside axes
+            return
+        dt_nearest = self.active_case().nearest_datetime(dt)
+        return dt_nearest.strftime(plotting.DATETIME_FMT_CSV)
+
     def click_select(self, event):
-        dt = plotting.num2tstr(event.xdata)
-        dt_floor = self.active_case().nearest_datetime(dt)
-        dtstr = dt_floor.strftime(plotting.DATETIME_FMT_CSV)
-        print('{},'.format(dtstr), end='')
+        tstr = self._select(event.xdata)
+        print('{},'.format(tstr), end='')
 
     def release_select(self, event):
-        dt = plotting.num2tstr(event.xdata)
-        dt_ceil = self.active_case().nearest_datetime(dt)
-        print(dt_ceil.strftime(plotting.DATETIME_FMT_CSV))
+        tstr = self._select(event.xdata)
+        print(tstr)
 
     def plot(self, **kws):
         super().plot(**kws)
