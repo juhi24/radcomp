@@ -29,6 +29,7 @@ class ProcBenchmark(VPCBenchmark):
     def __init__(self, **kws):
         super().__init__(**kws)
         self.data_fitted = None
+        self.n_clusters = None
 
     @classmethod
     def from_csv(cls, name='fingerprint', **kws):
@@ -37,7 +38,7 @@ class ProcBenchmark(VPCBenchmark):
         df = pd.read_csv(csv, parse_dates=['start', 'end'])
         dtypes = dict(ml=bool, hm=bool, dgz=bool, inv=bool)
         data = df.astype(dtypes)
-        return cls(data, **kws)
+        return cls(data=data, **kws)
 
     def fit(self, vpc):
         """Generate comparison with VPC."""
@@ -49,6 +50,19 @@ class ProcBenchmark(VPCBenchmark):
                 df[name] = value
             dfs.append(df)
         self.data_fitted = pd.concat(dfs)
+        self.n_clusters = vpc.n_clusters
+
+    def query_frac(self, cl, q='hm'):
+        """fraction of matched query for a given class"""
+        df = self.data_fitted
+        n = df.query('cl==@cl & {}'.format(q)).shape[0]
+        n_cl_occ = (df['cl'] == cl).sum()
+        return n/n_cl_occ
+
+    def query_fracs(self, q='hm'):
+        """fractions of matched query per class"""
+        fracs = pd.Series(index=range(self.n_clusters), data=range(self.n_clusters))
+        return fracs.apply(self.query_frac, q=q)
 
 
 if __name__ == '__main__':
