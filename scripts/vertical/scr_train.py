@@ -10,7 +10,7 @@ from j24 import ensure_join
 from conf import VPC_PARAMS_SNOW, VPC_PARAMS_RAIN
 
 
-VPC_PARAMS_SNOW.update({'n_clusters': 12})
+VPC_PARAMS_SNOW.update({'n_clusters': 12, 'basename': 'snowtest'})
 VPC_PARAMS_RAIN.update({'n_clusters': 10, 'invalid_classes': [9]})
 
 

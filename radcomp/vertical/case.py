@@ -1,13 +1,15 @@
 # coding: utf-8
 """tools for analyzing VPs in an individual precipitation event"""
+from collections import OrderedDict
+from os import path
+from datetime import timedelta
+
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from datetime import timedelta
 from scipy.io import loadmat
-from os import path
-from collections import OrderedDict
+
 from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
                               NAN_REPLACEMENT)
 from radcomp import arm, azs
@@ -147,7 +149,8 @@ def prep_data(pn, vpc):
 
 
 def scale_data(pn, reverse=False):
-    """Scale radar parameters so that values are same order of magnitude."""
+    """DEPRECATED
+    Scale radar parameters so that values are same order of magnitude."""
     scaled = pn.copy()
     for field, data in scaled.iteritems():
         try:
@@ -328,7 +331,8 @@ class Case:
         cl_data = self.prepare_cl_data(save=save, force_no_crop=force_no_crop)
         if cl_data is None:
             return None
-        scaled = scale_data(cl_data).fillna(0)
+        #scaled = scale_data(cl_data).fillna(0)
+        scaled = self.class_scheme.feature_scaling(cl_data).fillna(0)
         if save and not force_no_crop:
             self.cl_data_scaled = scaled
         return scaled
@@ -382,7 +386,7 @@ class Case:
         pn = self.class_scheme.inverse_data
         pn.major_axis = self.cl_data_scaled.minor_axis
         pn.minor_axis = self.data.minor_axis
-        return scale_data(pn, reverse=True)
+        return self.class_scheme.feature_scaling(pn, inverse=True)
 
     def plot_classes(self):
         """plot_classes wrapper"""
@@ -628,7 +632,7 @@ class Case:
         # TODO: move to VPC
         clus_centroids, extra = self.class_scheme.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
-        decoded = scale_data(clus_centroids, reverse=True)
+        decoded = self.class_scheme.feature_scaling(clus_centroids, inverse=True)
         if (sortby is not None) and (not order):
             if isinstance(sortby, str) and extra.empty:
                 order = extra.sort_values(by=sortby).index

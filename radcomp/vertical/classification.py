@@ -1,13 +1,16 @@
 # coding: utf-8
 import pickle
+import copy
+from os import path
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from os import path
-from collections import OrderedDict
-from sklearn import decomposition
+from sklearn import decomposition, preprocessing
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples
+
 from radcomp import learn, USER_DIR
 from j24 import ensure_dir, limitslist
 from j24.learn import pca_stats
@@ -133,7 +136,7 @@ class VPC:
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None, n_clusters=None,
                  extra_weight=None, radar_weights=None, basename=None,
-                 invalid_classes=[]):
+                 transformer_base=None, invalid_classes=[]):
         self.pca = pca
         self.km = km  # k means
         self.hlimits = hlimits
@@ -153,6 +156,9 @@ class VPC:
         self._inverse_data = None
         self._inverse_extra = None
         self.invalid_classes = invalid_classes
+        self.transformer_base = transformer_base
+        self.transformers = {}
+        self.setup_transform()
 
     def __repr__(self):
         return '<VPC {}>'.format(self.name())
@@ -190,6 +196,28 @@ class VPC:
         if isinstance(obj, cls):
             return obj
         raise Exception('Not a {} object.'.format(cls))
+
+    def setup_transform(self, transformer=None):
+        """preprocessing feature scaling transformer setup"""
+        if transformer is None:
+            if self.transformer_base is None:
+                transformer = preprocessing.QuantileTransformer()
+            else:
+                transformer = self.transformer_base
+        self.transformer_base = transformer
+        for param in self.params:
+            self.transformers[param] = copy.deepcopy(transformer)
+
+    def feature_scaling(self, pn, inverse=False):
+        """feature scaling"""
+        scaled = pn.copy()
+        for field, df in scaled.iteritems():
+            tr = self.transformers[field]
+            if inverse:
+                scaled[field] = tr.inverse_transform(df.T).T
+            else:
+                scaled[field] = tr.fit_transform(df)
+        return scaled
 
     def name(self):
         """scheme name string"""
