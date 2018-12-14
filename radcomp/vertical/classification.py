@@ -7,11 +7,12 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn import decomposition, preprocessing
+from sklearn import decomposition
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples
 
 from radcomp import learn, USER_DIR
+from radcomp.vertical import preprocessing
 from j24 import ensure_dir, limitslist
 from j24.learn import pca_stats
 
@@ -201,12 +202,12 @@ class VPC:
         """preprocessing feature scaling transformer setup"""
         if transformer is None:
             if self.transformer_base is None:
-                transformer = preprocessing.QuantileTransformer()
+                transformer = 0
             else:
                 transformer = self.transformer_base
         self.transformer_base = transformer
         for param in self.params:
-            self.transformers[param] = copy.deepcopy(transformer)
+            self.transformers[param] = preprocessing.RadarDataScaler(param=param)
 
     def feature_scaling(self, pn, inverse=False):
         """feature scaling"""

@@ -24,8 +24,6 @@ if USE_LEGACY_DATA:
 else:
     DATA_DIR = path.join(home(), 'DATA', 'vprhi2')
     DATA_FILE_FMT = '%Y%m%d_IKA_vprhi.mat'
-SCALING_LIMITS = {'ZH': (-10, 30), 'zh': (-10, 30), 'ZDR': (0, 3), 'zdr': (0, 3),
-                  'KDP': (0, 0.5), 'kdp': (0, 0.15)}
 DEFAULT_PARAMS = ['zh', 'zdr', 'kdp']
 
 
