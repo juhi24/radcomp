@@ -146,24 +146,6 @@ def prep_data(pn, vpc):
     return prepare_data(pn, fields=vpc.params, hlimits=vpc.hlimits, kdpmax=vpc.kdpmax)
 
 
-def scale_data(pn, reverse=False):
-    """DEPRECATED
-    Scale radar parameters so that values are same order of magnitude."""
-    scaled = pn.copy()
-    for field, data in scaled.iteritems():
-        try:
-            if reverse:
-                data *= SCALING_LIMITS[field][1]
-                data += SCALING_LIMITS[field][0]
-            else:
-                data -= SCALING_LIMITS[field][0]
-                data *= 1.0/SCALING_LIMITS[field][1]
-            scaled[field] = data
-        except KeyError:
-            continue
-    return scaled
-
-
 def handle_ax(ax):
     if ax is None:
         ax_out = None

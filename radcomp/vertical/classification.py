@@ -157,7 +157,6 @@ class VPC:
         self._inverse_data = None
         self._inverse_extra = None
         self.invalid_classes = invalid_classes
-        self.transformer_base = transformer_base
         self.transformers = {}
         self.setup_transform()
 
@@ -198,14 +197,8 @@ class VPC:
             return obj
         raise Exception('Not a {} object.'.format(cls))
 
-    def setup_transform(self, transformer=None):
+    def setup_transform(self):
         """preprocessing feature scaling transformer setup"""
-        if transformer is None:
-            if self.transformer_base is None:
-                transformer = 0
-            else:
-                transformer = self.transformer_base
-        self.transformer_base = transformer
         for param in self.params:
             self.transformers[param] = preprocessing.RadarDataScaler(param=param)
 
