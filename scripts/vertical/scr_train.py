@@ -10,8 +10,8 @@ from j24 import ensure_join
 from conf import VPC_PARAMS_SNOW, VPC_PARAMS_RAIN
 
 
-VPC_PARAMS_SNOW.update({'n_clusters': 12, 'basename': 'snowtest'})
-VPC_PARAMS_RAIN.update({'n_clusters': 10, 'invalid_classes': [9]})
+VPC_PARAMS_SNOW.update({'n_clusters': 12})
+VPC_PARAMS_RAIN.update({'n_clusters': 10})#, 'invalid_classes': [9]})
 
 
 def training(c, train=True, save_scheme=True):
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     plt.ion()
     plt.close('all')
     np.random.seed(1)
-    cases_id = 'snow'
+    cases_id = 'rain'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)

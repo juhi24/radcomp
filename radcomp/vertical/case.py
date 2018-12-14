@@ -296,6 +296,7 @@ class Case:
                 top = self.ml_limits()[1]
                 collapsefun = lambda df: ml.collapse2top(df.T, top=top).T
                 cl_data = cl_data.apply(collapsefun, axis=(1,2))
+                cl_data = fillna(cl_data)
                 if cl_data.size==0:
                     return None
             if save and not force_no_crop:

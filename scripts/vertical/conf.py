@@ -18,21 +18,25 @@ CASES_MELT = 'rain'
 PARAMS = ['zh', 'zdr', 'kdp']
 
 VPC_PARAMS_SNOW = dict(basename='snow',
+                       has_ml=False,
                        params=PARAMS,
                        hlimits=(190, 10e3),
                        n_eigens=30,
                        n_clusters=12,
                        reduced=True,
                        extra_weight=0.8,
-                       radar_weights=dict(kdp=1.7))
+                       #radar_weights=dict(kdp=1.7),
+                       radar_weights={})
 
 VPC_PARAMS_RAIN = dict(basename='mlt2',
+                       has_ml=True,
                        params=PARAMS,
                        hlimits=(290, 10e3),
                        n_eigens=30,
                        n_clusters=10,
                        reduced=True,
-                       radar_weights=dict(kdp=0.8))
+                       #radar_weights=dict(kdp=0.8),
+                       radar_weights={})
 
 P1_FIG_DIR = path.join(RESULTS_DIR, 'paper1')
 

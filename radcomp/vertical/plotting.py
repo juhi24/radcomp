@@ -2,16 +2,15 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-#import pandas as pd
-import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import pyart # for colormaps
+from mpl_toolkits.mplot3d import Axes3D
+
 import radcomp.visualization as vis
 import j24.visualization as jvis
 from radcomp import vertical, learn
-import pyart # for colormaps
-from mpl_toolkits.mplot3d import Axes3D
 
 
 DATETIME_FMT_CSV = '%Y-%m-%d %H:%M'

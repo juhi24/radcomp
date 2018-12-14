@@ -1,6 +1,5 @@
 # coding: utf-8
 import pickle
-import copy
 from os import path
 from collections import OrderedDict
 
@@ -137,7 +136,7 @@ class VPC:
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None, n_clusters=None,
                  extra_weight=None, radar_weights=None, basename=None,
-                 transformer_base=None, invalid_classes=[]):
+                 transformer_base=None, has_ml=False, invalid_classes=[]):
         self.pca = pca
         self.km = km  # k means
         self.hlimits = hlimits
@@ -158,7 +157,7 @@ class VPC:
         self._inverse_extra = None
         self.invalid_classes = invalid_classes
         self.transformers = {}
-        self.setup_transform()
+        self.setup_transform(has_ml)
 
     def __repr__(self):
         return '<VPC {}>'.format(self.name())
@@ -197,10 +196,11 @@ class VPC:
             return obj
         raise Exception('Not a {} object.'.format(cls))
 
-    def setup_transform(self):
+    def setup_transform(self, has_ml):
         """preprocessing feature scaling transformer setup"""
         for param in self.params:
-            self.transformers[param] = preprocessing.RadarDataScaler(param=param)
+            tr = preprocessing.RadarDataScaler(param=param, has_ml=has_ml)
+            self.transformers[param] = tr
 
     def feature_scaling(self, pn, inverse=False):
         """feature scaling"""
