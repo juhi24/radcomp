@@ -26,18 +26,13 @@ def weight_factor_str(param, value):
     return out
 
 def scheme_name(basename='', n_eigens=30, n_clusters=20,
-                reduced=True, extra_weight=0, radar_weights=None):
+                reduced=True, extra_weight=0):
     if reduced:
         qualifier = '_pca'
     else:
         qualifier = ''
     if extra_weight:
         basename += weight_factor_str('t', extra_weight)
-    if radar_weights:
-        for field, factor in radar_weights.items():
-            if factor==1:
-                continue
-            basename += weight_factor_str(field, factor)
     schemefmt = '{base}_{neig}eig{nclus}clus{qualifier}'
     return schemefmt.format(base=basename, neig=n_eigens, nclus=n_clusters,
                             qualifier=qualifier)
@@ -128,14 +123,12 @@ class VPC:
         data
         extra_weight (float, optional): temperature weight factor
             in clustering, 1 if unspecified
-        radar_weights (dict of {str: float} pairs, optional):
-            radar variable relative weight factors in clustering, 1 if unspecified
         basename (str): base name for the scheme id
     """
 
     def __init__(self, pca=None, km=None, hlimits=None, params=None,
                  reduced=False, n_eigens=None, n_clusters=None,
-                 extra_weight=None, radar_weights=None, basename=None,
+                 extra_weight=None, basename=None,
                  transformer_base=None, has_ml=False, invalid_classes=[]):
         self.pca = pca
         self.km = km  # k means
@@ -146,7 +139,6 @@ class VPC:
         self.kdpmax = None
         self.data = None  # training or classification data
         self.extra_weight = extra_weight
-        self.radar_weights = radar_weights
         self.basename = basename
         self._mapping = None
         self.training_data = None # archived training data
@@ -220,8 +212,7 @@ class VPC:
         return scheme_name(basename=self.basename, n_eigens=self._n_eigens,
                            n_clusters=self.n_clusters,
                            reduced=self.reduced,
-                           extra_weight=self.extra_weight,
-                           radar_weights=self.radar_weights)
+                           extra_weight=self.extra_weight)
 
     def get_class_list(self):
         """class number range"""
@@ -303,10 +294,6 @@ class VPC:
             df.index = pd.RangeIndex(stop=df.index.size)
             dfs[param] = df
         pn = pd.Panel(dfs)
-        rw = self.radar_weights
-        if rw is not None:
-            for field, weight_factor in rw.items():
-                pn[field] /= weight_factor
         return pn
 
     def inverse_transform(self, pc=None):
@@ -349,10 +336,6 @@ class VPC:
         metadata = dict(fields=data_scaled.items.values,
                         hlimits=(data_scaled.minor_axis.min(),
                                  data_scaled.minor_axis.max()))
-        rw = self.radar_weights
-        if rw is not None:
-            for field, weight_factor in rw.items():
-                data_scaled[field] *= weight_factor
         data_df = learn.pn2df(data_scaled)
         if self.pca is None:
             self.pca = pca_fit(data_df, n_components=n_components)

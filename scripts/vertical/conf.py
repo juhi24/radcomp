@@ -24,9 +24,7 @@ VPC_PARAMS_SNOW = dict(basename='snow',
                        n_eigens=30,
                        n_clusters=12,
                        reduced=True,
-                       extra_weight=0.8,
-                       #radar_weights=dict(kdp=1.7),
-                       radar_weights={})
+                       extra_weight=0.8)
 
 VPC_PARAMS_RAIN = dict(basename='mlt2',
                        has_ml=True,
@@ -34,9 +32,7 @@ VPC_PARAMS_RAIN = dict(basename='mlt2',
                        hlimits=(290, 10e3),
                        n_eigens=30,
                        n_clusters=10,
-                       reduced=True,
-                       #radar_weights=dict(kdp=0.8),
-                       radar_weights={})
+                       reduced=True)
 
 P1_FIG_DIR = path.join(RESULTS_DIR, 'paper1')
 
