@@ -78,6 +78,14 @@ def vprhimat2pn(datapath):
             raise e
 
 
+def kdp_gradient(kdp):
+    """smooth downwards gradient of kdp"""
+    kdp = kdp.fillna(0).apply(filtering.savgol_series, args=(19, 2)) # smooth kdp
+    kdpg = kdp.diff()
+    kdpg = kdpg.rolling(5, center=True).mean() # smooth gradient
+    return -kdpg
+
+
 def kdp2phidp(kdp, dr_km):
     kdp_filled = kdp.fillna(0)
     return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
@@ -405,9 +413,13 @@ class Case:
         plot_t = ('ts' in plot_extras) and (self.ground_temperature().size > 0)
         plot_silh = ('silh' in plot_extras) and (self.classes is not None)
         plot_lr = ('lr' in plot_extras)
+        plot_kdpg = ('kdpg' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
-        cmap_override = {'LR': 'seismic'}
+        cmap_override = {'LR': 'seismic', 'KDPG': 'bwr'}
+        if plot_kdpg:
+            data['KDPG'] = kdp_gradient(data['kdp'])
+            params = np.append(params, 'KDPG')
         if plot_lr:
             data['LR'] = data['T'].diff()
             params = np.append(params, 'LR')
