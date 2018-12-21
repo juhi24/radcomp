@@ -80,9 +80,10 @@ def vprhimat2pn(datapath):
 
 def kdp_gradient(kdp):
     """smooth downwards gradient of kdp"""
-    kdp = kdp.fillna(0).apply(filtering.savgol_series, args=(19, 2)) # smooth kdp
-    kdpg = kdp.diff()
+    kdp_smooth = kdp.fillna(0).apply(filtering.savgol_series, args=(19, 2))
+    kdpg = kdp_smooth.diff()
     kdpg = kdpg.rolling(5, center=True).mean() # smooth gradient
+    kdpg[kdp.isnull()] = np.nan
     return -kdpg
 
 
@@ -453,10 +454,10 @@ class Case:
         if self.has_ml and has_vpc and not above_ml_only:
             for i in range(len(params)):
                 self.plot_ml(ax=axarr[i])
+        self.cursor = mpl.widgets.MultiCursor(fig.canvas, axarr,
+                                              color='black', horizOn=True,
+                                              vertOn=True, lw=0.5)
         if interactive:
-            self.cursor = mpl.widgets.MultiCursor(fig.canvas, axarr,
-                                                  color='black', horizOn=True,
-                                                  vertOn=True, lw=0.5)
             on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params,
                                                                    inverse_transformed=inverse_transformed,
                                                                    above_ml_only=above_ml_only)

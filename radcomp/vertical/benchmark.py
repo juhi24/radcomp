@@ -52,17 +52,31 @@ class ProcBenchmark(VPCBenchmark):
         self.data_fitted = pd.concat(dfs)
         self.n_clusters = vpc.n_clusters
 
+    def query_count(self, cl, q='hm'):
+        """number of matched query for a given class"""
+        df = self.data_fitted
+        return df.query('cl==@cl & {}'.format(q)).shape[0]
+
     def query_frac(self, cl, q='hm'):
         """fraction of matched query for a given class"""
         df = self.data_fitted
-        n = df.query('cl==@cl & {}'.format(q)).shape[0]
+        n = self.query_count(cl, q=q)
         n_cl_occ = (df['cl'] == cl).sum()
         return n/n_cl_occ
 
-    def query_fracs(self, q='hm'):
+    def query_classes(self, fun, q='hm'):
         """fractions of matched query per class"""
-        fracs = pd.Series(index=range(self.n_clusters), data=range(self.n_clusters))
-        return fracs.apply(self.query_frac, q=q)
+        stat = pd.Series(index=range(self.n_clusters), data=range(self.n_clusters))
+        return stat.apply(fun, q=q)
+
+    def query_all(self, fun, procs=('hm', 'dgz')):
+        stats = []
+        for proc in procs:
+            col = self.query_classes(fun, proc)
+            col.name = proc
+            stats.append(col)
+        return pd.concat(stats, axis=1)
+
 
 
 if __name__ == '__main__':
