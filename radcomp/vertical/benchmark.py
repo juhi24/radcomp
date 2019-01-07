@@ -33,12 +33,14 @@ class ProcBenchmark(VPCBenchmark):
         self.n_clusters = None
 
     @classmethod
-    def from_csv(cls, name='fingerprint', **kws):
+    def from_csv(cls, name='fingerprint', fltr_q=None, **kws):
         """new instance from csv"""
         csv = path.join(BENCHMARK_DIR, name + '.csv')
         df = pd.read_csv(csv, parse_dates=['start', 'end'])
         dtypes = dict(ml=bool, hm=bool, dgz=bool, inv=bool)
         data = df.astype(dtypes)
+        if fltr_q is not None:
+            data.query(fltr_q, inplace=True)
         return cls(data=data, **kws)
 
     def fit(self, vpc):

@@ -13,7 +13,7 @@ import conf
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
-    bm = benchmark.ProcBenchmark.from_csv()
+    bm = benchmark.ProcBenchmark.from_csv(fltr_q='~ml')
     #c = multicase.MultiCase.from_caselist('snow')
     #c.load_classification(conf.SCHEME_ID_SNOW)
     bm.fit(c.class_scheme)
