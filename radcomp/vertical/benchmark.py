@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 from os import path
+from itertools import combinations
 
 import pandas as pd
 
@@ -55,7 +56,8 @@ class ProcBenchmark(VPCBenchmark):
     def query_count(self, cl, q='hm'):
         """number of matched query for a given class"""
         df = self.data_fitted
-        return df.query('cl==@cl & {}'.format(q)).shape[0]
+        query = 'cl==@cl & {}'.format(q)
+        return df.query(query).shape[0]
 
     def query_frac(self, cl, q='hm'):
         """fraction of matched query for a given class"""
@@ -69,11 +71,18 @@ class ProcBenchmark(VPCBenchmark):
         stat = pd.Series(index=range(self.n_clusters), data=range(self.n_clusters))
         return stat.apply(fun, q=q)
 
-    def query_all(self, fun, procs=('hm', 'dgz')):
+    def query_all(self, fun, procs={'hm', 'dgz'}):
         stats = []
         for proc in procs:
-            col = self.query_classes(fun, proc)
+            other = procs - set((proc,))
+            q_not = ' & ~(' + ' | '.join(other) + ')' if len(other) > 0 else ''
+            col = self.query_classes(fun, proc + q_not)
             col.name = proc
+            stats.append(col)
+        for pair in combinations(procs, 2):
+            q = '{} & {}'.format(*pair)
+            col = self.query_classes(fun, q)
+            col.name = q.replace(' ', '')
             stats.append(col)
         return pd.concat(stats, axis=1)
 
