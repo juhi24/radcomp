@@ -74,13 +74,16 @@ class ProcBenchmark(VPCBenchmark):
         return stat.apply(fun, q=q)
 
     def query_all(self, fun, procs={'hm', 'dgz'}):
+        """Query process occurrences against all classes."""
         stats = []
         for proc in procs:
+            # ignore rows with multiple process flags
             other = procs - set((proc,))
             q_not = ' & ~(' + ' | '.join(other) + ')' if len(other) > 0 else ''
             col = self.query_classes(fun, proc + q_not)
             col.name = proc
             stats.append(col)
+        # query simultaneous process occurrences
         for pair in combinations(procs, 2):
             q = '{} & {}'.format(*pair)
             col = self.query_classes(fun, q)
