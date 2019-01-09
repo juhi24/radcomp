@@ -25,8 +25,8 @@ def weight_factor_str(param, value):
         out += str(value).replace('.', '')
     return out
 
-def scheme_name(basename='', n_eigens=30, n_clusters=20,
-                reduced=True, extra_weight=0):
+def scheme_name(basename='', n_eigens=30, n_clusters=20, reduced=True,
+                extra_weight=0, **kws):
     if reduced:
         qualifier = '_pca'
     else:

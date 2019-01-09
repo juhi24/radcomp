@@ -16,6 +16,7 @@ import conf
 
 
 def silh_score_avgs(cc, n_iter=10, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
+    """Compute silhouette scores per number of classes."""
     scores = pd.DataFrame()
     vconf = vpc_conf.copy()
     vconf.pop('n_clusters')
@@ -32,6 +33,7 @@ def silh_score_avgs(cc, n_iter=10, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
 
 
 def plot_scores(scores, ax=None, **kws):
+    """Plot the silhouette score mean and standard deviation."""
     n_classes = scores.columns.values
     ax = ax or plt.gca()
     score = scores.mean()
@@ -49,7 +51,7 @@ def plot_scores(scores, ax=None, **kws):
 
 def score_analysis(cc, **kws):
     """Compute and plot silhouette scores per number of classes."""
-    scores = silh_score_avgs(cc, n_iter=10, **kws)
+    scores = silh_score_avgs(cc, **kws)
     notify('Silhouette score', 'Score calculation finished.')
     fig, ax = plt.subplots(dpi=110, figsize=(5,4))
     plot_scores(scores, ax=ax)
@@ -59,14 +61,12 @@ def score_analysis(cc, **kws):
 
 if __name__ == '__main__':
     plt.close('all')
-    season = 'rain'
+    season = 'snow'
     vpc_conf = conf.VPC_PARAMS_RAIN if season=='rain' else conf.VPC_PARAMS_SNOW
-    cases = conf.init_cases(season=season)
-    cc = multicase.MultiCase.by_combining(cases, has_ml=(season == 'rain'))
-    del(cases)
+    cc = multicase.MultiCase.from_caselist(season, has_ml=(season == 'rain'))
     #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
     #fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
-    fig, ax = score_analysis(cc, cols='all', vpc_conf=vpc_conf)
+    fig, ax = score_analysis(cc, n_iter=1, cols='all', vpc_conf=vpc_conf)
     fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
     savefile = path.join(conf.P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')
