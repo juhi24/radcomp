@@ -11,13 +11,14 @@ from radcomp import USER_DIR
 
 
 BENCHMARK_DIR = path.join(USER_DIR, 'benchmark')
+Q_DEFAULT = 'kdp_hm'
 
 
 class VPCBenchmark:
     """score VPC classification results"""
 
-    def __init__(self, data=None):
-        self.data = data
+    def __init__(self, man_analysis=None):
+        self.man_analysis = man_analysis
 
     def fit(self, vpc):
         raise NotImplementedError
@@ -37,16 +38,16 @@ class ProcBenchmark(VPCBenchmark):
         """new instance from csv"""
         csv = path.join(BENCHMARK_DIR, name + '.csv')
         df = pd.read_csv(csv, parse_dates=['start', 'end'])
-        dtypes = dict(ml=bool, hm=bool, dgz=bool, inv=bool)
-        data = df.astype(dtypes)
+        dtypes = dict(ml=bool, kdp_hm=bool, kdp_dgz=bool, inv=bool)
+        man_analysis = df.astype(dtypes)
         if fltr_q is not None:
-            data.query(fltr_q, inplace=True)
-        return cls(data=data, **kws)
+            man_analysis.query(fltr_q, inplace=True)
+        return cls(man_analysis=man_analysis, **kws)
 
     def fit(self, vpc):
         """Generate comparison with VPC."""
         dfs = []
-        for start, row in self.data.iterrows():
+        for start, row in self.man_analysis.iterrows():
             ser = vpc.training_result[row['start']:row['end']]
             df = pd.DataFrame(ser, columns=['cl'])
             for name, value in row.iloc[2:].iteritems():
@@ -55,25 +56,26 @@ class ProcBenchmark(VPCBenchmark):
         self.data_fitted = pd.concat(dfs)
         self.n_clusters = vpc.n_clusters
 
-    def query_count(self, cl, q='hm'):
+    def query_count(self, cl, q=Q_DEFAULT):
         """number of matched query for a given class"""
         df = self.data_fitted
         query = 'cl==@cl & {}'.format(q)
         return df.query(query).shape[0]
 
-    def query_frac(self, cl, q='hm'):
+    def query_frac(self, cl, q=Q_DEFAULT):
         """fraction of matched query for a given class"""
         df = self.data_fitted
         n = self.query_count(cl, q=q)
         n_cl_occ = (df['cl'] == cl).sum()
         return n/n_cl_occ
 
-    def query_classes(self, fun, q='hm'):
+    def query_classes(self, fun, q=Q_DEFAULT):
         """fractions of matched query per class"""
-        stat = pd.Series(index=range(self.n_clusters), data=range(self.n_clusters))
+        stat = pd.Series(index=range(self.n_clusters),
+                         data=range(self.n_clusters))
         return stat.apply(fun, q=q)
 
-    def query_all(self, fun, procs={'hm', 'dgz'}):
+    def query_all(self, fun, procs={'kdp_hm', 'kdp_dgz'}):
         """Query process occurrences against all classes."""
         stats = []
         for proc in procs:
@@ -90,7 +92,6 @@ class ProcBenchmark(VPCBenchmark):
             col.name = q.replace(' ', '')
             stats.append(col)
         return pd.concat(stats, axis=1)
-
 
 
 if __name__ == '__main__':
