@@ -61,7 +61,7 @@ def score_analysis(cc, **kws):
 
 if __name__ == '__main__':
     plt.close('all')
-    season = 'snow'
+    season = 'rain'
     vpc_conf = conf.VPC_PARAMS_RAIN if season=='rain' else conf.VPC_PARAMS_SNOW
     cc = multicase.MultiCase.from_caselist(season, has_ml=(season == 'rain'))
     #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)

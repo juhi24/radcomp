@@ -50,16 +50,16 @@ def workflow(c, vpc_params, plot_kws={}, **kws):
 
 
 if __name__ == '__main__':
-    bracketing = False
+    bracketing = True
     plt.ion()
     plt.close('all')
     np.random.seed(1)
-    cases_id = 'snow'
+    cases_id = 'rain'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)
     if rain_season:
-        cases = cases[cases.ml_ok.fillna(0).astype(bool)]
+        cases = cases[cases['ml_ok'].fillna(0).astype(bool)]
     vpc_params = VPC_PARAMS_RAIN if rain_season else VPC_PARAMS_SNOW
     c = multicase.MultiCase.by_combining(cases, has_ml=rain_season)
     if bracketing:

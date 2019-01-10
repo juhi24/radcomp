@@ -46,6 +46,6 @@ def init_cases(cases_id=None, season=''):
             cases_id = CASES_MELT
     cases = multicase.read_cases(cases_id)
     if cases.ml.astype(bool).all():
-        cases = cases[cases.ml_ok.astype(bool)]
+        cases = cases[cases['ml_ok'].fillna(0).astype(bool)]
     return cases
 
