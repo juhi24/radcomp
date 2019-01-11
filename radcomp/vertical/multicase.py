@@ -120,7 +120,9 @@ class MultiCase(case.Case):
         """MultiCase from a case list using optional filter flag"""
         cases = read_cases(name)
         if filter_flag is not None:
-            cases = cases[cases[filter_flag].astype(bool)]
+            cases = cases[cases[filter_flag].fillna(0).astype(bool)]
+        for cid, c in cases.case.iteritems():
+            c.load_model_temperature()
         return cls.by_combining(cases, **kws)
 
     def silhouette_score(self, cols=(0,1,2), weights=1):
