@@ -122,6 +122,7 @@ def prepare_pn(pn, kdpmax=np.nan):
     # ensure all small case keys are in place
     pn_new = filtering.create_filtered_fields_if_missing(pn_new, DEFAULT_PARAMS)
     #pn_new = filtering.fltr_ground_clutter_median(pn_new)
+    pn_new['kdpg'] = kdp_gradient(pn_new['kdp'])
     return pn_new
 
 
@@ -414,13 +415,9 @@ class Case:
         plot_t = ('ts' in plot_extras) and (self.ground_temperature().size > 0)
         plot_silh = ('silh' in plot_extras) and (self.classes is not None)
         plot_lr = ('lr' in plot_extras)
-        plot_kdpg = ('kdpg' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
-        cmap_override = {'LR': 'seismic', 'KDPG': 'bwr'}
-        if plot_kdpg:
-            data['KDPG'] = kdp_gradient(data['kdp'])
-            params = np.append(params, 'KDPG')
+        cmap_override = {'LR': 'seismic', 'kdpg': 'bwr'}
         if plot_lr:
             data['LR'] = data['T'].diff()
             params = np.append(params, 'LR')

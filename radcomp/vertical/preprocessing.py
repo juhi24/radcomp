@@ -6,7 +6,8 @@ from sklearn import preprocessing
 
 
 SCALING_LIMITS_SNOW = {'zh': (-10, 35), 'zdr': (0, 3.5), 'kdp': (0, 0.1)}
-SCALING_LIMITS_RAIN = {'zh': (-10, 38), 'zdr': (0, 3), 'kdp': (0, 0.22)}
+SCALING_LIMITS_RAIN = {'zh': (-10, 38), 'zdr': (0, 3.1), 'kdp': (0, 0.25),
+                       'kdpg': (-0.005, 0.005)}
 
 
 def scale(data, param='zh', has_ml=False, inverse=False):
