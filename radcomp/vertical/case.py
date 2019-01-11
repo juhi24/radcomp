@@ -87,6 +87,11 @@ def downward_gradient(df):
     return -dfg
 
 
+def proc_indicator(pn, var='zdrg', tlims=(-20,-10)):
+    """gradient to process indicator"""
+    return pn[var][(pn.T<tlims[1]) & (pn.T>tlims[0])].sum()
+
+
 def kdp2phidp(kdp, dr_km):
     kdp_filled = kdp.fillna(0)
     return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
@@ -482,11 +487,15 @@ class Case:
         ax.plot(top.index, top.values, color='black', zorder=6, **common_kws)
         return ax
 
+    def shift(self, data):
+        """shift data for plotting"""
+        half_dt = self.mean_delta()/2
+        return data.shift(freq=half_dt)
+
     def plot_series(self, data, ax=None, **kws):
         """Plot time series correctly shifted."""
         ax = ax or plt.gca()
-        half_dt = self.mean_delta()/2
-        dat = data.shift(freq=half_dt)
+        dat = self.shift(data)
         plotting.plot_data(dat, ax=ax, **kws)
         self.set_xlim(ax)
         return ax
