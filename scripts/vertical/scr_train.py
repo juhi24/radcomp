@@ -5,7 +5,7 @@ A script for using the VP classification training method
 import numpy as np
 import matplotlib.pyplot as plt
 from os import path
-from radcomp.vertical import multicase, classification, RESULTS_DIR
+from radcomp.vertical import multicase, classification, benchmark, plotting, RESULTS_DIR
 from j24 import ensure_join
 from conf import VPC_PARAMS_SNOW, VPC_PARAMS_RAIN
 
@@ -63,10 +63,18 @@ if __name__ == '__main__':
     vpc_params = VPC_PARAMS_RAIN if rain_season else VPC_PARAMS_SNOW
     c = multicase.MultiCase.by_combining(cases, has_ml=rain_season)
     if bracketing:
-        for n_clusters in (10, 12, 14, 16, 18, 20):
+        for n_clusters in np.arange(10, 20):
             vpc_params.update({'n_clusters': n_clusters})
             plot_kws = dict(plt_silh=False, plt_sca=False)
             workflow(c, vpc_params, plot_kws=plot_kws)
+            #
+            fltr_q = 'ml' if rain_season else '~ml'
+            bm = benchmark.ProcBenchmark.from_csv(fltr_q=fltr_q)
+            bm.fit(c.class_scheme)
+            benchmark.prefilter(bm, c)
+            stat = bm.query_all(bm.query_count)
+            fig, ax = plt.subplots()
+            plotting.plot_bm_stats(stat, ax=ax)
     else:
         kws = dict(save_plots=True)
         workflow(c, vpc_params, plot_kws=kws)

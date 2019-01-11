@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from radcomp.vertical import classification, benchmark, plotting
 
@@ -18,31 +19,20 @@ def check_man_cl(c, bm, fields=['zh', 'zdr', 'kdp'], cmap='viridis', **kws):
         plotting.plotpn(data_p, x_is_date=False, fields=fields, cmap=cmap, **kws)
 
 
-def data_by_bm(bm, c):
-    return c.data.loc[:, :, bm.data_fitted.index]
-
-
-def prefilter(bm, c):
-    """radar data based benchmark filter"""
-    data = data_by_bm(bm, c)
-    cond = data['kdp'].max() > 0.08 # prefilter condition
-    bm.data_fitted = bm.data_fitted[cond].copy()
-
-
 if __name__ == '__main__':
     plt.ion()
     #plt.close('all')
     bm = benchmark.ProcBenchmark.from_csv(fltr_q='ml')
     vpc_params = conf.VPC_PARAMS_RAIN
-    for n_clusters in (10, 12, 14, 16, 18, 20):
+    for n_clusters in np.arange(10, 20):
         vpc_params.update({'n_clusters': n_clusters})
         name = classification.scheme_name(**vpc_params)
-        vpc = vpc = classification.VPC.load(name)
+        vpc = classification.VPC.load(name)
         bm.fit(vpc)
-        prefilter(bm, c)
+        benchmark.prefilter(bm, c)
         stat = bm.query_all(bm.query_count)
         ax = stat.plot.bar(stacked=True)
         ax.grid(axis='y')
         ax.set_ylabel('number of profiles')
         ax.set_xlabel('class')
-        ax.set_title('snow classification vs. manual analysis')
+        ax.set_title('unsupervised classification vs. manual analysis')
