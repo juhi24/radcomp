@@ -5,6 +5,7 @@ __metaclass__ = type
 from os import path
 from itertools import combinations
 
+import numpy as np
 import pandas as pd
 
 from radcomp import USER_DIR
@@ -25,47 +26,29 @@ def prefilter(bm, c):
     bm.data_fitted = bm.data_fitted[cond].copy()
 
 
+def autoref(pn):
+    """automatic reference generation using case data"""
+    from radcomp.vertical import case
+    zdr_dgz = case.proc_indicator(pn, 'zdrg')
+    kdp_dgz = case.proc_indicator(pn, 'kdpg')
+    kdp_hm = case.proc_indicator(pn, 'kdpg', tlims=(-8, -3))
+    df = pd.DataFrame(index=zdr_dgz.index)
+    df['dgz_zdr'] = zdr_dgz > 0.15
+    df['dgz_kdp'] = kdp_dgz > 0.03
+    df['hm_kdp'] = kdp_hm > 0.02
+    return df
+
+
 class VPCBenchmark:
     """score VPC classification results"""
 
-    def __init__(self, man_analysis=None):
-        self.man_analysis = man_analysis
-
-    def fit(self, vpc):
-        raise NotImplementedError
-
-
-class ProcBenchmark(VPCBenchmark):
-    """
-    Compare VPC classification against a supervised process classification.
-    """
-    def __init__(self, **kws):
-        super().__init__(**kws)
+    def __init__(self, data=None):
+        self.data = data
         self.data_fitted = None
         self.n_clusters = None
 
-    @classmethod
-    def from_csv(cls, name='fingerprint', fltr_q=None, **kws):
-        """new instance from csv"""
-        csv = path.join(BENCHMARK_DIR, name + '.csv')
-        df = pd.read_csv(csv, parse_dates=['start', 'end'])
-        dtypes = dict(ml=bool, kdp_hm=bool, kdp_dgz=bool, inv=bool)
-        man_analysis = df.astype(dtypes)
-        if fltr_q is not None:
-            man_analysis.query(fltr_q, inplace=True)
-        return cls(man_analysis=man_analysis, **kws)
-
     def fit(self, vpc):
-        """Generate comparison with VPC."""
-        dfs = []
-        for start, row in self.man_analysis.iterrows():
-            ser = vpc.training_result[row['start']:row['end']]
-            df = pd.DataFrame(ser, columns=['cl'])
-            for name, value in row.iloc[2:].iteritems():
-                df[name] = value
-            dfs.append(df)
-        self.data_fitted = pd.concat(dfs)
-        self.n_clusters = vpc.n_clusters
+        raise NotImplementedError
 
     def query_count(self, cl, q=Q_DEFAULT):
         """number of matched query for a given class"""
@@ -86,7 +69,7 @@ class ProcBenchmark(VPCBenchmark):
                          data=range(self.n_clusters))
         return stat.apply(fun, q=q)
 
-    def query_all(self, fun, procs={'kdp_hm', 'kdp_dgz'}):
+    def query_all(self, fun, procs={'hm_kdp', 'dgz_kdp'}):
         """Query process occurrences against all classes."""
         stats = []
         for proc in procs:
@@ -97,13 +80,54 @@ class ProcBenchmark(VPCBenchmark):
             col.name = proc
             stats.append(col)
         # query simultaneous process occurrences
-        for pair in combinations(procs, 2):
-            q = '{} & {}'.format(*pair)
-            col = self.query_classes(fun, q)
-            col.name = q.replace(' ', '')
-            stats.append(col)
+        if len(procs)>1:
+            for n_comb in np.arange(2, len(proc)+1):
+                for comb in combinations(procs, n_comb):
+                    q = ' & '.join(['{}' for i in range(n_comb)]).format(*comb)
+                    other = procs - set(comb)
+                    q_not = ' & ~(' + ' | '.join(other) + ')' if len(other) > 0 else ''
+                    col = self.query_classes(fun, q + q_not)
+                    col.name = q.replace(' ', '')
+                    stats.append(col)
         return pd.concat(stats, axis=1)
 
 
-if __name__ == '__main__':
-    pb = ProcBenchmark.from_csv()
+class AutoBenchmark(VPCBenchmark):
+    """Compare VPC classification against other process classification."""
+
+    def fit(self, vpc):
+        cl = vpc.training_result.loc[self.data.index]
+        df = self.data.copy()
+        df['cl'] = cl
+        self.data_fitted = df
+        self.n_clusters = vpc.n_clusters
+
+
+class ManBenchmark(VPCBenchmark):
+    """
+    Compare VPC classification against a supervised process classification.
+    """
+
+    @classmethod
+    def from_csv(cls, name='fingerprint', fltr_q=None, **kws):
+        """new instance from csv"""
+        csv = path.join(BENCHMARK_DIR, name + '.csv')
+        df = pd.read_csv(csv, parse_dates=['start', 'end'])
+        dtypes = dict(ml=bool, hm_kdp=bool, dgz_kdp=bool, inv=bool)
+        data = df.astype(dtypes)
+        if fltr_q is not None:
+            data.query(fltr_q, inplace=True)
+        return cls(data=data, **kws)
+
+    def fit(self, vpc):
+        """Generate comparison with VPC."""
+        dfs = []
+        for start, row in self.data.iterrows():
+            ser = vpc.training_result[row['start']:row['end']]
+            df = pd.DataFrame(ser, columns=['cl'])
+            for name, value in row.iloc[2:].iteritems():
+                df[name] = value
+            dfs.append(df)
+        self.data_fitted = pd.concat(dfs)
+        self.n_clusters = vpc.n_clusters
+

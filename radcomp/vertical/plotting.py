@@ -26,8 +26,7 @@ DEFAULT_DISCRETE_CMAP = 'tab20'
 
 def plot_data(data, ax=None, **kws):
     """plot Series"""
-    if ax is None:
-        ax = plt.gca()
+    ax = ax or plt.gca()
     return ax.plot(data.index, data.values, drawstyle='steps', **kws)
 
 
