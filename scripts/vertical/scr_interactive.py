@@ -28,6 +28,6 @@ if __name__ == '__main__':
             raise e
             continue
     cp = ProfileMarker(cases)
-    cp.plot(params=['kdp', 'zh', 'zdr', 'kdpg'], n_extra_ax=0, plot_extras=['lr', 'ts', 'cl'],
-            t_contour_ax_ind='all', t_levels=[-20, -8, -3],
+    cp.plot(params=['kdp', 'zh', 'zdr', 'zdrg', 'kdpg'], n_extra_ax=0, plot_extras=['cl'],
+            t_contour_ax_ind='all', t_levels=[-20, -10, -8, -3],
             fig_scale_factor=0.8, cmap='viridis', interactive=False)

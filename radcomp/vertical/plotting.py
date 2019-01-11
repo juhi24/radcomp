@@ -305,11 +305,11 @@ def plot_growth_zones(x, ax=None, var='TEMP', levels=('ml'), **kws):
     ax = ax or plt.gca()
     contours = []
     args = (x.columns, x.index, x)
-    kws['linewidths'] = 1
+    kws['linewidths'] = 0.6
     kws['linestyles'] = 'solid'
     try:
         np.array(levels).astype(float) # check if numeric
-        con = ax.contour(*args, levels=levels, colors='red', **kws)
+        con = ax.contour(*args, levels=levels, colors='black', **kws)
         contours.append(con)
     except ValueError:
         if 'hm' in levels:

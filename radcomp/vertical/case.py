@@ -78,13 +78,13 @@ def vprhimat2pn(datapath):
             raise e
 
 
-def kdp_gradient(kdp):
-    """smooth downwards gradient of kdp"""
-    kdp_smooth = kdp.fillna(0).apply(filtering.savgol_series, args=(19, 2))
-    kdpg = kdp_smooth.diff()
-    kdpg = kdpg.rolling(5, center=True).mean() # smooth gradient
-    kdpg[kdp.isnull()] = np.nan
-    return -kdpg
+def downward_gradient(df):
+    """smooth downwards gradient"""
+    df_smooth = df.fillna(0).apply(filtering.savgol_series, args=(19, 2))
+    dfg = df_smooth.diff()
+    dfg = dfg.rolling(5, center=True).mean() # smooth gradient
+    dfg[df.isnull()] = np.nan
+    return -dfg
 
 
 def kdp2phidp(kdp, dr_km):
@@ -122,7 +122,8 @@ def prepare_pn(pn, kdpmax=np.nan):
     # ensure all small case keys are in place
     pn_new = filtering.create_filtered_fields_if_missing(pn_new, DEFAULT_PARAMS)
     #pn_new = filtering.fltr_ground_clutter_median(pn_new)
-    pn_new['kdpg'] = kdp_gradient(pn_new['kdp'])
+    pn_new['kdpg'] = downward_gradient(pn_new['kdp'])
+    pn_new['zdrg'] = downward_gradient(pn_new['zdr'])
     return pn_new
 
 
@@ -417,7 +418,7 @@ class Case:
         plot_lr = ('lr' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
-        cmap_override = {'LR': 'seismic', 'kdpg': 'bwr'}
+        cmap_override = {'LR': 'seismic', 'kdpg': 'bwr', 'zdrg': 'bwr'}
         if plot_lr:
             data['LR'] = data['T'].diff()
             params = np.append(params, 'LR')
