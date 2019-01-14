@@ -41,15 +41,15 @@ def just_kdp(bm):
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
+    rain_season = False
     #c = multicase.MultiCase.from_caselist('rain', filter_flag='ml_ok')
     #bm = benchmark.ManBenchmark.from_csv(fltr_q='ml')
     ref = benchmark.autoref(c.data)[c.silh_score>0]
     bm = benchmark.AutoBenchmark(ref)
-    vpc_params = conf.VPC_PARAMS_RAIN
-    for n_clusters in np.arange(6, 14):
+    vpc_params = conf.VPC_PARAMS_RAIN if rain_season else conf.VPC_PARAMS_SNOW
+    for n_clusters in np.arange(8, 18):
         vpc_params.update({'n_clusters': n_clusters})
         name = classification.scheme_name(**vpc_params)
         vpc = classification.VPC.load(name)
         bm.fit(vpc)
-        #benchmark.prefilter(bm, c)
         stat, ax = just_kdp(bm)

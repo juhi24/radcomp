@@ -10,10 +10,6 @@ from j24 import ensure_join
 from conf import VPC_PARAMS_SNOW, VPC_PARAMS_RAIN
 
 
-#VPC_PARAMS_SNOW.update({'n_clusters': 12})
-#VPC_PARAMS_RAIN.update({'n_clusters': 10})#, 'invalid_classes': [9]})
-
-
 def training(c, train=True, save_scheme=True):
     if train:
         c.train(quiet=True)
@@ -50,11 +46,11 @@ def workflow(c, vpc_params, plot_kws={}, **kws):
 
 
 if __name__ == '__main__':
-    bracketing = True
+    bracketing = False
     plt.ion()
     plt.close('all')
     np.random.seed(1)
-    cases_id = 'rain'
+    cases_id = 'snow'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)
@@ -63,15 +59,13 @@ if __name__ == '__main__':
     vpc_params = VPC_PARAMS_RAIN if rain_season else VPC_PARAMS_SNOW
     c = multicase.MultiCase.by_combining(cases, has_ml=rain_season)
     if bracketing:
-        for n_clusters in np.arange(6, 12):
+        for n_clusters in np.arange(8, 18):
             vpc_params.update({'n_clusters': n_clusters})
             plot_kws = dict(plt_silh=False, plt_sca=False, save_plots=True)
             workflow(c, vpc_params, plot_kws=plot_kws)
             #
-            fltr_q = 'ml' if rain_season else '~ml'
             bm = benchmark.AutoBenchmark(benchmark.autoref(c.data_above_ml))
             bm.fit(c.class_scheme)
-            #benchmark.prefilter(bm, c)
             stat = bm.query_all(bm.query_count)
             fig, ax = plt.subplots()
             plotting.plot_bm_stats(stat, ax=ax)

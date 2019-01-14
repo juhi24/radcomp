@@ -7,7 +7,7 @@ from os import path
 from radcomp.vertical import multicase, RESULTS_DIR
 
 
-SCHEME_ID_SNOW = 'snow_t08_30eig12clus_pca'
+SCHEME_ID_SNOW = 'snow_t08_30eig13clus_pca'
 SCHEME_ID_MELT = 'mlt2_30eig10clus_pca'
 
 CASES_SNOW = 'snow'
@@ -20,7 +20,7 @@ VPC_PARAMS_SNOW = dict(basename='snow',
                        params=PARAMS,
                        hlimits=(190, 10e3),
                        n_eigens=30,
-                       n_clusters=12,
+                       n_clusters=13,
                        reduced=True,
                        extra_weight=0.8)
 

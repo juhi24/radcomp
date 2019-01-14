@@ -19,13 +19,6 @@ def _data_by_bm(bm, c):
     return c.data.loc[:, :, bm.data_fitted.index]
 
 
-def prefilter(bm, c):
-    """radar data based benchmark filter"""
-    data = _data_by_bm(bm, c)
-    cond = data['kdp'].max() > 0.1 # prefilter condition
-    bm.data_fitted = bm.data_fitted[cond].copy()
-
-
 def autoref(pn):
     """automatic reference generation using case data"""
     from radcomp.vertical import case
