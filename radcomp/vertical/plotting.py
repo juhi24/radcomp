@@ -377,9 +377,9 @@ def format_coord_pn(x, y, data, x_is_date=False):
     return ', '.join([xystr, dict2coord(values)])
 
 
-def plot_bm_stats(stat, ax=None):
+def plot_bm_stats(stat, ax=None, **kws):
     ax = ax or plt.gca()
-    stat.plot.bar(stacked=True, ax=ax)
+    stat.plot.bar(stacked=True, ax=ax, **kws)
     ax.grid(axis='y')
     ax.set_ylabel('number of profiles')
     ax.set_xlabel('class')

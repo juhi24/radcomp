@@ -63,7 +63,7 @@ if __name__ == '__main__':
     vpc_params = VPC_PARAMS_RAIN if rain_season else VPC_PARAMS_SNOW
     c = multicase.MultiCase.by_combining(cases, has_ml=rain_season)
     if bracketing:
-        for n_clusters in np.arange(10, 20):
+        for n_clusters in np.arange(6, 12):
             vpc_params.update({'n_clusters': n_clusters})
             plot_kws = dict(plt_silh=False, plt_sca=False, save_plots=True)
             workflow(c, vpc_params, plot_kws=plot_kws)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
             fltr_q = 'ml' if rain_season else '~ml'
             bm = benchmark.AutoBenchmark(benchmark.autoref(c.data_above_ml))
             bm.fit(c.class_scheme)
-            benchmark.prefilter(bm, c)
+            #benchmark.prefilter(bm, c)
             stat = bm.query_all(bm.query_count)
             fig, ax = plt.subplots()
             plotting.plot_bm_stats(stat, ax=ax)
