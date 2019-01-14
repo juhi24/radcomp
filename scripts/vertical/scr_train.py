@@ -69,7 +69,7 @@ if __name__ == '__main__':
             workflow(c, vpc_params, plot_kws=plot_kws)
             #
             fltr_q = 'ml' if rain_season else '~ml'
-            bm = benchmark.AutoBenchmark(benchmark.autoref(c.data))
+            bm = benchmark.AutoBenchmark(benchmark.autoref(c.data_above_ml))
             bm.fit(c.class_scheme)
             benchmark.prefilter(bm, c)
             stat = bm.query_all(bm.query_count)

@@ -253,6 +253,8 @@ class Case:
     @property
     def data_above_ml(self):
         """lazy loading data above ml"""
+        if not self.has_ml:
+            return self.data
         if self._data_above_ml is None:
             self._data_above_ml = self.only_data_above_ml()
         return self._data_above_ml
