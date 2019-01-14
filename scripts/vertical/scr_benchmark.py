@@ -34,7 +34,12 @@ if __name__ == '__main__':
         benchmark.prefilter(bm, c)
         stat = bm.query_all(bm.query_count,
                             procs={'hm_kdp', 'dgz_kdp', 'dgz_zdr'})
-        ax = stat.plot.bar(stacked=True)
+        cval = 0.8
+        cno = 0
+        colors = [(cval,cno,cno), (cno,cval,cno), (cno,cno,cval),
+                  (cval,cval,cno), (cval,cno,cval), (cno,cval,cval),
+                  (cval, cval, cval)]
+        ax = stat.plot.bar(stacked=True, color=colors)
         ax.grid(axis='y')
         ax.set_ylabel('number of profiles')
         ax.set_xlabel('class')
