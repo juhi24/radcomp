@@ -104,6 +104,8 @@ class MultiCase(case.Case):
     @classmethod
     def by_combining(cls, cases, **kws):
         """Combine a DataFrame of Case objects into one."""
+        for cid, c in cases.case.iteritems():
+            c.load_model_temperature()
         t = pd.concat([c.ground_temperature() for i,c in cases.case.iteritems()])
         datas = list(cases.case.apply(lambda c: c.data)) # data of each case
         data = pd.concat(datas, axis=2)
