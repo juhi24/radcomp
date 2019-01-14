@@ -65,11 +65,11 @@ if __name__ == '__main__':
     if bracketing:
         for n_clusters in np.arange(10, 20):
             vpc_params.update({'n_clusters': n_clusters})
-            plot_kws = dict(plt_silh=False, plt_sca=False)
+            plot_kws = dict(plt_silh=False, plt_sca=False, save_plots=True)
             workflow(c, vpc_params, plot_kws=plot_kws)
             #
             fltr_q = 'ml' if rain_season else '~ml'
-            bm = benchmark.ProcBenchmark.from_csv(fltr_q=fltr_q)
+            bm = benchmark.AutoBenchmark(benchmark.autoref(c.data))
             bm.fit(c.class_scheme)
             benchmark.prefilter(bm, c)
             stat = bm.query_all(bm.query_count)

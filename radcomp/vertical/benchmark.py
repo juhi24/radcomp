@@ -22,7 +22,7 @@ def _data_by_bm(bm, c):
 def prefilter(bm, c):
     """radar data based benchmark filter"""
     data = _data_by_bm(bm, c)
-    cond = data['kdp'].max() > 0.08 # prefilter condition
+    cond = data['kdp'].max() > 0.1 # prefilter condition
     bm.data_fitted = bm.data_fitted[cond].copy()
 
 
@@ -33,9 +33,10 @@ def autoref(pn):
     kdp_dgz = case.proc_indicator(pn, 'kdpg')
     kdp_hm = case.proc_indicator(pn, 'kdpg', tlims=(-8, -3))
     df = pd.DataFrame(index=zdr_dgz.index)
+    kdpmax = pn['kdp'].max()
     df['dgz_zdr'] = zdr_dgz > 0.15
-    df['dgz_kdp'] = kdp_dgz > 0.03
-    df['hm_kdp'] = kdp_hm > 0.02
+    df['dgz_kdp'] = (kdp_dgz > 0.03) & (kdpmax > 0.15)
+    df['hm_kdp'] = (kdp_hm > 0.02) & (kdpmax > 0.1)
     return df
 
 
