@@ -871,3 +871,20 @@ class Case:
         from sklearn.metrics import silhouette_samples
         sh_arr = silhouette_samples(self.class_scheme.data, self.classes)
         return pd.Series(index=self.classes.index, data=sh_arr)
+
+    def echotop(self):
+        """echo top heights"""
+        isnull = self.data.zh.isnull()
+        hghts = isnull.copy()
+        for col in hghts.columns:
+            hghts[col] = hghts.index
+        hghts[isnull] = np.nan
+        top = hghts.idxmax()
+        top.name = 'echotop'
+        return top
+
+    def t_echotop(self):
+        """model temperature at echo top"""
+        t = self.data['T']
+        top = self.echotop()
+        return pd.Series({dt: t.loc[h, dt] for dt, h in top.iteritems()})
