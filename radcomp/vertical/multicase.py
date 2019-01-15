@@ -106,7 +106,6 @@ class MultiCase(case.Case):
         """Combine a DataFrame of Case objects into one."""
         for cid, c in cases.case.iteritems():
             c.load_model_temperature()
-        t = pd.concat([c.ground_temperature() for i,c in cases.case.iteritems()])
         datas = list(cases.case.apply(lambda c: c.data)) # data of each case
         data = pd.concat(datas, axis=2)
         if 'convective' in cases:
@@ -115,7 +114,7 @@ class MultiCase(case.Case):
                 flag_series = c.timestamps().apply(lambda x: c.is_convective)
                 conv_flags.append(flag_series)
             kws['is_convective'] = pd.concat(conv_flags)
-        return cls(data=data, temperature=t, **kws)
+        return cls(data=data, **kws)
 
     @classmethod
     def from_caselist(cls, name, filter_flag=None, **kws):
@@ -123,8 +122,6 @@ class MultiCase(case.Case):
         cases = read_cases(name)
         if filter_flag is not None:
             cases = cases[cases[filter_flag].fillna(0).astype(bool)]
-        for cid, c in cases.case.iteritems():
-            c.load_model_temperature()
         return cls.by_combining(cases, **kws)
 
     def silhouette_score(self, cols=(0,1,2), weights=1):
@@ -193,3 +190,6 @@ class MultiCase(case.Case):
                                          class_color_fun=self.class_color,
                                          **cmkw)
         return fig, axarr, order
+
+    def ground_temperature(self, **kws):
+        return super().ground_temperature(**kws).loc[self.data.minor_axis]

@@ -216,15 +216,14 @@ class Case:
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, class_scheme=None, temperature=None,
-                 has_ml=False, is_convective=None):
+                 classes=None, class_scheme=None, has_ml=False,
+                 is_convective=None):
         self.data = data
         self.cl_data = cl_data
         self.cl_data_scaled = cl_data_scaled
         self.classes = classes # is this needed?
         self.silh_score = None
         self.class_scheme = class_scheme
-        self.temperature = temperature
         self.pluvio = None
         self.has_ml = has_ml
         self.is_convective = is_convective
@@ -759,14 +758,12 @@ class Case:
             offset = 0
         return insitu.time_weighted_mean(data, rule=dt, base=base, offset=offset)
 
-    def ground_temperature(self, save=False, use_arm=False, interp_gaps=True):
+    def ground_temperature(self, use_arm=False, interp_gaps=True):
         """resampled ground temperature
 
         Returns:
             Series: resampled temperature
         """
-        if self.temperature is not None:
-            return self.temperature
         t_end = self.t_end()+pd.Timedelta(minutes=15)
         if use_arm:
             t = arm.var_in_timerange(self.t_start(), t_end, var='temp_mean')
@@ -779,8 +776,6 @@ class Case:
         tre = t.resample('15min', base=self.base_minute()).mean()
         if interp_gaps:
             tre = tre.interpolate()
-        if save:
-            self.temperature = tre
         return tre
 
     def cl(self):
