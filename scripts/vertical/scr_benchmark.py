@@ -34,7 +34,7 @@ def with_zdr(bm):
 def just_kdp(bm):
     stat = bm.query_all(bm.query_count, procs={'hm_kdp', 'dgz_kdp'})
     fig, ax = plt.subplots()
-    plotting.plot_bm_stats(stat, ax=ax)
+    plotting.plot_bm_stats(stat.drop('non-event', axis=1), ax=ax)
     return stat, ax
 
 
@@ -42,14 +42,17 @@ if __name__ == '__main__':
     plt.ion()
     plt.close('all')
     rain_season = False
-    #c = multicase.MultiCase.from_caselist('rain', filter_flag='ml_ok')
+    casesname = conf.CASES_MELT if rain_season else conf.CASES_SNOW
+    flag = 'ml_ok' if rain_season else None
+    #c = multicase.MultiCase.from_caselist(casesname, filter_flag=flag)
     #bm = benchmark.ManBenchmark.from_csv(fltr_q='ml')
-    ref = benchmark.autoref(c.data)[c.silh_score>0]
-    bm = benchmark.AutoBenchmark(ref)
     vpc_params = conf.VPC_PARAMS_RAIN if rain_season else conf.VPC_PARAMS_SNOW
     for n_clusters in np.arange(8, 18):
         vpc_params.update({'n_clusters': n_clusters})
         name = classification.scheme_name(**vpc_params)
         vpc = classification.VPC.load(name)
+        c.classify(scheme=vpc)
+        ref = benchmark.autoref(c.data, rain_season=rain_season)[c.silh_score>0]
+        bm = benchmark.AutoBenchmark(ref)
         bm.fit(vpc)
         stat, ax = just_kdp(bm)

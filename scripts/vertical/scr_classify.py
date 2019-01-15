@@ -10,20 +10,17 @@ from j24 import ensure_join
 from warnings import warn
 import conf
 
-save = False
 
 if __name__ == '__main__':
+    save = True
     plt.ioff() if save else plt.ion()
     plt.close('all')
     rain_season = False
-    #case_set = conf.CASES_MELT if rain_season else conf.CASES_SNOW
-    case_set = 'mar20'
+    case_set = conf.CASES_MELT if rain_season else conf.CASES_SNOW
     name = conf.SCHEME_ID_MELT if rain_season else conf.SCHEME_ID_SNOW
-    #name = 'snow_t08_kdp17_18eig19clus_pca'
     plot_t = not rain_season
     cases = conf.init_cases(cases_id=case_set)
-    #results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
-    results_dir = ensure_join(RESULTS_DIR, 'proc', name, case_set)
+    results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
     for i, c in cases.case.iteritems():
         print(i)
         try:
@@ -38,8 +35,9 @@ if __name__ == '__main__':
             continue
         #c.plot_classes()
         #c.plot_cluster_centroids()
-        fig, axarr = c.plot(n_extra_ax=0, plot_extras=['ts', 'silh', 'cl'],
-                            t_contour_ax_ind='all', t_levels=[-20, -8, -3],
+        fig, axarr = c.plot(params=['kdp', 'zh', 'zdr', 'kdpg'],
+                            n_extra_ax=0, plot_extras=['ts', 'silh', 'cl'],
+                            t_contour_ax_ind='all', t_levels=[-20, -10, -8, -3],
                             fig_scale_factor=0.8, cmap='viridis')
         if save:
             fname = path.join(results_dir, c.name()+'.png')

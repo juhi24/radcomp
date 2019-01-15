@@ -378,10 +378,11 @@ def format_coord_pn(x, y, data, x_is_date=False):
 
 
 def plot_bm_stats(stat, ax=None, **kws):
+    """Plot benchmark stats."""
     ax = ax or plt.gca()
     stat.plot.bar(stacked=True, ax=ax, **kws)
     ax.grid(axis='y')
     ax.set_ylabel('number of profiles')
     ax.set_xlabel('class')
-    ax.set_title('unsupervised classification vs. manual analysis')
+    ax.set_title('unsupervised classification vs. reference analysis')
     return ax

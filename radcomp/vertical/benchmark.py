@@ -19,7 +19,7 @@ def _data_by_bm(bm, c):
     return c.data.loc[:, :, bm.data_fitted.index]
 
 
-def autoref(pn):
+def autoref(pn, rain_season=False):
     """automatic reference generation using case data"""
     from radcomp.vertical import case
     zdr_dgz = case.proc_indicator(pn, 'zdrg')
@@ -28,8 +28,10 @@ def autoref(pn):
     df = pd.DataFrame(index=zdr_dgz.index)
     kdpmax = pn['kdp'].max()
     df['dgz_zdr'] = zdr_dgz > 0.15
-    df['dgz_kdp'] = (kdp_dgz > 0.03) & (kdpmax > 0.15)
-    df['hm_kdp'] = (kdp_hm > 0.02) & (kdpmax > 0.1)
+    kdp_dgz_thresh = 0.15 if rain_season else 0.12
+    kdp_hm_thresh = 0.1 if rain_season else 0.08
+    df['dgz_kdp'] = (kdp_dgz > 0.03) & (kdpmax > kdp_dgz_thresh)
+    df['hm_kdp'] = (kdp_hm > 0.02) & (kdpmax > kdp_hm_thresh)
     return df
 
 
@@ -66,6 +68,7 @@ class VPCBenchmark:
     def query_all(self, fun, procs={'hm_kdp', 'dgz_kdp'}):
         """Query process occurrences against all classes."""
         stats = []
+        # single process occurrences
         for proc in procs:
             # ignore rows with multiple process flags
             other = procs - set((proc,))
@@ -83,6 +86,11 @@ class VPCBenchmark:
                     col = self.query_classes(fun, q + q_not)
                     col.name = q.replace(' ', '')
                     stats.append(col)
+        # non-events
+        q = ' & '.join(['~{}' for i in range(len(procs))]).format(*procs)
+        col = self.query_classes(fun, q)
+        col.name = 'non-event'
+        stats.append(col)
         return pd.concat(stats, axis=1)
 
 
