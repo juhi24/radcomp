@@ -1,4 +1,5 @@
 # coding: utf-8
+"""Visualization related tools."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
@@ -92,7 +93,7 @@ def _pn_fig(fig_scale_factor, n_rows, **fig_kws):
     """Initialize figure for plotpn."""
     fw = fig_scale_factor*8
     fh = fig_scale_factor*(3+1.1*n_rows)
-    return plt.figure(figsize=(fw,fh), **fig_kws)
+    return plt.figure(figsize=(fw, fh), **fig_kws)
 
 
 def _pn_gs(fig_scale_factor, n_rows):
@@ -104,7 +105,7 @@ def _pn_gs(fig_scale_factor, n_rows):
                                  left=left, right=right)
 
 
-def _pn_scalekws(field, scaled, x_is_date, has_ml):
+def _pn_scalekws(field, scaled, has_ml):
     """plotpn helper function for setting scaling arguments and cb label"""
     fieldup = field.upper()
     if scaled:
@@ -163,7 +164,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         ax = fig.add_subplot(gs[h+1+i, 0], **subplot_kws)
         ax_cb = fig.add_subplot(gs[h+1+i, 1])
         axarr.append(ax)
-        scalekws, cb_label = _pn_scalekws(field, scaled, x_is_date, has_ml)
+        scalekws, cb_label = _pn_scalekws(field, scaled, has_ml)
         kws.update(scalekws)
         x = _pn_x(pn[field], x_is_date)
         im = ax.pcolormesh(x, pn[field].index,
@@ -176,7 +177,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         #
         use_ml_label = has_ml and not x_is_date
         label = 'Height, km above ML top' if use_ml_label else 'Height, km'
-        set_h_ax(ax, label=label) if i==1 else set_h_ax(ax, label='')
+        set_h_ax(ax, label=label) if i == 1 else set_h_ax(ax, label='')
         ax.autoscale(False)
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)
@@ -209,8 +210,8 @@ def plot_classes(data, classes):
     axarrs = []
     n_classes = classes.max()+1
     for eigen in range(n_classes):
-        i_classes = np.where(classes==eigen)[0]
-        if len(i_classes)==0:
+        i_classes = np.where(classes == eigen)[0]
+        if len(i_classes) == 0:
             continue
         pn_class = data.iloc[:, i_classes, :]
         fig, axarr = learn.plot_class(pn_class, ylim=(-1, 2))
@@ -247,7 +248,7 @@ def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
                         right='off')
     frameax.set_xlabel(LABELS[param])
     frameax.set_ylabel('probability density')
-    for i, ax in enumerate(axflat):
+    for ax in axflat:
         rotate_tick_labels(0, ax=ax)
         try:
             iclass = int(float(ax.get_title()))
@@ -259,7 +260,6 @@ def hists_by_class(data, classes, cmap=DEFAULT_DISCRETE_CMAP, **kws):
                 verticalalignment='center', transform=ax.transAxes)
         for p in ax.patches:
             p.set_color(class_color(iclass, cm, **kws))
-    #plt.tight_layout()
     return fig
 
 
@@ -287,6 +287,7 @@ def scatter_class_pca(profiles_pca, classes, color_fun=class_color, plot3d=True)
 
 
 def cm_blue():
+    """colormap of only blue color"""
     blue = (0.29803921568627451, 0.44705882352941179, 0.69019607843137254, 1.0)
     return mpl.colors.ListedColormap([blue]*50)
 
@@ -300,7 +301,7 @@ def bar_plot_colors(ax, classes, class_color_fun=class_color, **cmkw):
         p.set_color(color)
 
 
-def plot_growth_zones(x, ax=None, var='TEMP', levels=('ml'), **kws):
+def plot_growth_zones(x, ax=None, levels=('ml'), **kws):
     """Plot interpolated sounding data on growth zone edges."""
     ax = ax or plt.gca()
     contours = []
