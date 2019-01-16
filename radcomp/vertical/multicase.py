@@ -191,5 +191,5 @@ class MultiCase(case.Case):
                                          **cmkw)
         return fig, axarr, order
 
-    def ground_temperature(self, **kws):
-        return super().ground_temperature(**kws).loc[self.data.minor_axis]
+    def t_surface(self, **kws):
+        return super().t_surface(**kws).loc[self.data.minor_axis]

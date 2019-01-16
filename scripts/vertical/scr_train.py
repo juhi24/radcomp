@@ -23,6 +23,7 @@ def training(c, train=True, save_scheme=True):
 
 
 def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True):
+    """class summary and statistics plots"""
     fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue',
                                              fig_scale_factor=0.8)#, cmap='viridis')
     ax_sca = c.scatter_class_pca(plot3d=True) if plt_sca else None
@@ -54,6 +55,7 @@ def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True):
 
 
 def bm_stats(c):
+    """benchmark stuff"""
     bm = benchmark.AutoBenchmark(benchmark.autoref(c.data_above_ml))
     bm.fit(c.class_scheme)
     return bm.query_all(bm.query_count)

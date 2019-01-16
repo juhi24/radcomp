@@ -369,7 +369,7 @@ class Case:
             self.scale_cl_data()
         classify_kws = {}
         if 'temp_mean' in self.class_scheme.params_extra:
-            classify_kws['extra_df'] = self.ground_temperature()
+            classify_kws['extra_df'] = self.t_surface()
         if self.cl_data_scaled is not None and self.class_scheme is not None:
             classes, silh = self.class_scheme.classify(self.cl_data_scaled, **classify_kws)
             classes.name = 'class'
@@ -419,7 +419,7 @@ class Case:
             plot_lwe = not self.pluvio.data.empty
         plot_azs = ('azs' in plot_extras) and (self.azs().size > 0)
         plot_fr = ('fr' in plot_extras) and (self.fr().size > 0)
-        plot_t = ('ts' in plot_extras) and (self.ground_temperature().size > 0)
+        plot_t = ('ts' in plot_extras) and (self.t_surface().size > 0)
         plot_silh = ('silh' in plot_extras) and (self.classes is not None)
         plot_lr = ('lr' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
@@ -503,7 +503,7 @@ class Case:
 
     def plot_t(self, ax, tmin=-20, tmax=10):
         """Plot surface temperature."""
-        self.plot_series(self.ground_temperature(), ax=ax)
+        self.plot_series(self.t_surface(), ax=ax)
         ax.set_ylabel(plotting.LABELS['temp_mean'])
         ax.set_ylim([tmin, tmax])
         return ax
@@ -544,7 +544,7 @@ class Case:
     def train(self, **kws):
         """Train a classification scheme with scaled classification data."""
         if self.class_scheme.extra_weight:
-            extra_df = self.ground_temperature()
+            extra_df = self.t_surface()
         else:
             extra_df = None
         if self.cl_data_scaled is None:
@@ -758,7 +758,7 @@ class Case:
             offset = 0
         return insitu.time_weighted_mean(data, rule=dt, base=base, offset=offset)
 
-    def ground_temperature(self, use_arm=False, interp_gaps=True):
+    def t_surface(self, use_arm=False, interp_gaps=True):
         """resampled ground temperature
 
         Returns:

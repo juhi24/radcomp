@@ -28,7 +28,7 @@ def lwe_comb(cases):
 
 
 def t_comb(cases):
-    func = lambda case: case.ground_temperature()
+    func = lambda case: case.t_surface()
     return var_comb(cases, func)
 
 
