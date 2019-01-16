@@ -883,8 +883,13 @@ class Case:
         top.name = 'echotop'
         return top
 
-    def t_echotop(self):
+    def t_echotop(self, fill=True):
         """model temperature at echo top"""
         t = self.data['T']
         top = self.echotop()
-        return pd.Series({dt: t.loc[h, dt] for dt, h in top.iteritems()})
+        if fill:
+            top.fillna(self.data.major_axis[0], inplace=True)
+        d = {}
+        for dt, h in top.iteritems():
+            d[dt] = np.nan if np.isnan(h) else t.loc[h, dt]
+        return pd.Series(d)
