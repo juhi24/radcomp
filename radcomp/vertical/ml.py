@@ -16,7 +16,7 @@ H_MAX = 4200
 
 def indicator(zdr_scaled, zh_scaled, rho, savgol_args=(35, 3)):
     """Calculate ML indicator."""
-    rho[rho<0.86] = 0.86 # rho lower cap; free param
+    rho[rho < 0.86] = 0.86 # rho lower cap; free param
     mli = (1-rho)*(zdr_scaled+1)*zh_scaled*100
     # TODO: check window_length
     mli = mli.apply(filtering.savgol_series, args=savgol_args)
@@ -102,7 +102,7 @@ def limits_peak(peaksi, heights):
 def ml_limits_raw(mli, ml_max_change=1500, **kws): # free param
     """ML height range from ML indicator"""
     mlh = ml_height(mli)
-    peaksi, peaks = get_peaks(mli, hlim=(mlh-ml_max_change, mlh+ml_max_change),
+    peaksi, _ = get_peaks(mli, hlim=(mlh-ml_max_change, mlh+ml_max_change),
                               **kws)
     return limits_peak(peaksi, mli.index)
 
@@ -124,13 +124,13 @@ def ml_limits(mli, rho, **kws):
     # filter based on rel_height sensitivity
     lims05 = ml_limits_raw(mli, rel_height=0.5) # free param
     for lim, lim05 in zip(lims, lims05):
-        lim[abs(lim-lim05)>800] = np.nan # free param
+        lim[abs(lim-lim05) > 800] = np.nan # free param
     return fltr_ml_limits(lims, rho)
 
 
 def hseries2mask(hseries, hindex):
     """boolean mask DataFrame with False below given height limits"""
-    return hseries.apply(lambda x: pd.Series(data=hindex>x, index=hindex)).T
+    return hseries.apply(lambda x: pd.Series(data=hindex > x, index=hindex)).T
 
 
 def collapse(s_filled_masked):
