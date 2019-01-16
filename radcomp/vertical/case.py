@@ -93,6 +93,7 @@ def proc_indicator(pn, var='zdrg', tlims=(-20, -10)):
 
 
 def kdp2phidp(kdp, dr_km):
+    """Retrieve phidp from kdp."""
     kdp_filled = kdp.fillna(0)
     return 2*kdp_filled.cumsum().multiply(dr_km, axis=0)
 
@@ -294,11 +295,6 @@ class Case:
         if raw:
             return self.data['ZH'].isnull()
         return self.data['zh'].isnull()
-
-    def param_label(self, param):
-        if param.lower() in self.class_scheme.params:
-            return param.lower()
-        return param.upper()
 
     def load_classification(self, name=None, **kws):
         """Load a classification scheme based on its id, and classify."""
@@ -709,7 +705,7 @@ class Case:
     def precip_classes(self):
         """select potentially precipitating classes"""
         pn = self.clus_centroids()[0]
-        zmean = pn.loc[self.param_label('zh')].mean()
+        zmean = pn.loc['zh'].mean()
         return zmean[zmean > -9].index
 
     def precip_selection(self):
