@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 
 from radcomp.vertical import (filtering, classification, plotting, insitu, ml,
-                              NAN_REPLACEMENT)
+                              deriv, NAN_REPLACEMENT)
 from radcomp import arm, azs
 from radcomp.tools import strftime_date_range, cloudnet
 from j24 import home, daterange2str
@@ -873,14 +873,7 @@ class Case:
 
     def echotop(self):
         """echo top heights"""
-        isnull = self.data.zh.isnull()
-        hghts = isnull.copy()
-        for col in hghts.columns:
-            hghts[col] = hghts.index
-        hghts[isnull] = np.nan
-        top = hghts.idxmax()
-        top.name = 'echotop'
-        return top
+        return deriv.echotop(self.data['zh'])
 
     def t_echotop(self, fill=True):
         """model temperature at echo top"""
