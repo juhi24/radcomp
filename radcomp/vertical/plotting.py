@@ -3,6 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import pyart # for colormaps
@@ -385,4 +386,16 @@ def plot_bm_stats(stat, ax=None, **kws):
     ax.set_ylabel('number of profiles')
     ax.set_xlabel('class')
     ax.set_title('unsupervised classification vs. reference analysis')
+    return ax
+
+
+def boxplot_t_echotop(c, ax=None):
+    """boxplot of echo top temperature by class"""
+    ax = ax or plt.gca()
+    ax = pd.concat([c.t_echotop(), c.classes], axis=1).boxplot(by='class', ax=ax)
+    ax.get_figure().suptitle('')
+    ax.set_title('')
+    ax.invert_yaxis()
+    ax.set_xlabel('class')
+    ax.set_ylabel('echo top temperature')
     return ax
