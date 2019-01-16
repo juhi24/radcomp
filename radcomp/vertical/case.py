@@ -35,8 +35,8 @@ def case_id_fmt(t_start, t_end=None, dtformat='{year}{month}{day}{hour}',
                          year_fmt=year_fmt)
 
 
-def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}',
-                   day_fmt='%d', month_fmt='%b', year_fmt='%Y'):
+def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}', day_fmt='%d',
+                month_fmt='%b', year_fmt='%Y'):
     """daterange2str wrapper for US human readable date range format"""
     return daterange2str(t_start, t_end, dtformat=dtformat, day_fmt=day_fmt,
                          month_fmt=month_fmt, year_fmt=year_fmt)
@@ -87,9 +87,9 @@ def downward_gradient(df):
     return -dfg
 
 
-def proc_indicator(pn, var='zdrg', tlims=(-20,-10)):
+def proc_indicator(pn, var='zdrg', tlims=(-20, -10)):
     """gradient to process indicator"""
-    return pn[var][(pn.T<tlims[1]) & (pn.T>tlims[0])].sum()
+    return pn[var][(pn.T < tlims[1]) & (pn.T > tlims[0])].sum()
 
 
 def kdp2phidp(kdp, dr_km):
@@ -115,13 +115,13 @@ def prepare_pn(pn, kdpmax=np.nan):
     dr_km = dr/1000
     pn_new = pn.copy()
     pn_new['KDP_orig'] = pn_new['KDP'].copy()
-    pn_new['KDP'][pn_new['KDP']<0] = np.nan
+    pn_new['KDP'][pn_new['KDP'] < 0] = np.nan
     pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
     kdp = pn_new['KDP'] # a view
     # remove extreme KDP values in the panel using a view
     if USE_LEGACY_DATA:
         kdp[kdp > kdpmax] = 0
-    kdp[kdp<0] = 0
+    kdp[kdp < 0] = 0
     pn_new = filtering.fltr_median(pn_new)
     pn_new = filtering.fltr_nonmet(pn_new)
     # ensure all small case keys are in place
@@ -151,9 +151,9 @@ def fillna(dat, field=''):
 
 def prepare_data(pn, fields=DEFAULT_PARAMS, hlimits=(190, 10e3), kdpmax=None):
     """Prepare data for classification. Scaling has do be done separately."""
-    data = pn[fields, hlimits[0]:hlimits[1], :].transpose(0,2,1)
+    data = pn[fields, hlimits[0]:hlimits[1], :].transpose(0, 2, 1)
     if kdpmax is not None:
-        data['KDP'][data['KDP']>kdpmax] = np.nan
+        data['KDP'][data['KDP'] > kdpmax] = np.nan
     return fillna(data)
 
 
@@ -163,12 +163,14 @@ def prep_data(pn, vpc):
 
 
 def handle_ax(ax):
+    """prepare axes for redrawing"""
     if ax is None:
         ax_out = None
         axkws = dict()
         update = False
     else:
         cl_ax = ax
+        # clear axes
         if isinstance(cl_ax, np.ndarray):
             for ax_out in cl_ax:
                 ax_out.clear()
@@ -312,9 +314,9 @@ class Case:
             if self.has_ml and not force_no_crop:
                 top = self.ml_limits()[1]
                 collapsefun = lambda df: ml.collapse2top(df.T, top=top).T
-                cl_data = cl_data.apply(collapsefun, axis=(1,2))
+                cl_data = cl_data.apply(collapsefun, axis=(1, 2))
                 cl_data = fillna(cl_data)
-                if cl_data.size==0:
+                if cl_data.size == 0:
                     return None
             if save and not force_no_crop:
                 self.cl_data = cl_data
@@ -401,7 +403,7 @@ class Case:
         if raw:
             data = self.data
         else:
-            data = self.cl_data.transpose(0,2,1)
+            data = self.cl_data.transpose(0, 2, 1)
         if above_ml_only:
             data = self.data_above_ml if raw else self.only_data_above_ml(data)
         elif inverse_transformed:
@@ -475,6 +477,7 @@ class Case:
         return fig, axarr
 
     def plot_growth_zones(self, **kws):
+        """plotting.plot_growth_zones wrapper"""
         self.load_model_temperature()
         plotting.plot_growth_zones(self.data['T'], **kws)
 
@@ -482,8 +485,8 @@ class Case:
         """Plot melting layer highlighting interpolated parts."""
         ax = ax or plt.gca()
         common_kws = dict(linestyle=linestyle, marker=marker)
-        boti, topi = self.ml_limits(interpolate=True)
-        bot, top = self.ml_limits(interpolate=False)
+        _, topi = self.ml_limits(interpolate=True)
+        _, top = self.ml_limits(interpolate=False)
         ax.plot(topi.index, topi.values, color='gray', zorder=5, **common_kws)
         ax.plot(top.index, top.values, color='black', zorder=6, **common_kws)
         return ax
@@ -524,10 +527,10 @@ class Case:
 
     def plot_azs(self, ax, amin=10, amax=4000):
         """Plot prefactor of Z-S relation"""
-        azs = self.azs()
-        label = plotting.LABELS[azs.name]
-        self.plot_series(azs, ax=ax, label=label)
-        ax.set_ylabel(plotting.LABELS[azs.name])
+        a_zs = self.azs()
+        label = plotting.LABELS[a_zs.name]
+        self.plot_series(a_zs, ax=ax, label=label)
+        ax.set_ylabel(plotting.LABELS[a_zs.name])
         ax.set_yscale('log')
         ax.set_ylim(bottom=amin, top=amax)
         ax.set_yticks([10, 100, 1000])
@@ -659,12 +662,12 @@ class Case:
         n_extra = extra.shape[1]
         pn_plt = pn.copy() # with shifted axis, only for plotting
         pn_plt.minor_axis = pn.minor_axis-0.5
-        if n_extra>0:
+        if n_extra > 0:
             kws['n_ax_shift'] = n_extra
         fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
                                      n_extra_ax=n_extra+n_extra_ax+plot_counts,
                                      has_ml=self.has_ml, **kws)
-        if colorful_bars==True: # Might be str, so check for True.
+        if colorful_bars == True: # Might be str, so check for True.
             n_omit_coloring = 2
         else:
             n_omit_coloring = 1
@@ -672,7 +675,7 @@ class Case:
             self.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
         ax_last = axarr[-1]
         ax_extra = axarr[0]
-        if n_extra>0:
+        if n_extra > 0:
             extra.plot.bar(ax=ax_extra, color='black')
             ax_extra.get_legend().set_visible(False)
             ax_extra.set_ylim([-20, 1])
@@ -680,11 +683,11 @@ class Case:
             ax_extra.yaxis.grid(True)
         n_comp = self.class_scheme.km.n_clusters
         ax_last.set_xticks(extra.index.values)
-        ax_last.set_xlim(-0.5,n_comp-0.5)
+        ax_last.set_xlim(-0.5, n_comp-0.5)
         fig = ax_last.get_figure()
         precip_type = 'rain' if self.has_ml else 'snow'
         axarr[0].set_title('Class centroids for {} cases'.format(precip_type))
-        if colorful_bars=='blue':
+        if colorful_bars == 'blue':
             cmkw = {}
             cmkw['cm'] = plotting.cm_blue()
         if plot_counts:
@@ -707,7 +710,7 @@ class Case:
         """select potentially precipitating classes"""
         pn = self.clus_centroids()[0]
         zmean = pn.loc[self.param_label('zh')].mean()
-        return zmean[zmean>-9].index
+        return zmean[zmean > -9].index
 
     def precip_selection(self):
         """selector for precipitating classes over all time stamps"""
@@ -848,12 +851,12 @@ class Case:
             try:
                 return sounding.read_sounding(x, index_col='HGHT')[var]
             except pd.errors.ParserError:
-                return pd.Series(index=(0,20000), data=(np.nan, np.nan))
+                return pd.Series(index=(0, 20000), data=(np.nan, np.nan))
         a = ts.apply(snd_col)
         a.interpolate(axis=1, inplace=True)
         na = self.timestamps().apply(lambda x: np.nan)
         na = pd.DataFrame(na).reindex(a.columns, axis=1)
-        t = pd.concat([na,a]).sort_index().interpolate(method='time')
+        t = pd.concat([na, a]).sort_index().interpolate(method='time')
         if self.class_scheme is not None:
             hmax = self.class_scheme.hlimits[1]
         else:
