@@ -3,11 +3,13 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
+from os import path
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from os import path
 from sklearn.metrics import silhouette_score
+
 from radcomp import USER_DIR
 from radcomp.vertical import case, plotting
 
@@ -88,7 +90,7 @@ def n_class_in_cases(class_n, cases, combined_cases=None):
     elif combined_cases is not None:
         classes = combined_cases.classes
     groups = classes.groupby(case_ids)
-    return groups.agg(lambda x: (x==class_n).sum())
+    return groups.agg(lambda x: (x == class_n).sum())
 
 
 def plot_cases_with_class(cases, class_n, **kws):
@@ -124,7 +126,7 @@ class MultiCase(case.Case):
             cases = cases[cases[filter_flag].fillna(0).astype(bool)]
         return cls.by_combining(cases, **kws)
 
-    def silhouette_score(self, cols=(0,1,2), weights=1):
+    def silhouette_score(self, cols=(0, 1, 2), weights=1):
         """silhouette score"""
         #selection = self.precip_selection()
         #round_selection = round_time_index(self.precip_selection())
@@ -183,7 +185,7 @@ class MultiCase(case.Case):
             occ = self.class_convective_rel_occ()
             plot_convective_occurrence(occ, ax=ax_conv)
             if colorful_bars:
-                if colorful_bars=='blue':
+                if colorful_bars == 'blue':
                     cmkw = {}
                     cmkw['cm'] = plotting.cm_blue()
                 plotting.bar_plot_colors(ax_conv, order,
