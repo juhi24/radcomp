@@ -15,13 +15,13 @@ from j24.tools import notify
 import conf
 
 
-def silh_score_avgs(cc, n_iter=10, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
+def silh_score_avgs(cc, n_iter=12, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
     """Compute silhouette scores per number of classes."""
     scores = pd.DataFrame()
     vconf = vpc_conf.copy()
     vconf.pop('n_clusters')
     for i in range(n_iter):
-        for n_classes in range(5, 27):
+        for n_classes in range(5, 21):
             scheme = classification.VPC(n_clusters=n_classes, **vconf)
             cc.class_scheme = scheme
             cc.train(quiet=True)
@@ -56,7 +56,7 @@ def score_analysis(cc, **kws):
     fig, ax = plt.subplots(dpi=110, figsize=(5,4))
     plot_scores(scores, ax=ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    return fig, ax
+    return fig, ax, scores
 
 
 if __name__ == '__main__':
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     cc = multicase.MultiCase.from_caselist(season, has_ml=(season == 'rain'))
     #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
     #fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
-    fig, ax = score_analysis(cc, n_iter=1, cols='all', vpc_conf=vpc_conf)
+    fig, ax, scores = score_analysis(cc, cols='all', vpc_conf=vpc_conf)
     fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
     savefile = path.join(conf.P1_FIG_DIR, fname)
     fig.savefig(savefile, bbox_inches='tight')

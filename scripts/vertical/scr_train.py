@@ -11,10 +11,11 @@ import matplotlib.pyplot as plt
 from radcomp.vertical import multicase, classification, benchmark, plotting, RESULTS_DIR
 from j24 import ensure_join
 
-from conf import VPC_PARAMS_SNOW, VPC_PARAMS_RAIN
+from conf import VPC_PARAMS_SNOW, VPC_PARAMS_RAIN, SEED
 
 
 def training(c, train=True, save_scheme=True):
+    np.random.seed(SEED)
     if train:
         c.train(quiet=True)
         if save_scheme:
@@ -22,7 +23,8 @@ def training(c, train=True, save_scheme=True):
     c.load_classification()
 
 
-def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True):
+def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
+               plt_top=True):
     """class summary and statistics plots"""
     fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue',
                                              fig_scale_factor=0.8)#, cmap='viridis')
@@ -38,8 +40,11 @@ def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True):
     fig_bm, ax_bm = plt.subplots()
     plotting.plot_bm_stats(stat, ax=ax_bm)
     #
-    fig_top, ax_top = plt.subplots()
-    plotting.boxplot_t_echotop(c, ax=ax_top)
+    if plt_top:
+        fig_top, ax_top = plt.subplots()
+        plotting.boxplot_t_echotop(c, ax=ax_top)
+    else:
+        ax_top = None
     #
     if save_plots:
         savekws = {'bbox_inches': 'tight'}
@@ -50,7 +55,8 @@ def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True):
         if plt_silh:
             fig_s.savefig(path.join(savedir, 'silhouettes.png'), **savekws)
         fig_bm.savefig(path.join(savedir, 'benchmark.png'), **savekws)
-        fig_top.savefig(path.join(savedir, 't_top.png'), **savekws)
+        if plt_top:
+            fig_top.savefig(path.join(savedir, 't_top.png'), **savekws)
     return axarr, ax_sca, ax_s, ax_bm, ax_top
 
 
@@ -73,8 +79,7 @@ if __name__ == '__main__':
     bracketing = False
     plt.ion()
     plt.close('all')
-    np.random.seed(1)
-    cases_id = 'rain'
+    cases_id = 'snow'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)
@@ -83,9 +88,11 @@ if __name__ == '__main__':
     vpc_params = VPC_PARAMS_RAIN if rain_season else VPC_PARAMS_SNOW
     c = multicase.MultiCase.by_combining(cases, has_ml=rain_season)
     if bracketing:
-        for n_clusters in np.arange(8, 18):
+        for n_clusters in np.arange(13, 18):
             vpc_params.update({'n_clusters': n_clusters})
-            plot_kws = dict(plt_silh=False, plt_sca=False, save_plots=True)
+            plot_kws = dict(plt_silh=False, plt_sca=False, plt_top=False,
+                            save_plots=False)
+            print(vpc_params)
             workflow(c, vpc_params, plot_kws=plot_kws)
     else:
         kws = dict(save_plots=True)

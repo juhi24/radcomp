@@ -12,10 +12,11 @@ import conf
 
 
 if __name__ == '__main__':
+    # TODO: what is leaking memory?
     save = True
     plt.ioff() if save else plt.ion()
     plt.close('all')
-    rain_season = False
+    rain_season = True
     case_set = conf.CASES_MELT if rain_season else conf.CASES_SNOW
     name = conf.SCHEME_ID_MELT if rain_season else conf.SCHEME_ID_SNOW
     plot_t = not rain_season
@@ -37,8 +38,9 @@ if __name__ == '__main__':
         #c.plot_cluster_centroids()
         fig, axarr = c.plot(params=['kdp', 'zh', 'zdr', 'kdpg'],
                             n_extra_ax=0, plot_extras=['ts', 'silh', 'cl'],
-                            t_contour_ax_ind='all', t_levels=[-20, -10, -8, -3],
-                            fig_scale_factor=0.8, cmap='viridis')
+                            t_contour_ax_ind='all',
+                            t_levels=[-40, -20, -10, -8, -3],
+                            fig_scale_factor=0.75, cmap='viridis')
         if save:
             fname = path.join(results_dir, c.name()+'.png')
             #fig.set_size_inches([3.58666667, 5.92666667])
