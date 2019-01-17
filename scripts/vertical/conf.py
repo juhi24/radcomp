@@ -4,14 +4,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __metaclass__ = type
 
 from os import path
-from radcomp.vertical import multicase, RESULTS_DIR
+from radcomp.vertical import classification, multicase, RESULTS_DIR
 
-
-SCHEME_ID_SNOW = 'snow_t08_30eig13clus_pca'
-SCHEME_ID_MELT = 'mlt2_30eig10clus_pca'
 
 CASES_SNOW = 'snow'
-CASES_MELT = 'rain'
+CASES_RAIN = 'rain'
 
 PARAMS = ['zh', 'zdr', 'kdp']
 
@@ -20,7 +17,7 @@ VPC_PARAMS_SNOW = dict(basename='snow',
                        params=PARAMS,
                        hlimits=(190, 10e3),
                        n_eigens=30,
-                       n_clusters=13,
+                       n_clusters=16,
                        reduced=True,
                        extra_weight=0.8)
 
@@ -32,6 +29,11 @@ VPC_PARAMS_RAIN = dict(basename='mlt2',
                        n_clusters=10,
                        reduced=True)
 
+SEED = 0
+
+SCHEME_ID_SNOW = classification.scheme_name(VPC_PARAMS_SNOW)
+SCHEME_ID_RAIN = classification.scheme_name(VPC_PARAMS_RAIN)
+
 P1_FIG_DIR = path.join(RESULTS_DIR, 'paper1')
 
 
@@ -41,7 +43,7 @@ def init_cases(cases_id=None, season=''):
         if season == 'snow':
             cases_id = CASES_SNOW
         elif season == 'rain':
-            cases_id = CASES_MELT
+            cases_id = CASES_RAIN
     cases = multicase.read_cases(cases_id)
     if cases.ml.astype(bool).all():
         cases = cases[cases['ml_ok'].fillna(0).astype(bool)]
