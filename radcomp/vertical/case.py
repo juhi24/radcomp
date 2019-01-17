@@ -422,7 +422,8 @@ class Case:
         plot_lr = ('lr' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
-        cmap_override = {'LR': 'seismic', 'kdpg': 'bwr', 'zdrg': 'bwr'}
+        cmap_override = {'LR': 'seismic', 'kdpg': 'bwr', 'zdrg': 'bwr',
+                         'omega': 'seismic_r'}
         if plot_lr:
             data['LR'] = data['T'].diff()
             params = np.append(params, 'LR')
