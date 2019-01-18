@@ -31,8 +31,8 @@ VPC_PARAMS_RAIN = dict(basename='mlt2',
 
 SEED = 0
 
-SCHEME_ID_SNOW = classification.scheme_name(VPC_PARAMS_SNOW)
-SCHEME_ID_RAIN = classification.scheme_name(VPC_PARAMS_RAIN)
+SCHEME_ID_SNOW = classification.scheme_name(**VPC_PARAMS_SNOW)
+SCHEME_ID_RAIN = classification.scheme_name(**VPC_PARAMS_RAIN)
 
 P1_FIG_DIR = path.join(RESULTS_DIR, 'paper1')
 
