@@ -3,22 +3,25 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 __metaclass__ = type
 
-import matplotlib.pyplot as plt
+import gc
 from os import path
+from warnings import warn
+
+import matplotlib.pyplot as plt
+
 from radcomp.vertical import RESULTS_DIR
 from j24 import ensure_join
-from warnings import warn
+
 import conf
 
 
 if __name__ == '__main__':
-    # TODO: what is leaking memory?
     save = True
     plt.ioff() if save else plt.ion()
     plt.close('all')
     rain_season = True
-    case_set = conf.CASES_MELT if rain_season else conf.CASES_SNOW
-    name = conf.SCHEME_ID_MELT if rain_season else conf.SCHEME_ID_SNOW
+    case_set = conf.CASES_RAIN if rain_season else conf.CASES_SNOW
+    name = conf.SCHEME_ID_RAIN if rain_season else conf.SCHEME_ID_SNOW
     plot_t = not rain_season
     cases = conf.init_cases(cases_id=case_set)
     results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
@@ -47,3 +50,4 @@ if __name__ == '__main__':
             fig.savefig(fname, bbox_inches='tight')
             plt.close(fig)
             del(c)
+            gc.collect()
