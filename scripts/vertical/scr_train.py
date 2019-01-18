@@ -57,6 +57,9 @@ def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
         fig_bm.savefig(path.join(savedir, 'benchmark.png'), **savekws)
         if plt_top:
             fig_top.savefig(path.join(savedir, 't_top.png'), **savekws)
+        cl_data_std = c.cl_data_scaled.std().mean()
+        cl_data_std.name = 'std'
+        cl_data_std.to_csv(path.join(savedir, 'cl_data_stats.csv'))
     return axarr, ax_sca, ax_s, ax_bm, ax_top
 
 

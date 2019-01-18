@@ -22,8 +22,8 @@ def silh_score_avgs(cc, n_iter=12, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
     vconf.pop('n_clusters')
     for i in range(n_iter):
         for n_classes in range(5, 21):
-            scheme = classification.VPC(n_clusters=n_classes, **vconf)
-            cc.class_scheme = scheme
+            vpc = classification.VPC(n_clusters=n_classes, **vconf)
+            cc.class_scheme = vpc
             cc.train(quiet=True)
             cc.classify()
             #fig, ax = plt.subplots()
@@ -61,7 +61,7 @@ def score_analysis(cc, **kws):
 
 if __name__ == '__main__':
     plt.close('all')
-    season = 'rain'
+    season = 'snow'
     vpc_conf = conf.VPC_PARAMS_RAIN if season=='rain' else conf.VPC_PARAMS_SNOW
     cc = multicase.MultiCase.from_caselist(season, has_ml=(season == 'rain'))
     #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)

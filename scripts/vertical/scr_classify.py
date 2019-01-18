@@ -16,27 +16,22 @@ import conf
 
 
 if __name__ == '__main__':
+    # TODO: weird memory leak with rain cases
     save = True
     plt.ioff() if save else plt.ion()
     plt.close('all')
     rain_season = True
     case_set = conf.CASES_RAIN if rain_season else conf.CASES_SNOW
     name = conf.SCHEME_ID_RAIN if rain_season else conf.SCHEME_ID_SNOW
-    plot_t = not rain_season
     cases = conf.init_cases(cases_id=case_set)
     results_dir = ensure_join(RESULTS_DIR, 'classified', name, case_set)
     for i, c in cases.case.iteritems():
         print(i)
+        c.load_classification(name)
         try:
-            c.load_classification(name)
-            try:
-                c.load_pluvio()
-            except FileNotFoundError:
-                warn('Pluvio data not found.')
-        except ValueError as e:
-            warn(str(e))
-            raise e
-            continue
+            c.load_pluvio()
+        except FileNotFoundError:
+            warn('Pluvio data not found.')
         #c.plot_classes()
         #c.plot_cluster_centroids()
         fig, axarr = c.plot(params=['kdp', 'zh', 'zdr', 'kdpg'],

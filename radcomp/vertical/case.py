@@ -107,7 +107,7 @@ def data_range(dt_start, dt_end):
     for pn in pns:
         if not pn.empty:
             pns_out.append(pn)
-    return pd.concat(pns_out, axis=2).loc[:, :, dt_start:dt_end]
+    return pd.concat(pns_out, axis=2, sort=True).loc[:, :, dt_start:dt_end]
 
 
 def prepare_pn(pn, kdpmax=np.nan):
