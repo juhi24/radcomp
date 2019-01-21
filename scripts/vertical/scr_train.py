@@ -5,7 +5,6 @@ A script for using the VP classification training method
 from os import path
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 from radcomp.vertical import multicase, classification, benchmark, plotting, RESULTS_DIR
@@ -91,7 +90,7 @@ if __name__ == '__main__':
     vpc_params = VPC_PARAMS_RAIN if rain_season else VPC_PARAMS_SNOW
     c = multicase.MultiCase.by_combining(cases, has_ml=rain_season)
     if bracketing:
-        for n_clusters in np.arange(13, 18):
+        for n_clusters in np.arange(14, 20):
             vpc_params.update({'n_clusters': n_clusters})
             plot_kws = dict(plt_silh=False, plt_sca=False, plt_top=False,
                             save_plots=False)

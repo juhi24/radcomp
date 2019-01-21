@@ -20,7 +20,7 @@ if __name__ == '__main__':
     save = True
     plt.ioff() if save else plt.ion()
     plt.close('all')
-    rain_season = True
+    rain_season = False
     case_set = conf.CASES_RAIN if rain_season else conf.CASES_SNOW
     name = conf.SCHEME_ID_RAIN if rain_season else conf.SCHEME_ID_SNOW
     cases = conf.init_cases(cases_id=case_set)
