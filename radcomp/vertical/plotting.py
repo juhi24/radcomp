@@ -38,15 +38,26 @@ def plot_vp(data, ax=None, **kws):
     return ax.plot(data.values, data.index, **kws)
 
 
-def plot_vp_betweenx(s1, s2, ax=None, **kws):
-    """"""
+def _plot_vp_betweenx(s1, s2, ax=None, **kws):
+    """fill_betweenx wrapper for Series objects"""
     ax = ax or plt.gca()
     return ax.fill_betweenx(s1.index, s1.values, s2.values, **kws)
 
 
+def _vp_xlim(name, ax, has_ml):
+    """Set x limits in a vertical profile plot."""
+    search_name = name.upper()
+    if search_name in vis.LABELS:
+        ax.set_xlabel(vis.LABELS[search_name])
+        vmins, vmaxs = vis.vlims(has_ml=has_ml)
+        ax.set_xlim(left=vmins[search_name], right=vmaxs[search_name])
+    else:
+        ax.set_xlabel(name)
+
+
 def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5.5, 3.3)},
              has_ml=False, **kws):
-    """plot DataFrame of vertical profile parameters"""
+    """Plot DataFrame of vertical profile parameters."""
     ncols = df.shape[1]
     if axarr is None:
         fig, axarr = plt.subplots(nrows=1, ncols=ncols, sharey=True, **fig_kws)
@@ -55,13 +66,7 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5.5, 3.3)},
     for i, (name, data) in enumerate(df.T.sort_index().iterrows()):
         ax = axarr[i]
         plot_vp(data, ax=ax, **kws)
-        search_name = name.upper()
-        if search_name in vis.LABELS:
-            ax.set_xlabel(vis.LABELS[search_name])
-            vmins, vmaxs = vis.vlims(has_ml=has_ml)
-            ax.set_xlim(left=vmins[search_name], right=vmaxs[search_name])
-        else:
-            ax.set_xlabel(name)
+        _vp_xlim(name, ax, has_ml)
     set_h_ax(axarr[0])
     fig.subplots_adjust(left=0.10, right=0.98, bottom=0.15, top=0.9, wspace=0.05)
     for ax in axarr[1:]:
@@ -71,6 +76,7 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5.5, 3.3)},
 
 def plot_vps_betweenx(df1, df2, axarr=None, has_ml=False,
                       fig_kws={'dpi': 110, 'figsize': (5, 3)}, **kws):
+    """Plot areas between vertical profile curves."""
     ncols = df1.shape[1]
     if axarr is None:
         fig, axarr = plt.subplots(nrows=1, ncols=ncols, sharey=True, **fig_kws)
@@ -78,21 +84,13 @@ def plot_vps_betweenx(df1, df2, axarr=None, has_ml=False,
         fig = axarr[0].get_figure()
     for i, name in enumerate(df1.columns.sort_values()):
         ax = axarr[i]
-        plot_vp_betweenx(df1[name], df2[name], ax=ax, **kws)
-        search_name = name.upper()
-        if search_name in vis.LABELS:
-            ax.set_xlabel(vis.LABELS[search_name])
-            vmins, vmaxs = vis.vlims(has_ml=has_ml)
-            ax.set_xlim(left=vmins[search_name], right=vmaxs[search_name])
-        else:
-            ax.set_xlabel(name)
+        _plot_vp_betweenx(df1[name], df2[name], ax=ax, **kws)
+        _vp_xlim(name, ax, has_ml)
     set_h_ax(axarr[0])
-    if axarr is None:
-        fig.subplots_adjust(left=0.13, right=0.95, bottom=0.15, top=0.9, wspace=0.1)
+    fig.subplots_adjust(left=0.13, right=0.95, bottom=0.15, top=0.9, wspace=0.1)
     for ax in axarr[1:]:
         plt.setp(ax.get_yticklabels(), visible=False)
     return axarr
-
 
 
 def rotate_tick_labels(rot, ax=None):
