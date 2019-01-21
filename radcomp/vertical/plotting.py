@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.ticker import MaxNLocator
 import pyart # for colormaps
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -107,6 +108,7 @@ def mean_delta(t):
 
 def set_h_ax(ax, hlims=(0, 10000), label='Height, km'):
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax.set_ylim(*hlims)
     ax.set_ylabel(label)
 
