@@ -430,3 +430,36 @@ def boxplot_t_echotop(c, ax=None, **kws):
     ax.set_xlabel('class')
     ax.set_ylabel('echo top temperature')
     return ax
+
+
+def plot_occurrence_counts(count, ax=None, bottom=0, top=800):
+    """Bar plot occurrence counts.
+
+    Args:
+        count (Series)
+    """
+    ax = ax or plt.gca()
+    count.plot.bar(ax=ax)
+    ax.set_ylabel('Occurrence')
+    ax.yaxis.grid(True)
+    ax.set_ylim(bottom=bottom, top=top)
+
+
+def handle_ax(ax):
+    """prepare axes for redrawing"""
+    if ax is None:
+        ax_out = None
+        axkws = dict()
+        update = False
+    else:
+        cl_ax = ax
+        # clear axes
+        if isinstance(cl_ax, np.ndarray):
+            for ax_out in cl_ax:
+                ax_out.clear()
+        else:
+            ax_out = cl_ax
+            ax_out.clear()
+        axkws = dict(axarr=cl_ax)
+        update = True
+    return ax_out, update, axkws

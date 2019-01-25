@@ -163,39 +163,6 @@ def prep_data(pn, vpc):
     return prepare_data(pn, fields=vpc.params, hlimits=vpc.hlimits, kdpmax=vpc.kdpmax)
 
 
-def handle_ax(ax):
-    """prepare axes for redrawing"""
-    if ax is None:
-        ax_out = None
-        axkws = dict()
-        update = False
-    else:
-        cl_ax = ax
-        # clear axes
-        if isinstance(cl_ax, np.ndarray):
-            for ax_out in cl_ax:
-                ax_out.clear()
-        else:
-            ax_out = cl_ax
-            ax_out.clear()
-        axkws = dict(axarr=cl_ax)
-        update = True
-    return ax_out, update, axkws
-
-
-def plot_occurrence_counts(count, ax=None, bottom=0, top=800):
-    """Bar plot occurrence counts.
-
-    Args:
-        count (Series)
-    """
-    ax = ax or plt.gca()
-    count.plot.bar(ax=ax)
-    ax.set_ylabel('Occurrence')
-    ax.yaxis.grid(True)
-    ax.set_ylim(bottom=bottom, top=top)
-
-
 def round_time_index(data, resolution='1min'):
     """round datetime index to a given resolution"""
     dat = data.copy()
@@ -213,20 +180,19 @@ class Case:
         cl_data (Panel): non-scaled classifiable data
         cl_data_scaled (Panel): scaled classifiable data
         classes (Series): stored classification results
-        class_scheme (radcomp.vertical.VPC): classification scheme
+        vpc (radcomp.vertical.VPC): classification scheme
         temperature (Series): stored temperature
         pluvio (baecc.instruments.Pluvio)
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, class_scheme=None, has_ml=False,
+                 classes=None, vpc=None, has_ml=False,
                  is_convective=None):
         self.data = data
         self.cl_data = cl_data
         self.cl_data_scaled = cl_data_scaled
-        self.classes = classes # is this needed?
         self.silh_score = None
-        self.vpc = class_scheme
+        self.vpc = vpc
         self.pluvio = None
         self.has_ml = has_ml
         self.is_convective = is_convective
@@ -359,10 +325,10 @@ class Case:
             self.data['MLI'] = mli
         return mli
 
-    def classify(self, scheme=None, save=True):
+    def classify(self, vpc=None, save=True):
         """classify based on class_scheme"""
-        if scheme is not None:
-            self.vpc = scheme
+        if vpc is not None:
+            self.vpc = vpc
         if self.cl_data_scaled is None:
             self.scale_cl_data()
         classify_kws = {}
@@ -372,7 +338,6 @@ class Case:
             classes, silh = self.vpc.classify(self.cl_data_scaled, **classify_kws)
             classes.name = 'class'
             if save:
-                self.classes = classes
                 self.silh_score = silh
             return classes, silh
         return None, None
@@ -386,7 +351,7 @@ class Case:
 
     def plot_classes(self):
         """plot_classes wrapper"""
-        return plotting.plot_classes(self.cl_data_scaled, self.classes)
+        return plotting.plot_classes(self.cl_data_scaled, self.vpc.classes)
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              t_contour_ax_ind=False, above_ml_only=False, t_levels=[0],
@@ -411,14 +376,14 @@ class Case:
                 params = self.vpc.params
             else:
                 params = DEFAULT_PARAMS
-        plot_classes = ('cl' in plot_extras) and (self.classes is not None)
+        plot_classes = ('cl' in plot_extras) and (self.vpc.classes is not None)
         plot_lwe = ('lwe' in plot_extras) and (self.pluvio is not None)
         if plot_lwe:
             plot_lwe = not self.pluvio.data.empty
         plot_azs = ('azs' in plot_extras) and (self.azs().size > 0)
         plot_fr = ('fr' in plot_extras) and (self.fr().size > 0)
         plot_t = ('ts' in plot_extras) and (self.t_surface().size > 0)
-        plot_silh = ('silh' in plot_extras) and (self.classes is not None)
+        plot_silh = ('silh' in plot_extras) and (self.vpc.classes is not None)
         plot_lr = ('lr' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
@@ -452,7 +417,7 @@ class Case:
                 print(warnfmt.format(self.name()))
         if plot_classes:
             for iax in range(len(axarr)-1):
-                self.class_colors(self.classes, ax=axarr[iax])
+                self.vpc.class_colors(ax=axarr[iax])
         has_vpc = (self.vpc is not None)
         if self.has_ml and has_vpc and not above_ml_only:
             for i in range(len(params)):
@@ -558,23 +523,9 @@ class Case:
             dt = plotting.num2date(event.xdata)
         except TypeError: # clicked outside axes
             return
-        ax, update, axkws = handle_ax(self._dt_ax)
+        ax, update, axkws = plotting.handle_ax(self._dt_ax)
         axkws.update(kws)
         self._dt_ax = self.plot_data_at(dt, params=params, **axkws)
-        if update:
-            ax.get_figure().canvas.draw()
-
-    def _on_click_plot_cl_cs(self, event):
-        """click a class centroid to plot it"""
-        try:
-            i = int(round(event.xdata))
-        except TypeError: # clicked outside axes
-            return
-        ax, update, axkws = handle_ax(self._cl_ax)
-        ticklabels = event.inaxes.axes.get_xaxis().get_majorticklabels()
-        classes = list(map(lambda la: int(la.get_text()), ticklabels))
-        classn = classes[i]
-        self._cl_ax = self.plot_centroid(classn, **axkws)
         if update:
             ax.get_figure().canvas.draw()
 
@@ -606,129 +557,6 @@ class Case:
         t = data_orig.minor_axis[i]
         axarr[1].set_title(str(t))
         return axarr
-
-    def plot_centroid(self, n, **kws):
-        """Plot centroid for class n."""
-        # TODO move to VPC
-        cen, t = self.clus_centroids()
-        data = cen.minor_xs(n)
-        axarr = plotting.plot_vps(data, has_ml=self.has_ml, **kws)
-        titlestr = 'Class {} centroid'.format(n)
-        if self.vpc.extra_weight:
-            titlestr += ', $T_{{s}}={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])
-        axarr[1].set_title(titlestr)
-        return axarr
-
-    def pcolor_classes(self, **kws):
-        groups = self.cl_data.groupby(self.classes)
-        axarrs = groups.apply(plotting.pcolor_class, **kws)
-        for i, axarr in axarrs.iteritems():
-            axarr[0].set_title('Class {}'.format(i))
-        figs = axarrs.apply(lambda axarr: axarr[0].get_figure())
-        out = pd.concat([figs, axarrs], axis=1)
-        out.columns = ['fig', 'axarr']
-        return out
-
-    def clus_centroids(self, order=None, sortby=None):
-        """cluster centroids translated to original units"""
-        # TODO: move to VPC
-        clus_centroids, extra = self.vpc.clus_centroids_pn()
-        clus_centroids.major_axis = self.cl_data_scaled.minor_axis
-        decoded = self.vpc.feature_scaling(clus_centroids, inverse=True)
-        if (sortby is not None) and (not order):
-            if isinstance(sortby, str) and extra.empty:
-                order = extra.sort_values(by=sortby).index
-            elif isinstance(sortby, pd.Series):
-                order = sortby.sort_values().index
-            else:
-                raise ValueError('sortby must be series or extra column name.')
-        if order is not None:
-            if extra.empty:
-                return decoded.loc[:, :, order], extra
-            return decoded.loc[:, :, order], extra.loc[order]
-        return decoded, extra
-
-    def plot_cluster_centroids(self, colorful_bars='blue', order=None,
-                               sortby=None, n_extra_ax=0,
-                               plot_counts=True, **kws):
-        """class centroids pcolormesh"""
-        # TODO: split massive func
-        # TODO: move to VPC
-        pn, extra = self.clus_centroids(order=order, sortby=sortby)
-        order_out = pn.minor_axis
-        n_extra = extra.shape[1]
-        pn_plt = pn.copy() # with shifted axis, only for plotting
-        pn_plt.minor_axis = pn.minor_axis-0.5
-        if n_extra > 0:
-            kws['n_ax_shift'] = n_extra
-        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
-                                     n_extra_ax=n_extra+n_extra_ax+plot_counts,
-                                     has_ml=self.has_ml, **kws)
-        if colorful_bars == True: # Might be str, so check for True.
-            n_omit_coloring = 2
-        else:
-            n_omit_coloring = 1
-        for iax in range(len(axarr)-n_omit_coloring):
-            self.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
-        ax_last = axarr[-1]
-        ax_extra = axarr[0]
-        if n_extra > 0:
-            extra.plot.bar(ax=ax_extra, color='black')
-            ax_extra.get_legend().set_visible(False)
-            ax_extra.set_ylim([-20, 1])
-            ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
-            ax_extra.yaxis.grid(True)
-        n_comp = self.vpc.km.n_clusters
-        ax_last.set_xticks(extra.index.values)
-        ax_last.set_xlim(-0.5, n_comp-0.5)
-        fig = ax_last.get_figure()
-        precip_type = 'rain' if self.has_ml else 'snow'
-        axarr[0].set_title('Class centroids for {} cases'.format(precip_type))
-        if colorful_bars == 'blue':
-            cmkw = {}
-            cmkw['cm'] = plotting.cm_blue()
-        if plot_counts:
-            counts = self.class_counts().loc[pn.minor_axis]
-            plot_occurrence_counts(counts, ax=ax_last)
-        if colorful_bars:
-            plotting.bar_plot_colors(ax_last, pn.minor_axis,
-                                     class_color_fun=self.class_color, **cmkw)
-        fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
-        ax_last.set_xlabel('Class ID')
-        return fig, axarr, order_out
-
-    def scatter_class_pca(self, **kws):
-        """plotting.scatter_class_pca wrapper"""
-        classes = round_time_index(self.classes)
-        return plotting.scatter_class_pca(self.vpc.data, classes,
-                                          color_fun=self.class_color, **kws)
-
-    def precip_classes(self):
-        """select potentially precipitating classes"""
-        pn = self.clus_centroids()[0]
-        zmean = pn.loc['zh'].mean()
-        return zmean[zmean > -9].index
-
-    def precip_selection(self):
-        """selector for precipitating classes over all time stamps"""
-        return self.classes.isin(self.precip_classes())
-
-    def class_color(self, *args, **kws):
-        """color associated to a given class number"""
-        # TODO: move to VPC
-        mapping = self.class_color_mapping()
-        return plotting.class_color(*args, mapping=mapping, **kws)
-
-    def class_colors(self, *args, **kws):
-        # TODO: move to VPC
-        mapping = self.class_color_mapping()
-        return plotting.class_colors(*args, mapping=mapping, **kws)
-
-    def class_color_mapping(self):
-        # TODO: move to VPC
-        selection = self.precip_classes()
-        mapping = pd.Series(index=selection, data=range(selection.size))
-        return mapping
 
     def set_xlim(self, ax):
         start = self.t_start()-self.mean_delta()/2
@@ -777,10 +605,6 @@ class Case:
         if interp_gaps:
             tre = tre.interpolate()
         return tre
-
-    def cl(self):
-        """Classes rounded to 1min"""
-        return round_time_index(self.classes)
 
     def azs(self, **kws):
         t_end = self.t_end()+pd.Timedelta(minutes=15)
@@ -859,18 +683,6 @@ class Case:
         else:
             hmax = self.data.major_axis.max()
         return t.loc[:, 0:hmax].drop(a.index).T
-
-    def class_counts(self):
-        """occurrences of each class"""
-        count = self.classes.groupby(self.classes).count()
-        count.name = 'count'
-        return count
-
-    def silhouette_coef(self):
-        """silhouette coefficient of each profile"""
-        from sklearn.metrics import silhouette_samples
-        sh_arr = silhouette_samples(self.vpc.data, self.classes)
-        return pd.Series(index=self.classes.index, data=sh_arr)
 
     def echotop(self):
         """echo top heights"""

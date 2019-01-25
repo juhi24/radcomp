@@ -77,8 +77,6 @@ fr_med = var_grouped(cases, casedf.fr_comb).median()
 n_classes = c.classes.unique().size
 fr_med = fr_med.reindex(index=range(n_classes))
 
-if plot_by_class:
-    df = c.pcolor_classes(cmap=cmap)
 f_t, ax_t, order_t = c.plot_cluster_centroids(cmap=cmap, sortby=toph,
                                               colorful_bars=colorful_bars,
                                               n_extra_ax=0, plot_counts=True)

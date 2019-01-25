@@ -126,8 +126,6 @@ class MultiCase(case.Case):
 
     def silhouette_score(self, cols=(0, 1, 2), weights=1):
         """silhouette score"""
-        #selection = self.precip_selection()
-        #round_selection = round_time_index(self.precip_selection())
         if cols == 'all':
             if self.has_ml:
                 weights = 1
@@ -143,7 +141,7 @@ class MultiCase(case.Case):
     def plot_silhouette(self, ax=None, **kws):
         """plot silhouette analysis"""
         ax = ax or plt.gca()
-        s_coef = self.silhouette_coef()
+        s_coef = self.vpc.silhouette_coef()
         s_groups = s_coef.groupby(self.classes)
         y_lower = 10
         for cname, clust in s_groups:

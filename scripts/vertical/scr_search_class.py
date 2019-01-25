@@ -29,8 +29,6 @@ results_dir = ensure_dir(path.join(RESULTS_DIR, 'classes_summary', name))
 c = case.Case.by_combining(cases)
 c.load_classification(name)
 
-if plot_by_class:
-    df = c.pcolor_classes(cmap='viridis')
 f_cen, axarr_cen = c.plot_cluster_centroids(cmap='viridis', colorful_bars='blue')
 
 #c.classes[c.classes==14]

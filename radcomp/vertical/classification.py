@@ -11,7 +11,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_samples
 
 from radcomp import learn, USER_DIR
-from radcomp.vertical import preprocessing
+from radcomp.vertical import preprocessing, plotting
 from j24 import ensure_dir, limitslist
 from j24.learn import pca_stats
 
@@ -142,14 +142,16 @@ class VPC:
         self.basename = basename
         self._mapping = None
         self.training_data = None # archived training data
-        self.training_result = None # archived training data classes
+        self.classes = None # archived training data classes
         self._n_eigens = n_eigens
         self._n_clusters = n_clusters
         self._inverse_data = None
         self._inverse_extra = None
         self.invalid_classes = invalid_classes
         self.transformers = {}
-        self.setup_transform(has_ml)
+        self.has_ml = has_ml
+        self.setup_transform()
+        self.height_index = None # training data height index
 
     def __repr__(self):
         return '<VPC {}>'.format(self.name())
@@ -188,10 +190,10 @@ class VPC:
             return obj
         raise Exception('Not a {} object.'.format(cls))
 
-    def setup_transform(self, has_ml):
+    def setup_transform(self):
         """preprocessing feature scaling transformer setup"""
         for param in self.params:
-            tr = preprocessing.RadarDataScaler(param=param, has_ml=has_ml)
+            tr = preprocessing.RadarDataScaler(param=param, has_ml=self.has_ml)
             self.transformers[param] = tr
 
     def feature_scaling(self, pn, inverse=False):
@@ -225,6 +227,7 @@ class VPC:
 
     def train(self, data=None, n_eigens=None, extra_df=None, **kws):
         """Perform clustering of the training data to initialize classes."""
+        self.height_index = data.minor_axis
         if n_eigens is None:
             n_eigens = self._n_eigens
         if data is None:
@@ -235,7 +238,8 @@ class VPC:
         self.training_data = training_data
         self.km, cl_arr = train(training_data, self.pca, reduced=self.reduced,
                                 n_clusters=self.n_clusters, **kws)
-        self.training_result = self.prep_classes(cl_arr, training_data.index)
+        self.classes = self.prep_classes(cl_arr, training_data.index)
+        self.classes.name = 'class'
 
     def prep_classes(self, cl_arr, index):
         """Map classes as Series"""
@@ -248,7 +252,7 @@ class VPC:
         data = self.prepare_data(data_scaled, **kws)
         cl_arr = self.km.predict(data)
         classes = self.prep_classes(cl_arr, data.index)
-        tr = self.training_result
+        tr = self.classes
         td = self.training_data
         training_classes = tr.loc[tr.index.difference(classes.index)].copy()
         training_data = td.loc[td.index.difference(data.index)].copy()
@@ -329,6 +333,134 @@ class VPC:
         clus_centroids, extra = self._clus_centroids_df()
         pn = self.df2pn(clus_centroids)
         return pn, extra
+
+    def clus_centroids(self, order=None, sortby=None):
+        """cluster centroids translated to original units"""
+        clus_centroids, extra = self.clus_centroids_pn()
+        clus_centroids.major_axis = self.height_index
+        decoded = self.feature_scaling(clus_centroids, inverse=True)
+        if (sortby is not None) and (not order):
+            if isinstance(sortby, str) and extra.empty:
+                order = extra.sort_values(by=sortby).index
+            elif isinstance(sortby, pd.Series):
+                order = sortby.sort_values().index
+            else:
+                raise ValueError('sortby must be series or extra column name.')
+        if order is not None:
+            if extra.empty:
+                return decoded.loc[:, :, order], extra
+            return decoded.loc[:, :, order], extra.loc[order]
+        return decoded, extra
+
+    def plot_centroid(self, n, **kws):
+        """Plot centroid for class n."""
+        cen, t = self.clus_centroids()
+        data = cen.minor_xs(n)
+        axarr = plotting.plot_vps(data, has_ml=self.has_ml, **kws)
+        titlestr = 'Class {} centroid'.format(n)
+        if self.extra_weight:
+            titlestr += ', $T_{{s}}={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])
+        axarr[1].set_title(titlestr)
+        return axarr
+
+    def precip_classes(self):
+        """select potentially precipitating classes"""
+        pn = self.clus_centroids()[0]
+        zmean = pn.loc['zh'].mean()
+        return zmean[zmean > -9].index
+
+    def class_color_mapping(self):
+        selection = self.precip_classes()
+        mapping = pd.Series(index=selection, data=range(selection.size))
+        return mapping
+
+    def class_color(self, *args, **kws):
+        """color associated to a given class number"""
+        mapping = self.class_color_mapping()
+        return plotting.class_color(*args, mapping=mapping, **kws)
+
+    def class_colors(self, **kws):
+        mapping = self.class_color_mapping()
+        return plotting.class_colors(self.classes, mapping=mapping, **kws)
+
+    def class_counts(self):
+        """occurrences of each class"""
+        count = self.classes.groupby(self.classes).count()
+        count.name = 'count'
+        return count
+
+    def _on_click_plot_cl_cs(self, event):
+        """click a class centroid to plot it"""
+        try:
+            i = int(round(event.xdata))
+        except TypeError: # clicked outside axes
+            return
+        ax, update, axkws = plotting.handle_ax(self._cl_ax)
+        ticklabels = event.inaxes.axes.get_xaxis().get_majorticklabels()
+        classes = list(map(lambda la: int(la.get_text()), ticklabels))
+        classn = classes[i]
+        self._cl_ax = self.vpc.plot_centroid(classn, **axkws)
+        if update:
+            ax.get_figure().canvas.draw()
+
+    def plot_cluster_centroids(self, colorful_bars='blue', order=None,
+                               sortby=None, n_extra_ax=0,
+                               plot_counts=True, **kws):
+        """class centroids pcolormesh"""
+        # TODO: split massive func
+        pn, extra = self.clus_centroids(order=order, sortby=sortby)
+        order_out = pn.minor_axis
+        n_extra = extra.shape[1]
+        pn_plt = pn.copy() # with shifted axis, only for plotting
+        pn_plt.minor_axis = pn.minor_axis-0.5
+        if n_extra > 0:
+            kws['n_ax_shift'] = n_extra
+        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
+                                     n_extra_ax=n_extra+n_extra_ax+plot_counts,
+                                     has_ml=self.has_ml, **kws)
+        if colorful_bars == True: # Might be str, so check for True.
+            n_omit_coloring = 2
+        else:
+            n_omit_coloring = 1
+        for iax in range(len(axarr)-n_omit_coloring):
+            self.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
+        ax_last = axarr[-1]
+        ax_extra = axarr[0]
+        if n_extra > 0:
+            extra.plot.bar(ax=ax_extra, color='black')
+            ax_extra.get_legend().set_visible(False)
+            ax_extra.set_ylim([-20, 1])
+            ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
+            ax_extra.yaxis.grid(True)
+        n_comp = self.km.n_clusters
+        ax_last.set_xticks(extra.index.values)
+        ax_last.set_xlim(-0.5, n_comp-0.5)
+        fig = ax_last.get_figure()
+        precip_type = 'rain' if self.has_ml else 'snow'
+        axarr[0].set_title('Class centroids for {} cases'.format(precip_type))
+        if colorful_bars == 'blue':
+            cmkw = {}
+            cmkw['cm'] = plotting.cm_blue()
+        if plot_counts:
+            counts = self.class_counts().loc[pn.minor_axis]
+            plotting.plot_occurrence_counts(counts, ax=ax_last)
+        if colorful_bars:
+            plotting.bar_plot_colors(ax_last, pn.minor_axis,
+                                     class_color_fun=self.class_color, **cmkw)
+        fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
+        ax_last.set_xlabel('Class ID')
+        return fig, axarr, order_out
+
+    def scatter_class_pca(self, **kws):
+        """plotting.scatter_class_pca wrapper"""
+        return plotting.scatter_class_pca(self.data, self.classes,
+                                          color_fun=self.class_color, **kws)
+
+    def silhouette_coef(self):
+        """silhouette coefficient of each profile"""
+        from sklearn.metrics import silhouette_samples
+        sh_arr = silhouette_samples(self.data, self.classes)
+        return pd.Series(index=self.classes.index, data=sh_arr)
 
     def prepare_data(self, data, extra_df=None, n_components=0, save=True):
         """prepare data for clustering or classification"""
