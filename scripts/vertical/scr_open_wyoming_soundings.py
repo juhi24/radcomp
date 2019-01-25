@@ -1,7 +1,5 @@
 # coding: utf-8
 """open soundings from wyoming website"""
-from __future__ import absolute_import, division, print_function, unicode_literals
-__metaclass__ = type
 
 import webbrowser
 import time

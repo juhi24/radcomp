@@ -1,7 +1,5 @@
 # coding: utf-8
 """Test ML detection performance."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-__metaclass__ = type
 
 import pytest
 from radcomp.vertical import multicase

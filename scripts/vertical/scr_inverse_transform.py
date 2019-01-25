@@ -1,7 +1,5 @@
 # coding: utf-8
 """inverse transform experiments for selecting number of PCA components"""
-from __future__ import absolute_import, division, print_function, unicode_literals
-__metaclass__ = type
 
 import matplotlib.pyplot as plt
 

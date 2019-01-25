@@ -1,6 +1,4 @@
 # coding: utf-8
-from __future__ import absolute_import, division, print_function, unicode_literals
-__metaclass__ = type
 
 import matplotlib.pyplot as plt
 from scr_class_stats import init_rain, cl_frac_in_case, frac_in_case_hist

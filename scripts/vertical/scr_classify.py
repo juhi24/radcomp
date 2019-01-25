@@ -1,7 +1,5 @@
 # coding: utf-8
 """classification script for both snow and rain events"""
-from __future__ import absolute_import, division, print_function, unicode_literals
-__metaclass__ = type
 
 import gc
 from os import path

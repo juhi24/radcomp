@@ -1,7 +1,5 @@
 # coding: utf-8
 """script for saving quicklooks of VP data"""
-from __future__ import absolute_import, division, print_function, unicode_literals
-__metaclass__ = type
 
 from os import path
 from datetime import timedelta
