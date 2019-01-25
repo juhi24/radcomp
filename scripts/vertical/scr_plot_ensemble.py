@@ -37,7 +37,7 @@ def t_boxplot(c, **kws):
 
 def lineboxplots(c, name, rain_season, savedir):
     data = c.data_above_ml
-    for cl in c.class_scheme.get_class_list():
+    for cl in c.vpc.get_class_list():
         dat = case.fillna(data.loc[('zh', 'kdp', 'zdr'), :10000, c.classes==cl])
         axarr = plotting.plot_vps(dat.iloc[:,:,0], linewidth=0.5, alpha=0)
         kws = dict(has_ml=rain_season, axarr=axarr)

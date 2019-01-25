@@ -41,7 +41,7 @@ if __name__ == '__main__':
     plt.ion()
     cases = case.read_cases('melting-test')
     c = cases.case.iloc[4]
-    c.class_scheme = scheme
+    c.vpc = scheme
     #
     scaled_data = c.scale_cl_data()
     rho = c.data.RHO

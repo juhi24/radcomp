@@ -83,7 +83,7 @@ def ts_case_ids(cases):
 def n_class_in_cases(class_n, cases, combined_cases=None):
     """numbers of occurrences of a given class per case in cases DataFrame"""
     case_ids = ts_case_ids(cases)
-    if cases.case.iloc[0].class_scheme is not None:
+    if cases.case.iloc[0].vpc is not None:
         classes = pd.concat([x.classes for i, x in cases.case.iteritems()])
     elif combined_cases is not None:
         classes = combined_cases.classes
@@ -132,12 +132,12 @@ class MultiCase(case.Case):
             if self.has_ml:
                 weights = 1
             else:
-                weights = np.ones(self.class_scheme.data.shape[1])
-                ew = self.class_scheme.extra_weight
+                weights = np.ones(self.vpc.data.shape[1])
+                ew = self.vpc.extra_weight
                 weights[:-1] = ew
-            class_data = self.class_scheme.data*weights
+            class_data = self.vpc.data*weights
         else:
-            class_data = self.class_scheme.data.loc[:, cols]*weights
+            class_data = self.vpc.data.loc[:, cols]*weights
         return silhouette_score(class_data, self.classes)
 
     def plot_silhouette(self, ax=None, **kws):

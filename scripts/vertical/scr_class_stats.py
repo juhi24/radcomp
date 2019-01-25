@@ -80,7 +80,7 @@ def plot_class_streak_counts(cases, ax=None, order=None):
 def occ_in_cases(cases, frac=True):
     """number or fraction of cases where each class occurs"""
     counts = []
-    for cl_id in cases.case[0].class_scheme.get_class_list():
+    for cl_id in cases.case[0].vpc.get_class_list():
         count = 0
         for _, c in cases.case.iteritems():
             count += cl_id in c.classes.values

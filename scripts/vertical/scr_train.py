@@ -18,7 +18,7 @@ def training(c, train=True, save_scheme=True):
     if train:
         c.train(quiet=True)
         if save_scheme:
-            c.class_scheme.save()
+            c.vpc.save()
     c.load_classification()
 
 
@@ -49,7 +49,7 @@ def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
     if save_plots:
         savekws = {'bbox_inches': 'tight'}
         if savedir is None:
-            name = c.class_scheme.name()
+            name = c.vpc.name()
             savedir = ensure_join(RESULTS_DIR, 'classes_summary', name)
         fig.savefig(path.join(savedir, 'centroids.png'), **savekws)
         if plt_silh:
@@ -66,14 +66,14 @@ def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
 def bm_stats(c):
     """benchmark stuff"""
     bm = benchmark.AutoBenchmark(benchmark.autoref(c.data_above_ml))
-    bm.fit(c.class_scheme)
+    bm.fit(c.vpc)
     return bm.query_all(bm.query_count)
 
 
 def workflow(c, vpc_params, plot_kws={}, **kws):
     """training workflow"""
     scheme = classification.VPC(**vpc_params)
-    c.class_scheme = scheme
+    c.vpc = scheme
     training(c, **kws)
     make_plots(c, **plot_kws)
 

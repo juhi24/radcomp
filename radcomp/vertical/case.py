@@ -226,7 +226,7 @@ class Case:
         self.cl_data_scaled = cl_data_scaled
         self.classes = classes # is this needed?
         self.silh_score = None
-        self.class_scheme = class_scheme
+        self.vpc = class_scheme
         self.pluvio = None
         self.has_ml = has_ml
         self.is_convective = is_convective
@@ -299,14 +299,14 @@ class Case:
     def load_classification(self, name=None, **kws):
         """Load a classification scheme based on its id, and classify."""
         if name is None:
-            name = self.class_scheme.name()
-        self.class_scheme = classification.VPC.load(name)
+            name = self.vpc.name()
+        self.vpc = classification.VPC.load(name)
         self.classify(**kws)
 
     def prepare_cl_data(self, save=True, force_no_crop=False):
         """Prepare unscaled classification data."""
         if self.data is not None:
-            cl_data = prep_data(self.data, self.class_scheme)
+            cl_data = prep_data(self.data, self.vpc)
             if self.has_ml and not force_no_crop:
                 top = self.ml_limits()[1]
                 collapsefun = lambda df: ml.collapse2top(df.T, top=top).T
@@ -328,14 +328,14 @@ class Case:
         if cl_data is None:
             return None
         #scaled = scale_data(cl_data).fillna(0)
-        scaled = self.class_scheme.feature_scaling(cl_data).fillna(0)
+        scaled = self.vpc.feature_scaling(cl_data).fillna(0)
         if save and not force_no_crop:
             self.cl_data_scaled = scaled
         return scaled
 
     def ml_limits(self, interpolate=True):
         """ML top using peak detection"""
-        if self.class_scheme is None:
+        if self.vpc is None:
             nans = self.timestamps(fill_value=np.nan)
             return nans.copy(), nans.copy()
         if 'MLI' not in self.data:
@@ -362,14 +362,14 @@ class Case:
     def classify(self, scheme=None, save=True):
         """classify based on class_scheme"""
         if scheme is not None:
-            self.class_scheme = scheme
+            self.vpc = scheme
         if self.cl_data_scaled is None:
             self.scale_cl_data()
         classify_kws = {}
-        if 'temp_mean' in self.class_scheme.params_extra:
+        if 'temp_mean' in self.vpc.params_extra:
             classify_kws['extra_df'] = self.t_surface()
-        if self.cl_data_scaled is not None and self.class_scheme is not None:
-            classes, silh = self.class_scheme.classify(self.cl_data_scaled, **classify_kws)
+        if self.cl_data_scaled is not None and self.vpc is not None:
+            classes, silh = self.vpc.classify(self.cl_data_scaled, **classify_kws)
             classes.name = 'class'
             if save:
                 self.classes = classes
@@ -379,10 +379,10 @@ class Case:
 
     def inverse_transform(self):
         """inverse transformed classification data"""
-        pn = self.class_scheme.inverse_data
+        pn = self.vpc.inverse_data
         pn.major_axis = self.cl_data_scaled.minor_axis
         pn.minor_axis = self.data.minor_axis
-        return self.class_scheme.feature_scaling(pn, inverse=True)
+        return self.vpc.feature_scaling(pn, inverse=True)
 
     def plot_classes(self):
         """plot_classes wrapper"""
@@ -407,8 +407,8 @@ class Case:
                 above_ml_only = True
             data = self.inverse_transform()
         if params is None:
-            if self.class_scheme is not None:
-                params = self.class_scheme.params
+            if self.vpc is not None:
+                params = self.vpc.params
             else:
                 params = DEFAULT_PARAMS
         plot_classes = ('cl' in plot_extras) and (self.classes is not None)
@@ -453,7 +453,7 @@ class Case:
         if plot_classes:
             for iax in range(len(axarr)-1):
                 self.class_colors(self.classes, ax=axarr[iax])
-        has_vpc = (self.class_scheme is not None)
+        has_vpc = (self.vpc is not None)
         if self.has_ml and has_vpc and not above_ml_only:
             for i in range(len(params)):
                 self.plot_ml(ax=axarr[i])
@@ -543,13 +543,13 @@ class Case:
 
     def train(self, **kws):
         """Train a classification scheme with scaled classification data."""
-        if self.class_scheme.extra_weight:
+        if self.vpc.extra_weight:
             extra_df = self.t_surface()
         else:
             extra_df = None
         if self.cl_data_scaled is None:
             self.scale_cl_data()
-        return self.class_scheme.train(data=self.cl_data_scaled,
+        return self.vpc.train(data=self.cl_data_scaled,
                                        extra_df=extra_df, **kws)
 
     def _on_click_plot_dt_cs(self, event, params=None, **kws):
@@ -614,7 +614,7 @@ class Case:
         data = cen.minor_xs(n)
         axarr = plotting.plot_vps(data, has_ml=self.has_ml, **kws)
         titlestr = 'Class {} centroid'.format(n)
-        if self.class_scheme.extra_weight:
+        if self.vpc.extra_weight:
             titlestr += ', $T_{{s}}={t:.1f}^{{\circ}}$C'.format(t=t['temp_mean'][n])
         axarr[1].set_title(titlestr)
         return axarr
@@ -632,9 +632,9 @@ class Case:
     def clus_centroids(self, order=None, sortby=None):
         """cluster centroids translated to original units"""
         # TODO: move to VPC
-        clus_centroids, extra = self.class_scheme.clus_centroids_pn()
+        clus_centroids, extra = self.vpc.clus_centroids_pn()
         clus_centroids.major_axis = self.cl_data_scaled.minor_axis
-        decoded = self.class_scheme.feature_scaling(clus_centroids, inverse=True)
+        decoded = self.vpc.feature_scaling(clus_centroids, inverse=True)
         if (sortby is not None) and (not order):
             if isinstance(sortby, str) and extra.empty:
                 order = extra.sort_values(by=sortby).index
@@ -678,7 +678,7 @@ class Case:
             ax_extra.set_ylim([-20, 1])
             ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
             ax_extra.yaxis.grid(True)
-        n_comp = self.class_scheme.km.n_clusters
+        n_comp = self.vpc.km.n_clusters
         ax_last.set_xticks(extra.index.values)
         ax_last.set_xlim(-0.5, n_comp-0.5)
         fig = ax_last.get_figure()
@@ -700,7 +700,7 @@ class Case:
     def scatter_class_pca(self, **kws):
         """plotting.scatter_class_pca wrapper"""
         classes = round_time_index(self.classes)
-        return plotting.scatter_class_pca(self.class_scheme.data, classes,
+        return plotting.scatter_class_pca(self.vpc.data, classes,
                                           color_fun=self.class_color, **kws)
 
     def precip_classes(self):
@@ -854,8 +854,8 @@ class Case:
         na = self.timestamps().apply(lambda x: np.nan)
         na = pd.DataFrame(na).reindex(a.columns, axis=1)
         t = pd.concat([na, a]).sort_index().interpolate(method='time')
-        if self.class_scheme is not None:
-            hmax = self.class_scheme.hlimits[1]
+        if self.vpc is not None:
+            hmax = self.vpc.hlimits[1]
         else:
             hmax = self.data.major_axis.max()
         return t.loc[:, 0:hmax].drop(a.index).T
@@ -869,7 +869,7 @@ class Case:
     def silhouette_coef(self):
         """silhouette coefficient of each profile"""
         from sklearn.metrics import silhouette_samples
-        sh_arr = silhouette_samples(self.class_scheme.data, self.classes)
+        sh_arr = silhouette_samples(self.vpc.data, self.classes)
         return pd.Series(index=self.classes.index, data=sh_arr)
 
     def echotop(self):

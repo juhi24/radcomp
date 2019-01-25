@@ -21,7 +21,7 @@ def silh_score_avgs(cc, n_iter=12, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
     for i in range(n_iter):
         for n_classes in range(5, 21):
             vpc = classification.VPC(n_clusters=n_classes, **vconf)
-            cc.class_scheme = vpc
+            cc.vpc = vpc
             cc.train(quiet=True)
             cc.classify()
             #fig, ax = plt.subplots()
