@@ -61,7 +61,7 @@ def lineboxplots(c, name, rain_season, savedir):
 if __name__ == '__main__':
     plt.ioff()
     plt.close('all')
-    cases_id = 'snow'
+    cases_id = 'rain'
     rain_season = cases_id in ('rain',)
     flag = 'ml_ok' if rain_season else None
     c = multicase.MultiCase.from_caselist(cases_id, filter_flag=flag, has_ml=rain_season)

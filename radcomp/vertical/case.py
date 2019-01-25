@@ -648,7 +648,7 @@ class Case:
             return decoded.loc[:, :, order], extra.loc[order]
         return decoded, extra
 
-    def plot_cluster_centroids(self, colorful_bars=False, order=None,
+    def plot_cluster_centroids(self, colorful_bars='blue', order=None,
                                sortby=None, n_extra_ax=0,
                                plot_counts=True, **kws):
         """class centroids pcolormesh"""

@@ -30,18 +30,19 @@ def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
     ax_sca = c.scatter_class_pca(plot3d=True) if plt_sca else None
     #
     if plt_silh:
-        fig_s, ax_s = plt.subplots()
+        fig_s, ax_s = plt.subplots(dpi=110)
         c.plot_silhouette(ax=ax_s)
     else:
         ax_s = None
     #
     stat = bm_stats(c)
-    fig_bm, ax_bm = plt.subplots()
+    fig_bm, ax_bm = plt.subplots(dpi=110)
     plotting.plot_bm_stats(stat, ax=ax_bm)
     #
     if plt_top:
-        fig_top, ax_top = plt.subplots()
-        plotting.boxplot_t_echotop(c, ax=ax_top)
+        fig_top, ax_top = plt.subplots(dpi=110)
+        plotting.boxplot_t_echotop(c, ax=ax_top, whis=[2.5, 97.5],
+                                   showfliers=False)
     else:
         ax_top = None
     #
