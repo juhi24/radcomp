@@ -82,7 +82,7 @@ if __name__ == '__main__':
     bracketing = False
     plt.ion()
     plt.close('all')
-    cases_id = 'rain'
+    cases_id = 'snow'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)

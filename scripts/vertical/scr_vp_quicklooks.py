@@ -66,10 +66,6 @@ if __name__ == '__main__':
     plt.close('all')
     #params = ['ZH', 'ZDR', 'KDP', 'RHO']
     params = None
-    #casesname = 'snow'
-    #datelistfile = path.join(case.DATA_DIR, 'date.list')
-    #write_dates(datelistfile, 'daily_quicklooks')
-    #iterator = iterate_cases(casesname)
     datadir = path.expanduser('~/DATA/vprhi2')
     savedir = ensure_join(datadir, 'quicklooks', 'jet')
     iterator = iterate_mat2case(datadir)#, fname_glob='201501*.mat')
