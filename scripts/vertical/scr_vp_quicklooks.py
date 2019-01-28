@@ -13,9 +13,6 @@ from radcomp.vertical import case, multicase, RESULTS_DIR
 from j24 import ensure_join
 
 
-interactive = False
-
-
 def plot_quicklooks(cases_iterator, save=True, saveid='everything',
                     params=None, savedir=None, **kws):
     """Plot and save quicklooks."""
@@ -24,8 +21,7 @@ def plot_quicklooks(cases_iterator, save=True, saveid='everything',
         savedir = savedir or ensure_join(RESULTS_DIR, 'quicklooks', saveid)
     for caseid, c in cases_iterator:
         print(caseid)
-        fig, _ = c.plot(params=params, plot_fr=False, plot_t=True,
-                        plot_azs=False, plot_snd=False, **kws)
+        fig, _ = c.plot(params=params, **kws)
         if save:
             filename = path.join(savedir, c.name()+'.png')
             fig.savefig(filename, bbox_inches='tight')
@@ -66,6 +62,7 @@ def iterate_mat2case(datadir, fname_glob='*.mat'):
 
 
 if __name__ == '__main__':
+    interactive = False
     plt.close('all')
     #params = ['ZH', 'ZDR', 'KDP', 'RHO']
     params = None
@@ -74,7 +71,7 @@ if __name__ == '__main__':
     #write_dates(datelistfile, 'daily_quicklooks')
     #iterator = iterate_cases(casesname)
     datadir = path.expanduser('~/DATA/vprhi2')
-    savedir = ensure_join(datadir, 'quicklooks', 'viridis')
+    savedir = ensure_join(datadir, 'quicklooks', 'jet')
     iterator = iterate_mat2case(datadir)#, fname_glob='201501*.mat')
     if interactive:
         plt.ion()
@@ -82,6 +79,5 @@ if __name__ == '__main__':
     else:
         plt.ioff()
         save = True
-    plot_quicklooks(iterator, save=save, params=params, cmap='viridis',
-                    savedir=savedir)
+    plot_quicklooks(iterator, save=save, params=params, savedir=savedir)
 

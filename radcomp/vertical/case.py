@@ -376,14 +376,18 @@ class Case:
                 params = self.vpc.params
             else:
                 params = DEFAULT_PARAMS
-        plot_classes = ('cl' in plot_extras) and (self.vpc.classes is not None)
+        if self.vpc is not None:
+            plot_classes = ('cl' in plot_extras) and (self.vpc.classes is not None)
+            plot_silh = ('silh' in plot_extras) and (self.vpc.classes is not None)
+        else:
+            plot_classes = False
+            plot_silh = False
         plot_lwe = ('lwe' in plot_extras) and (self.pluvio is not None)
         if plot_lwe:
             plot_lwe = not self.pluvio.data.empty
         plot_azs = ('azs' in plot_extras) and (self.azs().size > 0)
         plot_fr = ('fr' in plot_extras) and (self.fr().size > 0)
         plot_t = ('ts' in plot_extras) and (self.t_surface().size > 0)
-        plot_silh = ('silh' in plot_extras) and (self.vpc.classes is not None)
         plot_lr = ('lr' in plot_extras)
         n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
         next_free_ax = -n_extra_ax
