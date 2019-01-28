@@ -6,7 +6,6 @@ from os import path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.metrics import silhouette_score
 
 from radcomp import USER_DIR
 from radcomp.vertical import case, plotting
@@ -124,41 +123,6 @@ class MultiCase(case.Case):
             cases = cases[cases[filter_flag].fillna(0).astype(bool)]
         return cls.by_combining(cases, **kws)
 
-    def silhouette_score(self, cols=(0, 1, 2), weights=1):
-        """silhouette score"""
-        if cols == 'all':
-            if self.has_ml:
-                weights = 1
-            else:
-                weights = np.ones(self.vpc.data.shape[1])
-                ew = self.vpc.extra_weight
-                weights[:-1] = ew
-            class_data = self.vpc.data*weights
-        else:
-            class_data = self.vpc.data.loc[:, cols]*weights
-        return silhouette_score(class_data, self.classes)
-
-    def plot_silhouette(self, ax=None, **kws):
-        """plot silhouette analysis"""
-        ax = ax or plt.gca()
-        s_coef = self.vpc.silhouette_coef()
-        s_groups = s_coef.groupby(self.classes)
-        y_lower = 10
-        for cname, clust in s_groups:
-            if cname not in self.precip_classes():
-                continue
-            color = self.class_color(cname)
-            cluster = clust.sort_values()
-            y_upper = y_lower + cluster.size
-            ax.fill_betweenx(np.arange(y_lower, y_upper), 0, cluster,
-                             facecolor=color, edgecolor=color)
-            y_lower = y_upper + 30
-            #ax.text(-0.05, y_lower + 0.5*cluster.size, str(cname))
-        ax.axvline(x=self.silhouette_score(**kws), color="red", linestyle="--")
-        ax.set_xlabel('silhouette coefficient')
-        ax.set_ylabel('classes')
-        ax.set_yticks([])
-
     def class_convective_fraction(self):
         """fraction of convective profiles per class"""
         groups = self.is_convective.groupby(self.classes)
@@ -173,7 +137,7 @@ class MultiCase(case.Case):
                                colorful_bars=False, **kws):
         """class centroids pcolormesh with optional extra stats"""
         n_extra_ax += plot_conv_occ
-        fig, axarr, order = super().plot_cluster_centroids(n_extra_ax=n_extra_ax,
+        fig, axarr, order = self.vpc.plot_cluster_centroids(n_extra_ax=n_extra_ax,
                                                            colorful_bars=colorful_bars,
                                                            **kws)
         if plot_conv_occ:
@@ -185,7 +149,7 @@ class MultiCase(case.Case):
                     cmkw = {}
                     cmkw['cm'] = plotting.cm_blue()
                 plotting.bar_plot_colors(ax_conv, order,
-                                         class_color_fun=self.class_color,
+                                         class_color_fun=self.vpc.class_color,
                                          **cmkw)
         return fig, axarr, order
 

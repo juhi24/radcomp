@@ -19,7 +19,7 @@ VPC_PARAMS_SNOW = dict(basename='snow',
                        reduced=True,
                        extra_weight=0.75)
 
-VPC_PARAMS_RAIN = dict(basename='mlt2',
+VPC_PARAMS_RAIN = dict(basename='rain',
                        has_ml=True,
                        params=PARAMS,
                        hlimits=(290, 10e3),

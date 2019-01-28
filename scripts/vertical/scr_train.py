@@ -22,16 +22,16 @@ def training(c, train=True, save_scheme=True):
     c.load_classification()
 
 
-def make_plots(c, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
+def make_plots(vpc, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
                plt_top=True):
     """class summary and statistics plots"""
-    fig, axarr, i = c.plot_cluster_centroids(colorful_bars='blue',
+    fig, axarr, i = vpc.plot_cluster_centroids(colorful_bars='blue',
                                              fig_scale_factor=0.8)#, cmap='viridis')
-    ax_sca = c.scatter_class_pca(plot3d=True) if plt_sca else None
+    ax_sca = vpc.scatter_class_pca(plot3d=True) if plt_sca else None
     #
     if plt_silh:
         fig_s, ax_s = plt.subplots(dpi=110)
-        c.plot_silhouette(ax=ax_s)
+        vpc.plot_silhouette(ax=ax_s)
     else:
         ax_s = None
     #
@@ -72,17 +72,17 @@ def bm_stats(c):
 
 def workflow(c, vpc_params, plot_kws={}, **kws):
     """training workflow"""
-    scheme = classification.VPC(**vpc_params)
-    c.vpc = scheme
+    vpc = classification.VPC(**vpc_params)
+    c.vpc = vpc
     training(c, **kws)
-    make_plots(c, **plot_kws)
+    make_plots(vpc, **plot_kws)
 
 
 if __name__ == '__main__':
     bracketing = False
     plt.ion()
     plt.close('all')
-    cases_id = 'snow'
+    cases_id = 'rain'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)

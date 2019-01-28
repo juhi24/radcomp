@@ -13,7 +13,7 @@ import conf
 
 
 def t_boxplot(c, **kws):
-    t_cl = pd.concat([c.t_surface(), c.classes], axis=1)
+    t_cl = pd.concat([c.t_surface(), c.vpc.classes], axis=1)
     meanprops = dict(linestyle='-', color='darkred')
     medianprops = dict()
     boxprops = dict()
@@ -38,7 +38,7 @@ def t_boxplot(c, **kws):
 def lineboxplots(c, name, rain_season, savedir):
     data = c.data_above_ml
     for cl in c.vpc.get_class_list():
-        dat = case.fillna(data.loc[('zh', 'kdp', 'zdr'), :10000, c.classes==cl])
+        dat = case.fillna(data.loc[('zh', 'kdp', 'zdr'), :10000, c.vpc.classes==cl])
         axarr = plotting.plot_vps(dat.iloc[:,:,0], linewidth=0.5, alpha=0)
         kws = dict(has_ml=rain_season, axarr=axarr)
         for dt in dat.minor_axis:

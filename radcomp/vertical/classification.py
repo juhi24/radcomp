@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import decomposition
 from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_samples
+from sklearn.metrics import silhouette_samples, silhouette_score
 
 from radcomp import learn, USER_DIR
 from radcomp.vertical import preprocessing, plotting
@@ -379,9 +379,11 @@ class VPC:
         mapping = self.class_color_mapping()
         return plotting.class_color(*args, mapping=mapping, **kws)
 
-    def class_colors(self, **kws):
+    def class_colors(self, classes=None, **kws):
+        if classes is None:
+            classes = self.classes
         mapping = self.class_color_mapping()
-        return plotting.class_colors(self.classes, mapping=mapping, **kws)
+        return plotting.class_colors(classes, mapping=mapping, **kws)
 
     def class_counts(self):
         """occurrences of each class"""
@@ -461,6 +463,41 @@ class VPC:
         from sklearn.metrics import silhouette_samples
         sh_arr = silhouette_samples(self.data, self.classes)
         return pd.Series(index=self.classes.index, data=sh_arr)
+
+    def silhouette_score(self, cols=(0, 1, 2), weights=1):
+        """silhouette score"""
+        if cols == 'all':
+            if self.has_ml:
+                weights = 1
+            else:
+                weights = np.ones(self.data.shape[1])
+                ew = self.extra_weight
+                weights[:-1] = ew
+            class_data = self.data*weights
+        else:
+            class_data = self.data.loc[:, cols]*weights
+        return silhouette_score(class_data, self.classes)
+
+    def plot_silhouette(self, ax=None, **kws):
+        """plot silhouette analysis"""
+        ax = ax or plt.gca()
+        s_coef = self.silhouette_coef()
+        s_groups = s_coef.groupby(self.classes)
+        y_lower = 10
+        for cname, clust in s_groups:
+            if cname not in self.precip_classes():
+                continue
+            color = self.class_color(cname)
+            cluster = clust.sort_values()
+            y_upper = y_lower + cluster.size
+            ax.fill_betweenx(np.arange(y_lower, y_upper), 0, cluster,
+                             facecolor=color, edgecolor=color)
+            y_lower = y_upper + 30
+            #ax.text(-0.05, y_lower + 0.5*cluster.size, str(cname))
+        ax.axvline(x=self.silhouette_score(**kws), color="red", linestyle="--")
+        ax.set_xlabel('silhouette coefficient')
+        ax.set_ylabel('classes')
+        ax.set_yticks([])
 
     def prepare_data(self, data, extra_df=None, n_components=0, save=True):
         """prepare data for clustering or classification"""

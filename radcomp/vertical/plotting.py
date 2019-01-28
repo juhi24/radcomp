@@ -422,7 +422,7 @@ def plot_bm_stats(stat, ax=None, **kws):
 def boxplot_t_echotop(c, ax=None, **kws):
     """boxplot of echo top temperature by class"""
     ax = ax or plt.gca()
-    data = pd.concat([c.t_echotop(), c.classes], axis=1)
+    data = pd.concat([c.t_echotop(), c.vpc.classes], axis=1)
     ax = data.boxplot(by='class', ax=ax, **kws)
     ax.get_figure().suptitle('')
     ax.set_title('')

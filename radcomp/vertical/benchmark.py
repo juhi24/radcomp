@@ -96,7 +96,7 @@ class AutoBenchmark(VPCBenchmark):
     """Compare VPC classification against other process classification."""
 
     def fit(self, vpc):
-        cl = vpc.training_result.loc[self.data.index]
+        cl = vpc.classes.loc[self.data.index]
         df = self.data.copy()
         df['cl'] = cl
         self.data_fitted = df
@@ -123,7 +123,7 @@ class ManBenchmark(VPCBenchmark):
         """Generate comparison with VPC."""
         dfs = []
         for start, row in self.data.iterrows():
-            ser = vpc.training_result[row['start']:row['end']]
+            ser = vpc.classes[row['start']:row['end']]
             df = pd.DataFrame(ser, columns=['cl'])
             for name, value in row.iloc[2:].iteritems():
                 df[name] = value
