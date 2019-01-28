@@ -432,6 +432,33 @@ def boxplot_t_echotop(c, ax=None, **kws):
     return ax
 
 
+def boxplot_t_surf(c, ax=None, whis=4, **kws):
+    """Plot surface temperature distribution by class."""
+    t_cl = pd.concat([c.t_surface(), c.vpc.classes], axis=1)
+    meanprops = dict(linestyle='-', color='darkred')
+    medianprops = dict()
+    boxprops = dict()
+    if ax is None:
+        fig, ax = plt.subplots(dpi=110, figsize=(5,3.5))
+    else:
+        fig = ax.get_figure()
+    tup = t_cl.boxplot(by='class', whis=whis, return_type='both', showmeans=True,
+                       meanline=True, meanprops=meanprops, patch_artist=True,
+                       medianprops=medianprops, boxprops=boxprops, ax=ax, **kws)
+    ax, lines = tup.temp_mean
+    for med in lines['medians']:
+        med.set_color('yellow')
+    for box in lines['boxes']:
+        box.set_alpha(0.5)
+    #t_cl.boxplot(by='class', showcaps=False, showbox=False, showfliers=False, ax=ax)
+    ax.set_title('Surface temperature distribution by class')
+    ax.set_xlabel('class')
+    ax.set_ylabel('$T_s$')
+    fig = ax.get_figure()
+    fig.suptitle('')
+    return fig, ax, lines
+
+
 def plot_occurrence_counts(count, ax=None, bottom=0, top=800):
     """Bar plot occurrence counts.
 
