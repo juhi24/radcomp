@@ -31,6 +31,14 @@ def plot_silhouette():
     return
 
 
+def boxplot_t_combined(c, save=SAVE_DEFAULT, **kws):
+    """boxplot_t_combined wrapper"""
+    fig, ax, bp_top = plotting.boxplot_t_combined(c, i_dis=range(5), **kws)
+    if save:
+        savedir = subdir_vpc(c.vpc, 'classes_summary')
+        fig.savefig(path.join(savedir, 'boxplot_t_combined.png'), **SAVE_KWS)
+
+
 if __name__ == '__main__':
     plt.close('all')
     fig, ax, bp_top = plotting.boxplot_t_combined(c, i_dis=range(5))
