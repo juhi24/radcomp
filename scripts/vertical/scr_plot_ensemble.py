@@ -53,8 +53,8 @@ if __name__ == '__main__':
     flag = 'ml_ok' if rain_season else None
     c = multicase.MultiCase.from_caselist(cases_id, filter_flag=flag, has_ml=rain_season)
     name = conf.SCHEME_ID_RAIN if rain_season else conf.SCHEME_ID_SNOW
-    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name, 'class_vp_ensemble')
     c.load_classification(name)
+    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name, 'class_vp_ensemble')
     axarrlist = lineboxplots(c, name, rain_season, savedir)
     if not rain_season:
         fig, ax, lines = plotting.boxplot_t_surf(c)

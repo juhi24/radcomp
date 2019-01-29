@@ -31,8 +31,6 @@ def plot_silhouette():
     return
 
 
-def plot_t_combined(c):
-    fig, ax = plt.subplots(dpi=110)
-    plotting.boxplot_t_echotop(c, ax=ax, whis=[2.5, 97.5], showfliers=False)
-    plotting.boxplot_t_surf(c, ax=ax)
-    return
+if __name__ == '__main__':
+    plt.close('all')
+    fig, ax, bp_top = plotting.boxplot_t_combined(c, i_dis=range(5))

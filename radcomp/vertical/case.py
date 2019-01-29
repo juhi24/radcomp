@@ -701,4 +701,4 @@ class Case:
         d = {}
         for dt, h in top.iteritems():
             d[dt] = np.nan if np.isnan(h) else t.loc[h, dt]
-        return pd.Series(d)
+        return pd.Series(d, name='t_top')

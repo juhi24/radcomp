@@ -423,7 +423,7 @@ def boxplot_t_echotop(c, ax=None, **kws):
     """boxplot of echo top temperature by class"""
     ax = ax or plt.gca()
     data = pd.concat([c.t_echotop(), c.vpc.classes], axis=1)
-    ax = data.boxplot(by='class', ax=ax, **kws)
+    data.boxplot(by='class', ax=ax, **kws)
     ax.get_figure().suptitle('')
     ax.set_title('')
     ax.invert_yaxis()
@@ -457,6 +457,41 @@ def boxplot_t_surf(c, ax=None, whis=4, **kws):
     fig = ax.get_figure()
     fig.suptitle('')
     return fig, ax, lines
+
+
+def boxplot_t_combined(c, i_dis=tuple(), ax=None):
+    """boxplot of surface and echo top temperature distributions by class"""
+    if ax is None:
+        fig, ax = plt.subplots(dpi=110)
+    t_top = pd.concat([c.t_echotop(), c.vpc.classes], axis=1)
+    displacement = 0.1
+    pos_minus = np.arange(1, c.vpc.n_clusters+1).astype(float)
+    pos_plus = pos_minus.copy()
+    pos_minus[i_dis] -= displacement
+    pos_plus[i_dis] += displacement
+    color = 'gray'
+    whiskerprops = dict()
+    capprops = dict(color='k')
+    bp_top = t_top.boxplot(by='class', ax=ax, whis=[2.5, 97.5],
+                          showfliers=False, patch_artist=True,
+                          positions=pos_minus, whiskerprops=whiskerprops,
+                          capprops=capprops, return_type='dict')['t_top']
+    for box in bp_top['boxes']:
+        box.set_alpha(0.5)
+        box.set_facecolor(color)
+        box.set_edgecolor(color)
+    for whis in bp_top['whiskers']:
+        whis.set_color(color)
+    for med in bp_top['medians']:
+        med.set_color('green')
+    _, _, bp_bot = boxplot_t_surf(c, ax=ax, positions=pos_plus)
+    ax.legend((box, bp_bot['boxes'][0]), ('echo top', 'surface'))
+    ax.set_xticks(np.arange(c.vpc.n_clusters)+1)
+    ax.invert_yaxis()
+    ax.set_title('')
+    ax.set_ylabel(vis.LABELS['T'])
+    ax.set_xlabel('snow profile class')
+    return fig, ax, bp_top
 
 
 def plot_occurrence_counts(count, ax=None, bottom=0, top=800):

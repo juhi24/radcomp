@@ -16,7 +16,7 @@ VMAXS_NARROW = {}
 LABELS = {'ZH': '$Z_{e}$, dBZ',
           'ZDR': '$Z_{dr}$, dB',
           'RHO': '$\\rho_{hv}$',
-          'KDP': '$K_{dp}$, deg/km',
+          'KDP': '$K_{dp}$, $^{\circ}$ km^{-1}',
           'DP': 'deg',
           'PHIDP': 'deg',
           'R': 'rainrate, mm$\,$h$^{-1}$',
@@ -26,7 +26,8 @@ LABELS = {'ZH': '$Z_{e}$, dBZ',
           'LR': 'lapse rate',
           'KDPG': '$K_{dp}$ gradient',
           'ZDRG': '$Z_{dr}$ gradient',
-          'OMEGA': '$\omega$, Pa/s'}
+          'OMEGA': '$\omega$, Pa/s',
+          'T': '$T$, $^{\circ}$C'}
 
 
 def plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,
