@@ -83,7 +83,7 @@ def n_class_in_cases(class_n, cases, combined_cases=None):
     """numbers of occurrences of a given class per case in cases DataFrame"""
     case_ids = ts_case_ids(cases)
     if cases.case.iloc[0].vpc is not None:
-        classes = pd.concat([x.classes for i, x in cases.case.iteritems()])
+        classes = pd.concat([c.vpc.classes for i, c in cases.case.iteritems()])
     elif combined_cases is not None:
         classes = combined_cases.classes
     groups = classes.groupby(case_ids)
@@ -125,7 +125,7 @@ class MultiCase(case.Case):
 
     def class_convective_fraction(self):
         """fraction of convective profiles per class"""
-        groups = self.is_convective.groupby(self.classes)
+        groups = self.is_convective.groupby(self.vpc.classes)
         return groups.agg(lambda x: x.sum()/x.count())
 
     def class_convective_rel_occ(self):

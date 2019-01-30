@@ -1,12 +1,14 @@
 # coding: utf-8
 """class statistics and comparison"""
 
+from os import path
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from os import path
+
 from radcomp.vertical import multicase, plotting, RESULTS_DIR
-from j24 import ensure_join
+
 import conf
 
 
@@ -32,7 +34,7 @@ def init_snow(cases_id=conf.CASES_SNOW, scheme_id=conf.SCHEME_ID_SNOW):
     return init_data(cases_id, scheme_id, has_ml=False)
 
 
-def init_rain(cases_id=conf.CASES_MELT, scheme_id=conf.SCHEME_ID_MELT):
+def init_rain(cases_id=conf.CASES_RAIN, scheme_id=conf.SCHEME_ID_RAIN):
     """initialize rain data"""
     return init_data(cases_id, scheme_id, has_ml=True)
 
@@ -52,7 +54,7 @@ def class_streak_counts(cases):
     class_list = []
     count_list = []
     for i, c in cases.case.iteritems():
-        g = c.classes.groupby(consecutive_grouper(c.classes))
+        g = c.vpc.classes.groupby(consecutive_grouper(c.vpc.classes))
         class_list.append(g.mean())
         count_list.append(g.count())
     classes = pd.concat(class_list)
@@ -68,7 +70,7 @@ def plot_class_streak_counts(cases, ax=None, order=None):
         fig, axarr, order = c.plot_cluster_centroids(plot_counts=False, n_extra_ax=1)
         ax = axarr[-1]
     class_streak_counts(cases).mean().plot.bar(ax=ax)
-    plotting.bar_plot_colors(ax, order, class_color_fun=c.class_color, cm=plotting.cm_blue())
+    plotting.bar_plot_colors(ax, order, class_color_fun=c.vpc.class_color, cm=plotting.cm_blue())
     ax.grid(axis='y')
     ax.set_ylabel('avg. occurrence\nstreak')
     ax.set_ylim(bottom=1, top=5)
@@ -83,18 +85,18 @@ def occ_in_cases(cases, frac=True):
     for cl_id in cases.case[0].vpc.get_class_list():
         count = 0
         for _, c in cases.case.iteritems():
-            count += cl_id in c.classes.values
+            count += cl_id in c.vpc.classes.values
         counts.append(count)
     if frac:
         return np.array(counts)/cases.shape[0]
     return counts
 
 
-def cl_frac_in_case(c, cl, frac=True):
+def cl_frac_in_case(vpc, cl, frac=True):
     """fraction or number of class occurrences in a case"""
-    count = (c.classes==cl).sum()
+    count = (vpc.classes==cl).sum()
     if frac:
-        return count/c.classes.size
+        return count/vpc.classes.size
     return count
 
 
@@ -106,7 +108,7 @@ def frac_in_case_hist(cases, cl=-1, frac_per_case=None, log=True, ax=None, frac=
     else:
         bins = np.concatenate(([1],range(5, 65, 5)))
     if frac_per_case is None:
-        agg_fun = lambda x: cl_frac_in_case(x, cl, frac=frac)
+        agg_fun = lambda x: cl_frac_in_case(x.vpc, cl, frac=frac)
         frac_per_case = cases.case.apply(agg_fun)
     zeros_count = (frac_per_case<0.01).sum()
     ax.stem([0], [zeros_count], markerfmt='o', label='class not present')
@@ -126,7 +128,7 @@ def plot_occ_in_cases(cases, order, ax=None):
     ax = ax or plt.gca()
     c = cases.case.iloc[0]
     ax.bar(order, occ_in_cases(cases)*100, width=0.5)
-    plotting.bar_plot_colors(ax, order, class_color_fun=c.class_color,
+    plotting.bar_plot_colors(ax, order, class_color_fun=c.vpc.class_color,
                              cm=plotting.cm_blue())
     ax.set_ylabel('Occurrence\nin % of events')
     ax.grid(axis='y')
@@ -137,7 +139,7 @@ def plot_occ_in_cases(cases, order, ax=None):
 
 
 if __name__ == '__main__':
-    save = True
+    save = False
     plt.close('all')
     #cases_r, cc_r = init_rain()
     #cases_s, cc_s = init_snow()
@@ -159,6 +161,6 @@ if __name__ == '__main__':
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
     fig_h, ax_h = plt.subplots(dpi=150, figsize=(4, 3))
-    frac_in_case_hist(cases, 15, log=False, frac=True, ax=ax_h)
+    frac_in_case_hist(cases, 5, log=False, frac=True, ax=ax_h)
     if save:
         fig_h.savefig(path.join(savedir, 'occ_hist.png'))
