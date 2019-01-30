@@ -73,9 +73,11 @@ def plot_class_streak_counts(cases, ax=None, order=None):
     plotting.bar_plot_colors(ax, order, class_color_fun=c.vpc.class_color, cm=plotting.cm_blue())
     ax.grid(axis='y')
     ax.set_ylabel('avg. occurrence\nstreak')
-    ax.set_ylim(bottom=1, top=5)
-    ax.set_yticks((1,2,3,4,5))
-    ax.set_yticklabels((1,'',3,'',5))
+    ax.set_ylim(bottom=1, top=50)
+    ax.set_yscale('log')
+    yticks = (1, 2, 5, 10, 20)
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(yticks)
     return ax
 
 
@@ -141,13 +143,14 @@ def plot_occ_in_cases(cases, order, ax=None):
 if __name__ == '__main__':
     save = False
     plt.close('all')
-    cases_r, cc_r = init_rain()
-    cases_s, cc_s = init_snow()
+    #cases_r, cc_r = init_rain()
+    #cases_s, cc_s = init_snow()
     rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': True},
                 free_ax=3)
     snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=4)
     c_s = cases_s.case.iloc[0]
     savedir = conf.P1_FIG_DIR
+    n_convective = sum([c.is_convective or False for i, c in cases_r.case.iteritems()])
     for d in (rain, snow):
         cases = d['cases']
         cc = d['cc']
@@ -160,7 +163,7 @@ if __name__ == '__main__':
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
-    fig_h, ax_h = plt.subplots(dpi=150, figsize=(4, 3))
+    fig_h, ax_h = plt.subplots(dpi=100, figsize=(4, 3))
     frac_in_case_hist(cases, 5, log=False, frac=True, ax=ax_h)
     if save:
         fig_h.savefig(path.join(savedir, 'occ_hist.png'))
