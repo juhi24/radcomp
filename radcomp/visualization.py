@@ -16,7 +16,7 @@ VMAXS_NARROW = {}
 LABELS = {'ZH': '$Z_{e}$, dBZ',
           'ZDR': '$Z_{dr}$, dB',
           'RHO': '$\\rho_{hv}$',
-          'KDP': '$K_{dp}$, $^{\circ}$ km^{-1}',
+          'KDP': '$K_{dp}$, $^{\circ}$ km$^{-1}$',
           'DP': 'deg',
           'PHIDP': 'deg',
           'R': 'rainrate, mm$\,$h$^{-1}$',

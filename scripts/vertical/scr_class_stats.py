@@ -54,7 +54,7 @@ def class_streak_counts(cases):
     class_list = []
     count_list = []
     for i, c in cases.case.iteritems():
-        g = c.vpc.classes.groupby(consecutive_grouper(c.vpc.classes))
+        g = c.classes().groupby(consecutive_grouper(c.classes()))
         class_list.append(g.mean())
         count_list.append(g.count())
     classes = pd.concat(class_list)
@@ -85,18 +85,18 @@ def occ_in_cases(cases, frac=True):
     for cl_id in cases.case[0].vpc.get_class_list():
         count = 0
         for _, c in cases.case.iteritems():
-            count += cl_id in c.vpc.classes.values
+            count += cl_id in c.classes().values
         counts.append(count)
     if frac:
         return np.array(counts)/cases.shape[0]
     return counts
 
 
-def cl_frac_in_case(vpc, cl, frac=True):
-    """fraction or number of class occurrences in a case"""
-    count = (vpc.classes==cl).sum()
+def cl_frac_in_classes(classes, cl, frac=True):
+    """fraction or number of class occurrences in a classes"""
+    count = (classes==cl).sum()
     if frac:
-        return count/vpc.classes.size
+        return count/classes.size
     return count
 
 
@@ -108,7 +108,7 @@ def frac_in_case_hist(cases, cl=-1, frac_per_case=None, log=True, ax=None, frac=
     else:
         bins = np.concatenate(([1],range(5, 65, 5)))
     if frac_per_case is None:
-        agg_fun = lambda x: cl_frac_in_case(x.vpc, cl, frac=frac)
+        agg_fun = lambda x: cl_frac_in_classes(x.classes(), cl, frac=frac)
         frac_per_case = cases.case.apply(agg_fun)
     zeros_count = (frac_per_case<0.01).sum()
     ax.stem([0], [zeros_count], markerfmt='o', label='class not present')
@@ -141,8 +141,8 @@ def plot_occ_in_cases(cases, order, ax=None):
 if __name__ == '__main__':
     save = False
     plt.close('all')
-    #cases_r, cc_r = init_rain()
-    #cases_s, cc_s = init_snow()
+    cases_r, cc_r = init_rain()
+    cases_s, cc_s = init_snow()
     rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': True},
                 free_ax=3)
     snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=4)
@@ -153,8 +153,8 @@ if __name__ == '__main__':
         cc = d['cc']
         kws = d['kws']
         free_ax = d['free_ax']
-        fig, axarr, i = cc.plot_cluster_centroids(colorful_bars='blue',
-                                                  n_extra_ax=2, **kws)
+        kws.update(n_extra_ax=2, colorful_bars='blue', fig_kws={'dpi': 100})
+        fig, axarr, i = cc.plot_cluster_centroids(fig_scale_factor=1.1, **kws)
         plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, order=i, ax=axarr[free_ax+1])
         fname = 'clusters_{}.png'.format(d['id'])

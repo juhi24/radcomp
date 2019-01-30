@@ -351,7 +351,7 @@ class Case:
 
     def plot_classes(self):
         """plot_classes wrapper"""
-        return plotting.plot_classes(self.cl_data_scaled, self.vpc.classes)
+        return plotting.plot_classes(self.cl_data_scaled, self.classes())
 
     def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
              t_contour_ax_ind=False, above_ml_only=False, t_levels=[0],
@@ -376,12 +376,8 @@ class Case:
                 params = self.vpc.params
             else:
                 params = DEFAULT_PARAMS
-        if self.vpc is not None:
-            plot_classes = ('cl' in plot_extras) and (self.vpc.classes is not None)
-            plot_silh = ('silh' in plot_extras) and (self.vpc.classes is not None)
-        else:
-            plot_classes = False
-            plot_silh = False
+        plot_classes = ('cl' in plot_extras) and (self.vpc is not None)
+        plot_silh = ('silh' in plot_extras) and (self.vpc is not None)
         plot_lwe = ('lwe' in plot_extras) and (self.pluvio is not None)
         if plot_lwe:
             plot_lwe = not self.pluvio.data.empty
@@ -702,3 +698,9 @@ class Case:
         for dt, h in top.iteritems():
             d[dt] = np.nan if np.isnan(h) else t.loc[h, dt]
         return pd.Series(d, name='t_top')
+
+    def classes(self):
+        """classification results"""
+        if self.vpc is None:
+            return
+        return self.vpc.classes.loc[self.data.minor_axis].copy()

@@ -164,7 +164,7 @@ def _pn_x(df, x_is_date):
 
 
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
-           x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 150},
+           x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 110},
            n_ax_shift=0, has_ml=False, cmap_override={}, **kws):
     """Plot Panel of VPs"""
     if fields is None:
@@ -502,7 +502,7 @@ def plot_occurrence_counts(count, ax=None, bottom=0, top=800):
     """
     ax = ax or plt.gca()
     count.plot.bar(ax=ax)
-    ax.set_ylabel('Occurrence')
+    ax.set_ylabel('Profile count')
     ax.yaxis.grid(True)
     ax.set_ylim(bottom=bottom, top=top)
 
