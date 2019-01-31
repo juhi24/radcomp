@@ -1,13 +1,16 @@
 # coding: utf-8
 """class statistics and comparison"""
 
+import datetime
 from os import path
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 from radcomp.vertical import multicase, plotting, RESULTS_DIR
+from j24.datetools import strfdelta
 
 import conf
 
@@ -64,20 +67,38 @@ def class_streak_counts(cases):
     return g_class_counts
 
 
+def class_streak_avg_time(cases):
+    dt = cases.case.iloc[0].mean_delta()
+    t = class_streak_counts(cases).mean()*dt-dt/2
+    return t.apply(lambda x: x.total_seconds()/60)
+
+
+def time_ticks(t, pos):
+    dt = datetime.timedelta(minutes=t)
+    return strfdelta(dt, '%H:%M')
+
+
 def plot_class_streak_counts(cases, ax=None, order=None):
     c = cases.case.iloc[0]
     if ax is None:
         fig, axarr, order = c.plot_cluster_centroids(plot_counts=False, n_extra_ax=1)
         ax = axarr[-1]
-    class_streak_counts(cases).mean().plot.bar(ax=ax)
+    class_streak_avg_time(cases).plot.bar(ax=ax)
     plotting.bar_plot_colors(ax, order, class_color_fun=c.vpc.class_color, cm=plotting.cm_blue())
     ax.grid(axis='y')
     ax.set_ylabel('avg. occurrence\nstreak')
-    ax.set_ylim(bottom=1, top=50)
+    minorlocator = mpl.ticker.FixedLocator((20,30,40,50,2*60,3*60,4*60,5*60))
+    #majorlocator = mpl.ticker.LogLocator(base=60)
+    formatter = mpl.ticker.FuncFormatter(time_ticks)
+    ax.yaxis.set_major_formatter(formatter)
+    ax.set_ylim(bottom=15, top=7*60)
     ax.set_yscale('log')
-    yticks = (1, 2, 5, 10, 20)
+    ax.yaxis.set_minor_locator(minorlocator)
+    ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    yticks = (10, 30, 60, 120, 5*60)
     ax.set_yticks(yticks)
-    ax.set_yticklabels(yticks)
+    ax.set_yticklabels([time_ticks(tick, None) for tick in yticks])
+    #ax.yaxis.set_major_locator(majorlocator)
     return ax
 
 

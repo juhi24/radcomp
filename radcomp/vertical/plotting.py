@@ -494,7 +494,7 @@ def boxplot_t_combined(c, i_dis=tuple(), ax=None):
     return fig, ax, bp_top
 
 
-def plot_occurrence_counts(count, ax=None, bottom=0, top=800):
+def plot_occurrence_counts(count, ax=None, bottom=0, top=900):
     """Bar plot occurrence counts.
 
     Args:

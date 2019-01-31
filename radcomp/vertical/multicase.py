@@ -67,7 +67,7 @@ def plot_convective_occurrence(occ, ax=None, **kws):
     """
     ax = ax or plt.gca()
     occ.plot.bar(ax=ax, **kws)
-    ax.set_ylabel('rel. occ. in\nconvection')
+    ax.set_ylabel('norm. freq. in\nconvection')
     ax.yaxis.grid(True)
 
 
@@ -129,17 +129,16 @@ class MultiCase(case.Case):
         return groups.agg(lambda x: x.sum()/x.count())
 
     def class_convective_rel_occ(self):
-        """relative occurrence of convective profiles per class"""
+        """normalized frequenzy of convective profiles per class"""
         frac_total = self.is_convective.sum()/self.is_convective.count()
-        return (self.class_convective_fraction()-frac_total)/frac_total
+        return (self.class_convective_fraction()-frac_total)/frac_total + 1
 
     def plot_cluster_centroids(self, plot_conv_occ=False, n_extra_ax=0,
                                colorful_bars=False, **kws):
         """class centroids pcolormesh with optional extra stats"""
         n_extra_ax += plot_conv_occ
-        fig, axarr, order = self.vpc.plot_cluster_centroids(n_extra_ax=n_extra_ax,
-                                                           colorful_bars=colorful_bars,
-                                                           **kws)
+        kws.update(n_extra_ax=n_extra_ax, colorful_bars=colorful_bars)
+        fig, axarr, order = self.vpc.plot_cluster_centroids(**kws)
         if plot_conv_occ:
             ax_conv = axarr[-2]
             occ = self.class_convective_rel_occ()
@@ -148,9 +147,8 @@ class MultiCase(case.Case):
                 if colorful_bars == 'blue':
                     cmkw = {}
                     cmkw['cm'] = plotting.cm_blue()
-                plotting.bar_plot_colors(ax_conv, order,
-                                         class_color_fun=self.vpc.class_color,
-                                         **cmkw)
+                cmkw.update(class_color_fun=self.vpc.class_color)
+                plotting.bar_plot_colors(ax_conv, order, **cmkw)
         return fig, axarr, order
 
     def t_surface(self, **kws):
