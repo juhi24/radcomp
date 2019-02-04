@@ -417,7 +417,7 @@ class Case:
                 print(warnfmt.format(self.name()))
         if plot_classes:
             for iax in range(len(axarr)-1):
-                self.vpc.class_colors(ax=axarr[iax])
+                self.vpc.class_colors(classes=self.classes(), ax=axarr[iax])
         has_vpc = (self.vpc is not None)
         if self.has_ml and has_vpc and not above_ml_only:
             for i in range(len(params)):
