@@ -78,6 +78,16 @@ def time_ticks(t, pos):
     return strfdelta(dt, '%H:%M')
 
 
+def class_frac(classes):
+    """fraction of each class in series of classes"""
+    return classes.groupby(classes).count() / classes.shape[0]
+
+
+def class_fracs(cases):
+    fracs = [class_frac(c.classes()) for i, c in cases.case.iteritems()]
+    return pd.concat(fracs, axis=1)
+
+
 def plot_class_streak_counts(cases, ax=None, order=None):
     c = cases.case.iloc[0]
     if ax is None:
@@ -153,11 +163,20 @@ def plot_occ_in_cases(cases, order, ax=None):
     ax.bar(order, occ_in_cases(cases)*100, width=0.5)
     plotting.bar_plot_colors(ax, order, class_color_fun=c.vpc.class_color,
                              cm=plotting.cm_blue())
-    ax.set_ylabel('Occurrence\nin % of events')
+    ax.set_ylabel('% of events')
     ax.grid(axis='y')
     ax.set_ylim(bottom=0, top=100)
     ax.set_yticks((0, 25, 50, 75, 100))
     ax.set_yticklabels((0, '', 50, '', 100))
+    return ax
+
+
+def barplot_class_stats(fracs, class_color, ax=None):
+    """bar plot wrapper"""
+    ax = ax or plt.gca()
+    fracs.plot.bar(ax=ax)
+    plotting.bar_plot_colors(ax, fracs.index, class_color_fun=class_color,
+                             cm=plotting.cm_blue())
     return ax
 
 
@@ -177,10 +196,12 @@ if __name__ == '__main__':
         cc = d['cc']
         kws = d['kws']
         free_ax = d['free_ax']
-        kws.update(n_extra_ax=2, colorful_bars='blue', fig_kws={'dpi': 100})
+        class_color = cases.case[0].vpc.class_color
+        kws.update(n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 100})
         fig, axarr, i = cc.plot_cluster_centroids(fig_scale_factor=1.1, **kws)
         plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, order=i, ax=axarr[free_ax+1])
+        barplot_class_stats(class_fracs(cases).mean(axis=1), class_color, ax=axarr[free_ax+2])
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
