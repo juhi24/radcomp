@@ -78,13 +78,19 @@ def time_ticks(t, pos):
     return strfdelta(dt, '%H:%M')
 
 
+def class_count(classes):
+    """count of each class in series of classes"""
+    return classes.groupby(classes).count()
+
+
 def class_frac(classes):
     """fraction of each class in series of classes"""
-    return classes.groupby(classes).count() / classes.shape[0]
+    return class_count(classes) / classes.shape[0]
 
 
-def class_fracs(cases):
-    fracs = [class_frac(c.classes()) for i, c in cases.case.iteritems()]
+def class_agg(cases, agg_fun=class_frac):
+    """aggregate class occurrences"""
+    fracs = [agg_fun(c.classes()) for i, c in cases.case.iteritems()]
     return pd.concat(fracs, axis=1)
 
 
@@ -177,7 +183,38 @@ def barplot_class_stats(fracs, class_color, ax=None):
     fracs.plot.bar(ax=ax)
     plotting.bar_plot_colors(ax, fracs.index, class_color_fun=class_color,
                              cm=plotting.cm_blue())
+    ax.grid(axis='y')
     return ax
+
+
+def barplot_nanmean_class_frac(cases, class_color, ax=None):
+    ax = ax or plt.gca()
+    barplot_class_stats(class_agg(cases, agg_fun=class_frac).mean(axis=1), class_color, ax=ax)
+    ax.set_ylabel('nanmean class\noccurrence fraction')
+    ax.set_ylim(bottom=0, top=0.8)
+
+
+def barplot_mean_class_frac(cases, class_color, ax=None):
+    ax = ax or plt.gca()
+    barplot_class_stats(class_agg(cases, agg_fun=class_frac).fillna(0).mean(axis=1),
+                        class_color, ax=ax)
+    ax.set_ylabel('mean class\noccurrence fraction')
+    ax.set_ylim(bottom=0, top=0.8)
+
+
+def barplot_nanmean_class_count(cases, class_color, ax=None):
+    ax = ax or plt.gca()
+    barplot_class_stats(class_agg(cases, agg_fun=class_count).mean(axis=1), class_color, ax=ax)
+    ax.set_ylabel('nanmean class\ncount')
+    ax.set_ylim(bottom=0, top=30)
+
+
+def barplot_mean_class_count(cases, class_color, ax=None):
+    ax = ax or plt.gca()
+    barplot_class_stats(class_agg(cases, agg_fun=class_count).fillna(0).mean(axis=1),
+                        class_color, ax=ax)
+    ax.set_ylabel('mean class\ncount')
+    ax.set_ylim(bottom=0, top=30)
 
 
 if __name__ == '__main__':
@@ -197,11 +234,14 @@ if __name__ == '__main__':
         kws = d['kws']
         free_ax = d['free_ax']
         class_color = cases.case[0].vpc.class_color
-        kws.update(n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 100})
+        kws.update(n_extra_ax=6, colorful_bars='blue', fig_kws={'dpi': 100})
         fig, axarr, i = cc.plot_cluster_centroids(fig_scale_factor=1.1, **kws)
         plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, order=i, ax=axarr[free_ax+1])
-        barplot_class_stats(class_fracs(cases).mean(axis=1), class_color, ax=axarr[free_ax+2])
+        barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
+        barplot_nanmean_class_frac(cases, class_color, ax=axarr[free_ax+3])
+        barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
+        barplot_nanmean_class_count(cases, class_color, ax=axarr[free_ax+5])
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
