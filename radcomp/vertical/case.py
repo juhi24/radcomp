@@ -186,7 +186,7 @@ class Case:
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, vpc=None, has_ml=False,
+                 classes=None, vpc=None, has_ml=False, timedelta=None,
                  is_convective=None):
         self.data = data
         self.cl_data = cl_data
@@ -196,6 +196,7 @@ class Case:
         self.pluvio = None
         self.has_ml = has_ml
         self.is_convective = is_convective
+        self._timedelta = timedelta
         self._data_above_ml = None
         self._cl_ax = None
         self._dt_ax = None
@@ -226,6 +227,20 @@ class Case:
         if self._data_above_ml is None:
             self._data_above_ml = self.only_data_above_ml()
         return self._data_above_ml
+
+    @property
+    def timedelta(self):
+        """time resolution"""
+        if self._timedelta is None:
+            dt = self.timestamps().diff().min()
+            notefmt = 'Case timedelta was not set. Setting to detected value of {}'
+            print(notefmt.format(dt))
+            self._timedelta = self.timestamps().diff().min()
+        return self._timedelta
+
+    @timedelta.setter
+    def timedelta(self, timedelta):
+        self._timedelta = timedelta
 
     def only_data_above_ml(self, data=None):
         """Data above ml"""
@@ -455,7 +470,7 @@ class Case:
 
     def shift(self, data):
         """shift data for plotting"""
-        half_dt = self.mean_delta()/2
+        half_dt = self.timedelta/2
         return data.shift(freq=half_dt)
 
     def plot_series(self, data, ax=None, **kws):
@@ -559,13 +574,10 @@ class Case:
         return axarr
 
     def set_xlim(self, ax):
-        start = self.t_start()-self.mean_delta()/2
-        end = self.t_end()+self.mean_delta()/2
+        start = self.t_start()-self.timedelta/2
+        end = self.t_end()+self.timedelta/2
         ax.set_xlim(left=start, right=end)
         return ax
-
-    def mean_delta(self):
-        return plotting.mean_delta(self.data.minor_axis).round('1min')
 
     def base_minute(self):
         """positive offset in minutes for profile measurements after each hour
@@ -573,11 +585,11 @@ class Case:
         return self.data.minor_axis[0].round('1min').minute%15
 
     def base_middle(self):
-        dt_minutes = round(self.mean_delta().total_seconds()/60)
+        dt_minutes = round(self.timedelta.total_seconds()/60)
         return self.base_minute()-dt_minutes/2
 
     def time_weighted_mean(self, data, offset_half_delta=True):
-        dt = self.mean_delta()
+        dt = self.timedelta
         if offset_half_delta:
             base = self.base_middle()
             offset = dt/2

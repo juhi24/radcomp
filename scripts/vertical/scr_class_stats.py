@@ -68,7 +68,7 @@ def class_streak_counts(cases):
 
 
 def class_streak_avg_time(cases):
-    dt = cases.case.iloc[0].mean_delta()
+    dt = cases.case.iloc[0].timedelta
     t = class_streak_counts(cases).mean()*dt-dt/2
     return t.apply(lambda x: x.total_seconds()/60)
 
