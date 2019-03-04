@@ -101,10 +101,12 @@ class MultiCase(case.Case):
     """A case object combined from multiple cases"""
 
     @classmethod
-    def by_combining(cls, cases, **kws):
+    def by_combining(cls, cases, has_ml=None, vpc=None, **kws):
         """Combine a DataFrame of Case objects into one."""
         for cid, c in cases.case.iteritems():
             c.load_model_temperature()
+        has_ml = has_ml or c.has_ml
+        vpc = vpc or c.vpc
         datas = list(cases.case.apply(lambda c: c.data)) # data of each case
         data = pd.concat(datas, axis=2)
         if 'convective' in cases:
@@ -113,7 +115,7 @@ class MultiCase(case.Case):
                 flag_series = c.timestamps().apply(lambda x: c.is_convective)
                 conv_flags.append(flag_series)
             kws['is_convective'] = pd.concat(conv_flags)
-        return cls(data=data, **kws)
+        return cls(data=data, has_ml=has_ml, vpc=vpc, **kws)
 
     @classmethod
     def from_caselist(cls, name, filter_flag=None, **kws):
