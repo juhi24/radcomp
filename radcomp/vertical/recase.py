@@ -14,9 +14,9 @@ def _icombine(comb, cases):
     return multicase.MultiCase.by_combining(ccases)
 
 
-def _icomb_bool(comb, cases):
-    conv = cases.convective.iloc[comb]
-    if conv.isnull.any():
+def _icomb_bool(comb, column, cases):
+    conv = cases[column].iloc[comb]
+    if conv.isnull().any():
         return np.nan
     if conv.any() != conv.all():
         raise ValueError('Conflict in boolean flags.')
@@ -59,11 +59,11 @@ def combine_cases_t_thresh(cases, gap=datetime.timedelta(hours=12)):
     case.index.name = 'id'
     start = combinations.apply(lambda comb: cases.start.iloc[comb[0]])
     end = combinations.apply(lambda comb: cases.end.iloc[comb[-1]])
-    ml = combinations.apply(_icomb_bool, args=[cases])
+    ml = combinations.apply(_icomb_bool, args=['ml', cases])
     #comment = combinations.apply(lambda comb: '; '.join(cases.comment.iloc[comb].values))
     cases_new = pd.concat((start, end, ml, case), axis=1)
-    if 'ml_ok' in cases.index:
-        cases_new['ml_ok'] = combinations.apply(_icomb_bool, args=[cases])
-    if 'convective' in cases.index:
-        cases_new['convective'] = combinations.apply(_icomb_bool, args=[cases])
+    if 'ml_ok' in cases.columns:
+        cases_new['ml_ok'] = combinations.apply(_icomb_bool, args=['ml_ok', cases])
+    if 'convective' in cases.columns:
+        cases_new['convective'] = combinations.apply(_icomb_bool, args=['convective', cases])
     return cases_new, cc
