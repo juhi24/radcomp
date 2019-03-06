@@ -19,6 +19,7 @@ def _icomb_bool(comb, column, cases):
     if conv.isnull().any():
         return np.nan
     if conv.any() != conv.all():
+        return np.nan
         raise ValueError('Conflict in boolean flags.')
     return conv.astype(bool).any().astype(float)
 
@@ -58,8 +59,11 @@ def combine_cases_t_thresh(cases, gap=datetime.timedelta(hours=12)):
     case.name = 'case'
     case.index.name = 'id'
     start = combinations.apply(lambda comb: cases.start.iloc[comb[0]])
+    start.name = 'start'
     end = combinations.apply(lambda comb: cases.end.iloc[comb[-1]])
+    end.name = 'end'
     ml = combinations.apply(_icomb_bool, args=['ml', cases])
+    ml.name = 'ml'
     #comment = combinations.apply(lambda comb: '; '.join(cases.comment.iloc[comb].values))
     cases_new = pd.concat((start, end, ml, case), axis=1)
     if 'ml_ok' in cases.columns:
