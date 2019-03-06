@@ -99,6 +99,9 @@ def plot_cases_with_class(cases, class_n, **kws):
 
 class MultiCase(case.Case):
     """A case object combined from multiple cases"""
+    def __init__(self, convective=None, **kws):
+        super().__init__(**kws)
+        self.convective = convective
 
     @classmethod
     def by_combining(cls, cases, has_ml=None, vpc=None, **kws):
@@ -114,7 +117,8 @@ class MultiCase(case.Case):
             for i, c in cases.case.iteritems():
                 flag_series = c.timestamps().apply(lambda x: c.is_convective)
                 conv_flags.append(flag_series)
-            kws['is_convective'] = pd.concat(conv_flags)
+            kws['is_convective'] = None
+            kws['convective'] = pd.concat(conv_flags)
         return cls(data=data, has_ml=has_ml, vpc=vpc, **kws)
 
     @classmethod
@@ -127,12 +131,12 @@ class MultiCase(case.Case):
 
     def class_convective_fraction(self):
         """fraction of convective profiles per class"""
-        groups = self.is_convective.groupby(self.vpc.classes)
+        groups = self.convective.groupby(self.vpc.classes)
         return groups.agg(lambda x: x.sum()/x.count())
 
     def class_convective_rel_occ(self):
         """normalized frequenzy of convective profiles per class"""
-        frac_total = self.is_convective.sum()/self.is_convective.count()
+        frac_total = self.convective.sum()/self.convective.count()
         return (self.class_convective_fraction()-frac_total)/frac_total + 1
 
     def plot_cluster_centroids(self, plot_conv_occ=False, n_extra_ax=0,
