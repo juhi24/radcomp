@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-from radcomp.vertical import multicase, plotting, RESULTS_DIR
+from radcomp.vertical import multicase, plotting, recase, RESULTS_DIR
 from j24.datetools import strfdelta
 
 import conf
@@ -25,7 +25,10 @@ def init_data(cases_id, scheme_id, has_ml=False, **kws):
     cases = multicase.read_cases(cases_id)
     if has_ml:
         cases = cases[cases.ml_ok.astype(bool)]
-    cc = multicase.MultiCase.by_combining(cases, has_ml=has_ml, **kws)
+    for i, c in cases.case.iteritems():
+        c.load_classification(scheme_id)
+    cases, cc = recase.combine_cases_t_thresh(cases)
+    #cc = multicase.MultiCase.by_combining(cases, has_ml=has_ml, **kws)
     cc.load_classification(scheme_id)
     for i, c in cases.case.iteritems():
         c.load_classification(scheme_id)
@@ -102,7 +105,7 @@ def plot_class_streak_counts(cases, ax=None, order=None):
     class_streak_avg_time(cases).plot.bar(ax=ax)
     plotting.bar_plot_colors(ax, order, class_color_fun=c.vpc.class_color, cm=plotting.cm_blue())
     ax.grid(axis='y')
-    ax.set_ylabel('avg. occurrence\nstreak')
+    ax.set_ylabel('mean\npersistence')
     minorlocator = mpl.ticker.FixedLocator((20,30,40,50,2*60,3*60,4*60,5*60))
     #majorlocator = mpl.ticker.LogLocator(base=60)
     formatter = mpl.ticker.FuncFormatter(time_ticks)
@@ -190,7 +193,7 @@ def barplot_class_stats(fracs, class_color, ax=None):
 def barplot_nanmean_class_frac(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_frac).mean(axis=1), class_color, ax=ax)
-    ax.set_ylabel('nanmean class\noccurrence fraction')
+    ax.set_ylabel('nanmean occ.\nfraction')
     ax.set_ylim(bottom=0, top=0.8)
 
 
@@ -198,14 +201,14 @@ def barplot_mean_class_frac(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_frac).fillna(0).mean(axis=1),
                         class_color, ax=ax)
-    ax.set_ylabel('mean class\noccurrence fraction')
+    ax.set_ylabel('mean occ.\nfraction')
     ax.set_ylim(bottom=0, top=0.8)
 
 
 def barplot_nanmean_class_count(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_count).mean(axis=1), class_color, ax=ax)
-    ax.set_ylabel('nanmean class\ncount')
+    ax.set_ylabel('nanmean\ncount')
     ax.set_ylim(bottom=0, top=30)
 
 
@@ -213,19 +216,18 @@ def barplot_mean_class_count(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_count).fillna(0).mean(axis=1),
                         class_color, ax=ax)
-    ax.set_ylabel('mean class\ncount')
+    ax.set_ylabel('mean\ncount')
     ax.set_ylim(bottom=0, top=30)
 
 
 if __name__ == '__main__':
     save = False
     plt.close('all')
-    #cases_r, cc_r = init_rain()
-    #cases_s, cc_s = init_snow()
+    cases_r, cc_r = init_rain()
+    cases_s, cc_s = init_snow()
     rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': True},
                 free_ax=3)
     snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=4)
-    c_s = cases_s.case.iloc[0]
     savedir = conf.P1_FIG_DIR
     n_convective = sum([c.is_convective or False for i, c in cases_r.case.iteritems()])
     for d in (rain, snow):
@@ -234,7 +236,7 @@ if __name__ == '__main__':
         kws = d['kws']
         free_ax = d['free_ax']
         class_color = cases.case[0].vpc.class_color
-        kws.update(n_extra_ax=6, colorful_bars='blue', fig_kws={'dpi': 100})
+        kws.update(n_extra_ax=6, colorful_bars='blue', fig_kws={'dpi': 80})
         fig, axarr, i = cc.plot_cluster_centroids(fig_scale_factor=1.1, **kws)
         plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, order=i, ax=axarr[free_ax+1])
