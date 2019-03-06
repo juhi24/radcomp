@@ -714,5 +714,5 @@ class Case:
     def classes(self):
         """classification results"""
         if self.vpc is None:
-            return
+            raise RuntimeError('No classification scheme configured.')
         return self.vpc.classes.loc[self.data.minor_axis].copy()
