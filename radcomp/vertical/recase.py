@@ -11,7 +11,10 @@ from radcomp.vertical import multicase
 
 def _icombine(comb, cases):
     ccases = cases.iloc[comb]
-    return multicase.MultiCase.by_combining(ccases)
+    c = multicase.MultiCase.by_combining(ccases)
+    # fill gaps with nans
+    c.data = c.data.resample('15min', axis=2, base=c.base_minute()).mean()
+    return c
 
 
 def _icomb_bool(comb, column, cases):
@@ -71,3 +74,7 @@ def combine_cases_t_thresh(cases, gap=datetime.timedelta(hours=12)):
     if 'convective' in cases.columns:
         cases_new['convective'] = combinations.apply(_icomb_bool, args=['convective', cases])
     return cases_new, cc
+
+
+if __name__ == '__main__':
+    cases_s.case.loc['160110T21-14T06'].plot()
