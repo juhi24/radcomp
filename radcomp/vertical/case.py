@@ -353,7 +353,7 @@ class Case:
             classes, silh = self.vpc.classify(self.cl_data_scaled, **classify_kws)
             classes.name = 'class'
             if save:
-                self.silh_score = silh
+                self.silh_score = silh.reindex(self.data.minor_axis)
             return classes, silh
         return None, None
 
