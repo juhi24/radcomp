@@ -451,6 +451,10 @@ class VPC:
                                      class_color_fun=self.class_color, **cmkw)
         fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
         ax_last.set_xlabel('Class ID')
+        # prepend class names with chars
+        seasonchar = 'r' if self.has_ml else 's'
+        xticklabels = ax_last.get_xticks().astype(str)
+        ax_last.set_xticklabels(np.array([seasonchar + l for l in xticklabels]))
         return fig, axarr, order_out
 
     def scatter_class_pca(self, **kws):
