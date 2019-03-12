@@ -22,10 +22,11 @@ def lineboxplot(dat, cen=None):
     q1 = dat.apply(lambda df: df.quantile(q=0.25), axis=2)
     q3 = dat.apply(lambda df: df.quantile(q=0.75), axis=2)
     med = dat.median(axis=2)
-    plotting.plot_vps(med, color='yellow', **kws)
+    plotting.plot_vps(med, color='yellow', label='median', **kws)
     if cen is not None:
-        plotting.plot_vps(cen, color='darkred', **kws)
-    plotting.plot_vps_betweenx(q1, q3, alpha=0.5, **kws)
+        plotting.plot_vps(cen, color='darkred', label='centroid', **kws)
+    plotting.plot_vps_betweenx(q1, q3, alpha=0.5, label='50%', **kws)
+    axarr[-1].legend()
     return axarr
 
 
@@ -33,14 +34,18 @@ def lineboxplots(c, name, rain_season, savedir=None):
     """Plot line boxplots of profiles for each class"""
     data = c.data_above_ml
     axarrlist = []
+    seasonchar = 'r' if rain_season else 's'
+    fnamefmt = '{seasonchar}{cl:02.0f}.png'
+    titlefmt = 'Class {seasonchar}{cl}'
     for cl in c.vpc.get_class_list():
         dat = case.fillna(data.loc[('zh', 'kdp', 'zdr'), :10000, c.vpc.classes==cl])
         cen = c.vpc.clus_centroids()[0].loc[:,:,cl]
         axarr = lineboxplot(dat, cen)
         if savedir is not None:
             fig = axarr[0].get_figure()
-            fig.suptitle('Class {}'.format(cl))
-            fig.savefig(path.join(savedir, '{:02.0f}.png'.format(cl)))
+            fig.suptitle(titlefmt.format(seasonchar=seasonchar, cl=cl))
+            fname = fnamefmt.format(seasonchar=seasonchar, cl=cl)
+            fig.savefig(path.join(savedir, fname))
         axarrlist.append(axarr)
     return axarrlist
 
