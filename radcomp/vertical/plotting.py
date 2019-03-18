@@ -43,7 +43,7 @@ def _plot_vp_betweenx(s1, s2, ax=None, **kws):
     return ax.fill_betweenx(s1.index, s1.values, s2.values, **kws)
 
 
-def _vp_xlim(name, ax, has_ml):
+def vp_xlim(name, ax, has_ml):
     """Set x limits in a vertical profile plot."""
     search_name = name.upper()
     if search_name in vis.LABELS:
@@ -65,8 +65,8 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5.5, 3.3)},
     for i, (name, data) in enumerate(df.T.sort_index().iterrows()):
         ax = axarr[i]
         plot_vp(data, ax=ax, **kws)
-        _vp_xlim(name, ax, has_ml)
-    set_h_ax(axarr[0], has_ml=has_ml)
+        vp_xlim(name, ax, has_ml)
+    set_h_ax(axarr[0], has_ml=has_ml, nbins=10)
     fig.subplots_adjust(left=0.10, right=0.98, bottom=0.15, top=0.9, wspace=0.05)
     for ax in axarr[1:]:
         plt.setp(ax.get_yticklabels(), visible=False)
@@ -84,8 +84,8 @@ def plot_vps_betweenx(df1, df2, axarr=None, has_ml=False,
     for i, name in enumerate(df1.columns.sort_values()):
         ax = axarr[i]
         _plot_vp_betweenx(df1[name], df2[name], ax=ax, **kws)
-        _vp_xlim(name, ax, has_ml)
-    set_h_ax(axarr[0], has_ml=has_ml)
+        vp_xlim(name, ax, has_ml)
+    set_h_ax(axarr[0], has_ml=has_ml, nbins=10)
     fig.subplots_adjust(left=0.13, right=0.95, bottom=0.15, top=0.9, wspace=0.1)
     for ax in axarr[1:]:
         plt.setp(ax.get_yticklabels(), visible=False)
@@ -104,11 +104,13 @@ def mean_delta(t):
     return dt/(len(t)-1)
 
 
-def set_h_ax(ax, hlims=(0, 10000), has_ml=False, label=None):
+def set_h_ax(ax, hlims=(0, 10000), has_ml=False, label=None, nbins=3, **kws):
     if label is None:
         label = 'Height, km above ML top' if has_ml else 'Height, km'
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    steps = [1, 2, 5, 10] # acceptable step multipliers
+    locator = MaxNLocator(nbins=nbins, integer=True, steps=steps, **kws)
+    ax.yaxis.set_major_locator(locator)
     ax.set_ylim(*hlims)
     ax.set_ylabel(label)
 
