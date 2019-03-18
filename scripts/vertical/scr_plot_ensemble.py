@@ -13,13 +13,13 @@ from j24 import ensure_join
 import conf
 
 
-def lineboxplot(dat, rain_season, cen=None):
+def lineboxplot(dat, rain_season, color='blue', cen=None):
     """Plot individual profile lines, quantiles and optionally centroid."""
     axarr = plotting.plot_vps(dat.iloc[:,:,0], linewidth=0.5, alpha=0)
     kws = dict(has_ml=rain_season, axarr=axarr)
     for dt in dat.minor_axis:
         plotting.plot_vps(dat.loc[:,:,dt], linewidth=0.5, alpha=0.05,
-                          color='blue', **kws)
+                          color=color, color2='dimgrey', **kws)
     q1 = dat.apply(lambda df: df.quantile(q=0.25), axis=2)
     q3 = dat.apply(lambda df: df.quantile(q=0.75), axis=2)
     med = dat.median(axis=2)
@@ -27,7 +27,8 @@ def lineboxplot(dat, rain_season, cen=None):
     if cen is not None:
         cenn = cen.reindex_like(med) # add missing columns
         plotting.plot_vps(cenn, color='darkred', label='centroid', **kws)
-    plotting.plot_vps_betweenx(q1, q3, alpha=0.5, label='50%', **kws)
+    plotting.plot_vps_betweenx(q1, q3, alpha=0.5, label='50%',
+                               color2='dimgrey', **kws)
     axarr[-1].legend()
     return axarr
 

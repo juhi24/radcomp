@@ -55,7 +55,7 @@ def vp_xlim(name, ax, has_ml):
 
 
 def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5.5, 3.3)},
-             has_ml=False, **kws):
+             has_ml=False, color2=None, **kws):
     """Plot DataFrame of vertical profile parameters."""
     ncols = df.shape[1]
     if axarr is None:
@@ -64,8 +64,18 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5.5, 3.3)},
         fig = axarr[0].get_figure()
     for i, (name, data) in enumerate(df.T.sort_index().iterrows()):
         ax = axarr[i]
-        plot_vp(data, ax=ax, **kws)
+        if name == 'T':
+            locator = MaxNLocator(steps=(1,2,10), nbins=5, prune='lower')
+            kws2 = kws.copy()
+            if color2 is not None:
+                kws2.update(color=color2)
+            plot_vp(data, ax=ax, **kws2)
+        else:
+            locator = MaxNLocator(steps=(1,2,10), nbins=4)
+            plot_vp(data, ax=ax, **kws)
         vp_xlim(name, ax, has_ml)
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.grid(True)
     set_h_ax(axarr[0], has_ml=has_ml, nbins=10)
     fig.subplots_adjust(left=0.10, right=0.98, bottom=0.15, top=0.9, wspace=0.05)
     for ax in axarr[1:]:
@@ -73,7 +83,7 @@ def plot_vps(df, axarr=None, fig_kws={'dpi': 110, 'figsize': (5.5, 3.3)},
     return axarr
 
 
-def plot_vps_betweenx(df1, df2, axarr=None, has_ml=False,
+def plot_vps_betweenx(df1, df2, axarr=None, has_ml=False, color2=None,
                       fig_kws={'dpi': 110, 'figsize': (5, 3)}, **kws):
     """Plot areas between vertical profile curves."""
     ncols = df1.shape[1]
@@ -83,7 +93,12 @@ def plot_vps_betweenx(df1, df2, axarr=None, has_ml=False,
         fig = axarr[0].get_figure()
     for i, name in enumerate(df1.columns.sort_values()):
         ax = axarr[i]
-        _plot_vp_betweenx(df1[name], df2[name], ax=ax, **kws)
+        if (name == 'T') and (color2 is not None):
+            kws2 = kws.copy()
+            kws2.update(facecolor=color2)
+            _plot_vp_betweenx(df1[name], df2[name], ax=ax, **kws2)
+        else:
+            _plot_vp_betweenx(df1[name], df2[name], ax=ax, **kws)
         vp_xlim(name, ax, has_ml)
     set_h_ax(axarr[0], has_ml=has_ml, nbins=10)
     fig.subplots_adjust(left=0.13, right=0.95, bottom=0.15, top=0.9, wspace=0.1)
