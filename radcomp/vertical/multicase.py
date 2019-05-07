@@ -142,11 +142,11 @@ class MultiCase(case.Case):
     def plot_cluster_centroids(self, plot_conv_occ=False, n_extra_ax=0,
                                colorful_bars=False, **kws):
         """class centroids pcolormesh with optional extra stats"""
-        n_extra_ax += plot_conv_occ
+        n_extra_ax += int(bool(plot_conv_occ))
         kws.update(n_extra_ax=n_extra_ax, colorful_bars=colorful_bars)
         fig, axarr, order = self.vpc.plot_cluster_centroids(**kws)
         if plot_conv_occ:
-            ax_conv = axarr[-2]
+            ax_conv = axarr[plot_conv_occ]
             occ = self.class_convective_rel_occ()
             plot_convective_occurrence(occ, ax=ax_conv)
             if colorful_bars:
