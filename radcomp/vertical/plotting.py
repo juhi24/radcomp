@@ -528,7 +528,7 @@ def plot_occurrence_counts(count, ax=None, bottom=0, top=900):
 
 
 def handle_ax(ax):
-    """prepare axes for redrawing"""
+    """Prepare axes for redrawing."""
     if ax is None:
         ax_out = None
         axkws = dict()
@@ -545,3 +545,10 @@ def handle_ax(ax):
         axkws = dict(axarr=cl_ax)
         update = True
     return ax_out, update, axkws
+
+
+def prepend_class_xticks(ax, has_ml):
+    """Prepend class names with chars."""
+    seasonchar = 'r' if has_ml else 's'
+    xticklabels = ax.get_xticks().astype(str)
+    ax.set_xticklabels(np.array([seasonchar + l for l in xticklabels]))

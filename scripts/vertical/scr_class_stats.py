@@ -190,7 +190,7 @@ def barplot_class_stats(fracs, class_color, ax=None):
     return ax
 
 
-def barplot_nanmean_class_frac(cases, class_color, ax=None):
+def barplot_nanmedian_class_frac(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_frac).median(axis=1), class_color, ax=ax)
     ax.set_ylabel('Median\nfraction')
@@ -205,7 +205,7 @@ def barplot_mean_class_frac(cases, class_color, ax=None):
     ax.set_ylim(bottom=0, top=0.8)
 
 
-def barplot_nanmean_class_count(cases, class_color, ax=None):
+def barplot_nanmedian_class_count(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_count).median(axis=1), class_color, ax=ax)
     ax.set_ylabel('Median\nprofile count')
@@ -243,9 +243,10 @@ if __name__ == '__main__':
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, order=i, ax=axarr[free_ax])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
-        barplot_nanmean_class_frac(cases, class_color, ax=axarr[free_ax+1])
+        barplot_nanmedian_class_frac(cases, class_color, ax=axarr[free_ax+1])
         #barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
-        barplot_nanmean_class_count(cases, class_color, ax=axarr[free_ax+2])
+        barplot_nanmedian_class_count(cases, class_color, ax=axarr[free_ax+2])
+        plotting.prepend_class_xticks(axarr[-1], cc.has_ml)
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
