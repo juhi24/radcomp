@@ -22,11 +22,11 @@ def training(c, train=True, save_scheme=True):
     c.load_classification()
 
 
-def make_plots(vpc, save_plots=False, savedir=None, plt_silh=True, plt_sca=True,
-               plt_top=True):
+def make_plots(vpc, save_plots=False, savedir=None, plt_silh=True,
+               plt_sca=True, plt_top=True):
     """class summary and statistics plots"""
     fig, axarr, i = vpc.plot_cluster_centroids(colorful_bars='blue',
-                                             fig_scale_factor=0.8)#, cmap='viridis')
+                                               fig_scale_factor=0.8)#, cmap='viridis')
     ax_sca = vpc.scatter_class_pca(plot3d=True) if plt_sca else None
     #
     if plt_silh:
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     bracketing = False
     plt.ion()
     plt.close('all')
-    cases_id = 'snow'
+    cases_id = 'rain'
     #
     rain_season = cases_id in ('rain',)
     cases = multicase.read_cases(cases_id)

@@ -192,9 +192,9 @@ def barplot_class_stats(fracs, class_color, ax=None):
 
 def barplot_nanmean_class_frac(cases, class_color, ax=None):
     ax = ax or plt.gca()
-    barplot_class_stats(class_agg(cases, agg_fun=class_frac).mean(axis=1), class_color, ax=ax)
-    ax.set_ylabel('nanmean occ.\nfraction')
-    ax.set_ylim(bottom=0, top=0.8)
+    barplot_class_stats(class_agg(cases, agg_fun=class_frac).median(axis=1), class_color, ax=ax)
+    ax.set_ylabel('Median\nfraction')
+    ax.set_ylim(bottom=0, top=0.3)
 
 
 def barplot_mean_class_frac(cases, class_color, ax=None):
@@ -207,8 +207,8 @@ def barplot_mean_class_frac(cases, class_color, ax=None):
 
 def barplot_nanmean_class_count(cases, class_color, ax=None):
     ax = ax or plt.gca()
-    barplot_class_stats(class_agg(cases, agg_fun=class_count).mean(axis=1), class_color, ax=ax)
-    ax.set_ylabel('nanmean\ncount')
+    barplot_class_stats(class_agg(cases, agg_fun=class_count).median(axis=1), class_color, ax=ax)
+    ax.set_ylabel('Median\nprofile count')
     ax.set_ylim(bottom=0, top=30)
 
 
@@ -221,13 +221,13 @@ def barplot_mean_class_count(cases, class_color, ax=None):
 
 
 if __name__ == '__main__':
-    save = False
+    save = True
     plt.close('all')
-    cases_r, cc_r = init_rain()
-    cases_s, cc_s = init_snow()
-    rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': True},
-                free_ax=3)
-    snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=4)
+    #cases_r, cc_r = init_rain()
+    #cases_s, cc_s = init_snow()
+    rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -1},
+                free_ax=1)
+    snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=2)
     savedir = conf.P1_FIG_DIR
     n_convective = sum([c.is_convective or False for i, c in cases_r.case.iteritems()])
     for d in (rain, snow):
@@ -235,19 +235,21 @@ if __name__ == '__main__':
         cc = d['cc']
         kws = d['kws']
         free_ax = d['free_ax']
+        season = 'rain' if cc.has_ml else 'snow'
         class_color = cases.case[0].vpc.class_color
-        kws.update(n_extra_ax=6, colorful_bars='blue', fig_kws={'dpi': 80})
-        fig, axarr, i = cc.plot_cluster_centroids(fig_scale_factor=1.1, **kws)
-        plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
-        plot_occ_in_cases(cases, order=i, ax=axarr[free_ax+1])
-        barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
-        barplot_nanmean_class_frac(cases, class_color, ax=axarr[free_ax+3])
-        barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
-        barplot_nanmean_class_count(cases, class_color, ax=axarr[free_ax+5])
+        kws.update(plot_counts=False, n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 80})
+        fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=1.1, **kws)
+        axarr[0].set_title('{} events'.format(season).capitalize())
+        #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
+        plot_occ_in_cases(cases, order=i, ax=axarr[free_ax])
+        #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
+        barplot_nanmean_class_frac(cases, class_color, ax=axarr[free_ax+1])
+        #barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
+        barplot_nanmean_class_count(cases, class_color, ax=axarr[free_ax+2])
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
-    fig_h, ax_h = plt.subplots(dpi=100, figsize=(4, 3))
-    frac_in_case_hist(cases, 5, log=False, frac=True, ax=ax_h)
-    if save:
-        fig_h.savefig(path.join(savedir, 'occ_hist.png'))
+    #fig_h, ax_h = plt.subplots(dpi=100, figsize=(4, 3))
+    #frac_in_case_hist(cases, 5, log=False, frac=True, ax=ax_h)
+    #if save:
+    #    fig_h.savefig(path.join(savedir, 'occ_hist.png'))
