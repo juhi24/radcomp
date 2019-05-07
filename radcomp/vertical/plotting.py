@@ -203,6 +203,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         ax = fig.add_subplot(gs[h, 0])
         axarr.append(ax)
     # pcolormesh axes
+    i = -1 # in case fields is empty
     for i, field in enumerate(np.sort(fields)):
         cm = cmap if field not in cmap_override else cmap_override[field]
         subplot_kws = {}
@@ -230,7 +231,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         nice_cb_ticks(cb)
     # bottom axes
     for j in range(n_extra_ax-n_ax_shift):
-        ax = fig.add_subplot(gs[h+i+2+j, 0], sharex=axarr[0])
+        k = h+i+2+j
+        ax = fig.add_subplot(gs[k, 0], sharex=axarr[0])
         axarr.append(ax)
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')
