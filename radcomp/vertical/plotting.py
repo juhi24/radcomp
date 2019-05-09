@@ -483,12 +483,17 @@ def boxplot_t_combined(c, i_dis=tuple(), ax=None):
     """boxplot of surface and echo top temperature distributions by class"""
     if ax is None:
         fig, ax = plt.subplots(dpi=110)
+    else:
+        fig = ax.get_figure()
     t_top = pd.concat([c.t_echotop(), c.vpc.classes], axis=1)
-    displacement = 0.1
-    pos_minus = np.arange(1, c.vpc.n_clusters+1).astype(float)
-    pos_plus = pos_minus.copy()
-    pos_minus[i_dis] -= displacement
-    pos_plus[i_dis] += displacement
+    if c.has_ml:
+        pos_minus = None
+    else:
+        displacement = 0.1
+        pos_minus = np.arange(1, c.vpc.n_clusters+1).astype(float)
+        pos_plus = pos_minus.copy()
+        pos_minus[i_dis] -= displacement
+        pos_plus[i_dis] += displacement
     color = 'gray'
     whiskerprops = dict()
     capprops = dict(color='k')
@@ -504,13 +509,16 @@ def boxplot_t_combined(c, i_dis=tuple(), ax=None):
         whis.set_color(color)
     for med in bp_top['medians']:
         med.set_color('green')
-    _, _, bp_bot = boxplot_t_surf(c, ax=ax, positions=pos_plus)
-    ax.legend((box, bp_bot['boxes'][0]), ('echo top', 'surface'))
+    if not c.has_ml:
+        _, _, bp_bot = boxplot_t_surf(c, ax=ax, positions=pos_plus)
+        ax.legend((box, bp_bot['boxes'][0]), ('echo top', 'surface'))
     ax.set_xticks(np.arange(c.vpc.n_clusters)+1)
     ax.invert_yaxis()
     ax.set_title('')
     ax.set_ylabel(vis.LABELS['T'])
-    ax.set_xlabel('snow profile class')
+    ax.set_xlabel('profile class')
+    fig.suptitle('')
+    prepend_class_xticks(ax, c.has_ml)
     return fig, ax, bp_top
 
 
@@ -550,5 +558,6 @@ def handle_ax(ax):
 def prepend_class_xticks(ax, has_ml):
     """Prepend class names with chars."""
     seasonchar = 'r' if has_ml else 's'
-    xticklabels = ax.get_xticks().astype(str)
+    #xticklabels = ax.get_xticks().astype(str)
+    xticklabels = [t.get_text() for t in ax.get_xticklabels()]
     ax.set_xticklabels(np.array([seasonchar + l for l in xticklabels]))

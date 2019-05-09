@@ -13,6 +13,7 @@ from radcomp.vertical import multicase, plotting, recase, RESULTS_DIR
 from j24.datetools import strfdelta
 
 import conf
+import plot_wrappers
 
 
 BOXPROPS = dict(whis=[2.5, 97.5], manage_xticks=False, sym='')
@@ -276,6 +277,7 @@ if __name__ == '__main__':
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
+        #plot_wrappers.boxplot_t_combined(cc)
     #fig_h, ax_h = plt.subplots(dpi=100, figsize=(4, 3))
     #frac_in_case_hist(cases, 5, log=False, frac=True, ax=ax_h)
     #if save:
