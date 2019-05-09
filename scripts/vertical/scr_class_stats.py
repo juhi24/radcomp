@@ -15,6 +15,9 @@ from j24.datetools import strfdelta
 import conf
 
 
+BOXPROPS = dict(whis=3, manage_xticks=False)
+
+
 def consecutive_grouper(s):
     """Consecutive values to have same integer -> 111223333455"""
     return (s != s.shift()).cumsum()
@@ -197,6 +200,13 @@ def barplot_nanmedian_class_frac(cases, class_color, ax=None):
     ax.set_ylim(bottom=0, top=0.3)
 
 
+def boxplot_class_frac(cases, class_color, ax=None):
+    ax = ax or plt.gca()
+    pos = range(0, cases.case[0].vpc.n_clusters)
+    class_agg(cases, agg_fun=class_frac).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
+    ax.set_ylabel('Fraction of\ncase profiles')
+
+
 def barplot_mean_class_frac(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_frac).fillna(0).mean(axis=1),
@@ -210,6 +220,13 @@ def barplot_nanmedian_class_count(cases, class_color, ax=None):
     barplot_class_stats(class_agg(cases, agg_fun=class_count).median(axis=1), class_color, ax=ax)
     ax.set_ylabel('Median\nprofile count')
     ax.set_ylim(bottom=0, top=30)
+
+
+def boxplot_class_count(cases, class_color, ax=None):
+    ax = ax or plt.gca()
+    pos = range(0, cases.case[0].vpc.n_clusters)
+    class_agg(cases, agg_fun=class_count).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
+    ax.set_ylabel('Profile count per case')
 
 
 def barplot_mean_class_count(cases, class_color, ax=None):
@@ -243,9 +260,9 @@ if __name__ == '__main__':
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, order=i, ax=axarr[free_ax])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
-        barplot_nanmedian_class_frac(cases, class_color, ax=axarr[free_ax+1])
+        boxplot_class_frac(cases, class_color, ax=axarr[free_ax+1])
         #barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
-        barplot_nanmedian_class_count(cases, class_color, ax=axarr[free_ax+2])
+        boxplot_class_count(cases, class_color, ax=axarr[free_ax+2])
         plotting.prepend_class_xticks(axarr[-1], cc.has_ml)
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
