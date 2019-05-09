@@ -15,7 +15,7 @@ from j24.datetools import strfdelta
 import conf
 
 
-BOXPROPS = dict(whis=3, manage_xticks=False)
+BOXPROPS = dict(whis=[2.5, 97.5], manage_xticks=False, sym='')
 
 
 def consecutive_grouper(s):
@@ -169,12 +169,16 @@ def frac_in_case_hist(cases, cl=-1, frac_per_case=None, log=True, ax=None, frac=
     return ax
 
 
-def plot_occ_in_cases(cases, order, ax=None):
+def plot_occ_in_cases(cases, order, class_color=None, ax=None):
+    """class occurs in % of cases bar plot"""
     ax = ax or plt.gca()
-    c = cases.case.iloc[0]
-    ax.bar(order, occ_in_cases(cases)*100, width=0.5)
-    plotting.bar_plot_colors(ax, order, class_color_fun=c.vpc.class_color,
-                             cm=plotting.cm_blue())
+    if class_color is None:
+        color = plotting.cm_blue().colors[0]
+        ax.bar(order, occ_in_cases(cases)*100, width=0.5, color=color)
+    else:
+        ax.bar(order, occ_in_cases(cases)*100, width=0.5)
+        plotting.bar_plot_colors(ax, order, class_color_fun=class_color,
+                                 cm=plotting.cm_blue())
     ax.set_ylabel('% of events')
     ax.grid(axis='y')
     ax.set_ylim(bottom=0, top=100)
@@ -183,12 +187,15 @@ def plot_occ_in_cases(cases, order, ax=None):
     return ax
 
 
-def barplot_class_stats(fracs, class_color, ax=None):
+def barplot_class_stats(fracs, class_color=None, ax=None):
     """bar plot wrapper"""
     ax = ax or plt.gca()
-    fracs.plot.bar(ax=ax)
-    plotting.bar_plot_colors(ax, fracs.index, class_color_fun=class_color,
-                             cm=plotting.cm_blue())
+    if class_color is None:
+        fracs.plot.bar(ax=ax, color=plotting.cm_blue().colors[0])
+    else:
+        fracs.plot.bar(ax=ax)
+        plotting.bar_plot_colors(ax, fracs.index, class_color_fun=class_color,
+                                 cm=plotting.cm_blue())
     ax.grid(axis='y')
     return ax
 
@@ -205,6 +212,7 @@ def boxplot_class_frac(cases, class_color, ax=None):
     pos = range(0, cases.case[0].vpc.n_clusters)
     class_agg(cases, agg_fun=class_frac).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
     ax.set_ylabel('Fraction of\ncase profiles')
+    ax.set_ylim(bottom=0, top=1.02)
 
 
 def barplot_mean_class_frac(cases, class_color, ax=None):
@@ -227,6 +235,7 @@ def boxplot_class_count(cases, class_color, ax=None):
     pos = range(0, cases.case[0].vpc.n_clusters)
     class_agg(cases, agg_fun=class_count).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
     ax.set_ylabel('Profile count per case')
+    ax.set_ylim(bottom=0)
 
 
 def barplot_mean_class_count(cases, class_color, ax=None):
@@ -258,7 +267,7 @@ if __name__ == '__main__':
         fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=1.1, **kws)
         axarr[0].set_title('{} events'.format(season).capitalize())
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
-        plot_occ_in_cases(cases, order=i, ax=axarr[free_ax])
+        plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
         boxplot_class_frac(cases, class_color, ax=axarr[free_ax+1])
         #barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
