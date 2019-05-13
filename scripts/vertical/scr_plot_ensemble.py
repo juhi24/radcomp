@@ -3,14 +3,13 @@
 
 from os import path
 
-import pandas as pd
 import matplotlib.pyplot as plt
 
-import radcomp.visualization as vis
 from radcomp.vertical import multicase, plotting, case, RESULTS_DIR
 from j24 import ensure_join
 
 import conf
+from plot_wrappers import SAVE_KWS
 
 
 def lineboxplot(dat, rain_season, color='blue', cen=None):
@@ -55,7 +54,9 @@ def lineboxplots(c, rain_season, fields=None, xlim_override=False, savedir=None)
             fig = axarr[0].get_figure()
             fig.suptitle(titlefmt.format(seasonchar=seasonchar, cl=cl))
             fname = fnamefmt.format(seasonchar=seasonchar+fname_extra, cl=cl)
-            fig.savefig(path.join(savedir, fname))
+            fpath = path.join(savedir, fname)
+            print(fpath)
+            fig.savefig(fpath, **SAVE_KWS)
         axarrlist.append(axarr)
     return axarrlist
 
@@ -63,14 +64,18 @@ def lineboxplots(c, rain_season, fields=None, xlim_override=False, savedir=None)
 if __name__ == '__main__':
     plt.ioff()
     plt.close('all')
-    cases_id = 'snow'
+    cases_id = 'rain'
     rain_season = cases_id in ('rain',)
     flag = 'ml_ok' if rain_season else None
-    c = multicase.MultiCase.from_caselist(cases_id, filter_flag=flag, has_ml=rain_season)
+    c = multicase.MultiCase.from_caselist(cases_id, filter_flag=flag,
+                                          has_ml=rain_season)
     name = conf.SCHEME_ID_RAIN if rain_season else conf.SCHEME_ID_SNOW
     c.load_classification(name)
-    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name, 'class_vp_ensemble')
-    axarrlist = lineboxplots(c, rain_season, savedir=savedir, fields=('kdp', 'zdr', 'zh', 'T'))
+    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name,
+                          'class_vp_ensemble')
+    axarrlist = lineboxplots(c, rain_season, savedir=savedir,
+                             #xlim_override=True,
+                             fields=('kdp', 'zdr', 'zh'))#, 'T'))
     if not rain_season:
         fig, ax, lines = plotting.boxplot_t_surf(c)
-        fig.savefig(path.join(savedir, 't_boxplot.png'), bbox_inches='tight')
+        fig.savefig(path.join(savedir, 't_boxplot.png'), **SAVE_KWS)

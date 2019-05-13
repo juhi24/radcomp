@@ -236,7 +236,8 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         axarr.append(ax)
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')
-        axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
+        #axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
+        axarr[-1].xaxis.set_major_formatter(mpl.dates.AutoDateFormatter(mpl.dates.AutoDateLocator()))
         axarr[0].set_title(str(pn[field].columns[0].date()))
     # Hide xticks for all but last.
     for ax in axarr[:-1]:
