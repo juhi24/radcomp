@@ -560,5 +560,5 @@ def prepend_class_xticks(ax, has_ml):
     """Prepend class names with chars."""
     seasonchar = 'r' if has_ml else 's'
     #xticklabels = ax.get_xticks().astype(str)
-    xticklabels = [t.get_text() for t in ax.get_xticklabels()]
+    xticklabels = [str(int(float(t.get_text()))) for t in ax.get_xticklabels()]
     ax.set_xticklabels(np.array([seasonchar + l for l in xticklabels]))

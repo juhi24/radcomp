@@ -24,7 +24,7 @@ if __name__ == '__main__':
     rain_season = True
     if DEBUG:
         rain_season = True
-        case_set = 'debug_short'
+        case_set = 'rain_vpc1'
     else:
         case_set = conf.CASES_RAIN if rain_season else conf.CASES_SNOW
     name = conf.SCHEME_ID_RAIN if rain_season else conf.SCHEME_ID_SNOW

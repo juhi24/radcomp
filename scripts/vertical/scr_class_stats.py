@@ -212,7 +212,7 @@ def boxplot_class_frac(cases, class_color, ax=None):
     ax = ax or plt.gca()
     pos = range(0, cases.case[0].vpc.n_clusters)
     class_agg(cases, agg_fun=class_frac).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
-    ax.set_ylabel('Fraction of\ncase profiles')
+    ax.set_ylabel('Fraction of profiles\nper case')
     ax.set_ylim(bottom=0, top=1.02)
 
 
@@ -236,7 +236,8 @@ def boxplot_class_count(cases, class_color, ax=None):
     pos = range(0, cases.case[0].vpc.n_clusters)
     class_agg(cases, agg_fun=class_count).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
     ax.set_ylabel('Profile count per case')
-    ax.set_ylim(bottom=0)
+    ax.set_yscale('log')
+    ax.set_ylim(bottom=0.9, top=100)
 
 
 def barplot_mean_class_count(cases, class_color, ax=None):
@@ -252,8 +253,8 @@ if __name__ == '__main__':
     plt.close('all')
     #cases_r, cc_r = init_rain()
     #cases_s, cc_s = init_snow()
-    rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -1},
-                free_ax=1)
+    rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -4},
+                free_ax=2)
     snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=2)
     savedir = conf.P1_FIG_DIR
     n_convective = sum([c.is_convective or False for i, c in cases_r.case.iteritems()])
@@ -266,7 +267,7 @@ if __name__ == '__main__':
         class_color = cases.case[0].vpc.class_color
         kws.update(plot_counts=False, n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 80})
         fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=1.1, **kws)
-        axarr[0].set_title('{} events'.format(season).capitalize())
+        axarr[0].set_title('{}'.format(season).capitalize())
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])

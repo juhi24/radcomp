@@ -67,7 +67,7 @@ def plot_convective_occurrence(occ, ax=None, **kws):
     """
     ax = ax or plt.gca()
     occ.plot.bar(ax=ax, **kws)
-    ax.set_ylabel('norm. freq. in\nconvection')
+    ax.set_ylabel('rel. freq. in\nconvection')
     ax.yaxis.grid(True)
 
 

@@ -108,6 +108,57 @@ def plot_reduced(data, n_clusters):
     plt.yticks(())
 
 
+def plot_cluster_centroids(vpc, colorful_bars='blue', order=None,
+                           sortby=None, n_extra_ax=0,
+                           plot_counts=True, **kws):
+    """class centroids pcolormesh"""
+    # TODO: split massive func
+    pn, extra = vpc.clus_centroids(order=order, sortby=sortby)
+    order_out = pn.minor_axis
+    n_extra = extra.shape[1]
+    pn_plt = pn.copy() # with shifted axis, only for plotting
+    pn_plt.minor_axis = pn.minor_axis-0.5
+    if n_extra > 0:
+        kws['n_ax_shift'] = 0#n_extra
+    fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
+                                 n_extra_ax=n_extra+n_extra_ax+plot_counts,
+                                 has_ml=vpc.has_ml, **kws)
+    if colorful_bars == True: # Might be str, so check for True.
+        n_omit_coloring = 2
+    else:
+        n_omit_coloring = 1
+    for iax in range(len(axarr)-n_omit_coloring):
+        vpc.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
+    ax_last = axarr[-1]
+    axn_extra = len(kws['fields']) if 'fields' in kws else pn_plt.items.size
+    ax_extra = axarr[axn_extra]
+    if n_extra > 0:
+        extra.plot.bar(ax=ax_extra, color='black')
+        ax_extra.get_legend().set_visible(False)
+        ax_extra.set_ylim([-20, 1])
+        ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
+        ax_extra.yaxis.grid(True)
+    n_comp = vpc.km.n_clusters
+    ax_last.set_xticks(extra.index.values)
+    ax_last.set_xlim(-0.5, n_comp-0.5)
+    fig = ax_last.get_figure()
+    precip_type = 'rain' if vpc.has_ml else 'snow'
+    axarr[0].set_title('Class centroids for {} cases'.format(precip_type))
+    if colorful_bars == 'blue':
+        cmkw = {}
+        cmkw['cm'] = plotting.cm_blue()
+    if plot_counts:
+        counts = vpc.class_counts().loc[pn.minor_axis]
+        plotting.plot_occurrence_counts(counts, ax=ax_last)
+    if colorful_bars:
+        plotting.bar_plot_colors(ax_last, pn.minor_axis,
+                                 class_color_fun=vpc.class_color, **cmkw)
+    fig.canvas.mpl_connect('button_press_event', vpc._on_click_plot_cl_cs)
+    ax_last.set_xlabel('Class ID')
+    plotting.prepend_class_xticks(ax_last, vpc.has_ml)
+    return fig, axarr, order_out
+
+
 class VPC:
     """
     vertical profile classification scheme
@@ -352,6 +403,10 @@ class VPC:
             return decoded.loc[:, :, order], extra.loc[order]
         return decoded, extra
 
+    def plot_cluster_centroids(self, **kws):
+        """plot_cluster_centroids wrapper"""
+        return plot_cluster_centroids(self, **kws)
+
     def plot_centroid(self, n, **kws):
         """Plot centroid for class n."""
         cen, t = self.clus_centroids()
@@ -404,55 +459,6 @@ class VPC:
         self._cl_ax = self.vpc.plot_centroid(classn, **axkws)
         if update:
             ax.get_figure().canvas.draw()
-
-    def plot_cluster_centroids(self, colorful_bars='blue', order=None,
-                               sortby=None, n_extra_ax=0,
-                               plot_counts=True, **kws):
-        """class centroids pcolormesh"""
-        # TODO: split massive func
-        pn, extra = self.clus_centroids(order=order, sortby=sortby)
-        order_out = pn.minor_axis
-        n_extra = extra.shape[1]
-        pn_plt = pn.copy() # with shifted axis, only for plotting
-        pn_plt.minor_axis = pn.minor_axis-0.5
-        if n_extra > 0:
-            kws['n_ax_shift'] = n_extra
-        fig, axarr = plotting.plotpn(pn_plt, x_is_date=False,
-                                     n_extra_ax=n_extra+n_extra_ax+plot_counts,
-                                     has_ml=self.has_ml, **kws)
-        if colorful_bars == True: # Might be str, so check for True.
-            n_omit_coloring = 2
-        else:
-            n_omit_coloring = 1
-        for iax in range(len(axarr)-n_omit_coloring):
-            self.class_colors(pd.Series(pn.minor_axis), ax=axarr[iax])
-        ax_last = axarr[-1]
-        ax_extra = axarr[0]
-        if n_extra > 0:
-            extra.plot.bar(ax=ax_extra, color='black')
-            ax_extra.get_legend().set_visible(False)
-            ax_extra.set_ylim([-20, 1])
-            ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
-            ax_extra.yaxis.grid(True)
-        n_comp = self.km.n_clusters
-        ax_last.set_xticks(extra.index.values)
-        ax_last.set_xlim(-0.5, n_comp-0.5)
-        fig = ax_last.get_figure()
-        precip_type = 'rain' if self.has_ml else 'snow'
-        axarr[0].set_title('Class centroids for {} cases'.format(precip_type))
-        if colorful_bars == 'blue':
-            cmkw = {}
-            cmkw['cm'] = plotting.cm_blue()
-        if plot_counts:
-            counts = self.class_counts().loc[pn.minor_axis]
-            plotting.plot_occurrence_counts(counts, ax=ax_last)
-        if colorful_bars:
-            plotting.bar_plot_colors(ax_last, pn.minor_axis,
-                                     class_color_fun=self.class_color, **cmkw)
-        fig.canvas.mpl_connect('button_press_event', self._on_click_plot_cl_cs)
-        ax_last.set_xlabel('Class ID')
-        plotting.prepend_class_xticks(ax_last, self.has_ml)
-        return fig, axarr, order_out
 
     def scatter_class_pca(self, **kws):
         """plotting.scatter_class_pca wrapper"""
