@@ -255,7 +255,7 @@ if __name__ == '__main__':
     #cases_s, cc_s = init_snow()
     rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -4},
                 free_ax=2)
-    snow = dict(id='s', cases=cases_s, cc=cc_s, kws={}, free_ax=2)
+    snow = dict(id='s', cases=cases_s, cc=cc_s, kws={'lim_override': True}, free_ax=2)
     savedir = conf.P1_FIG_DIR
     n_convective = sum([c.is_convective or False for i, c in cases_r.case.iteritems()])
     for d in (rain, snow):
@@ -274,6 +274,7 @@ if __name__ == '__main__':
         boxplot_class_frac(cases, class_color, ax=axarr[free_ax+1])
         #barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
         boxplot_class_count(cases, class_color, ax=axarr[free_ax+2])
+        plotting.set_h_label(axarr[0], cc.has_ml, narrow=True)
         plotting.prepend_class_xticks(axarr[-1], cc.has_ml)
         fname = 'clusters_{}.png'.format(d['id'])
         if save:

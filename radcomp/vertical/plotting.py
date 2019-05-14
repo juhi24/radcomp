@@ -119,15 +119,20 @@ def mean_delta(t):
     return dt/(len(t)-1)
 
 
+def set_h_label(ax, has_ml, narrow=False):
+    ml_label = 'Height, km\nabove ML top' if narrow else 'Height, km above ML top'
+    label = ml_label if has_ml else 'Height, km'
+    ax.set_ylabel(label)
+
+
 def set_h_ax(ax, hlims=(0, 10000), has_ml=False, label=None, nbins=3, **kws):
-    if label is None:
-        label = 'Height, km above ML top' if has_ml else 'Height, km'
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     steps = [1, 2, 5, 10] # acceptable step multipliers
     locator = MaxNLocator(nbins=nbins, integer=True, steps=steps, **kws)
     ax.yaxis.set_major_locator(locator)
     ax.set_ylim(*hlims)
-    ax.set_ylabel(label)
+    if label is None:
+        set_h_label(ax, has_ml)
 
 
 def nice_cb_ticks(cb, nbins=5, steps=(1, 5, 10), **kws):
@@ -184,7 +189,8 @@ def _pn_x(df, x_is_date):
 
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 110},
-           n_ax_shift=0, has_ml=False, cmap_override={}, **kws):
+           n_ax_shift=0, has_ml=False, cmap_override={}, lim_override=False,
+           **kws):
     """Plot Panel of VPs"""
     if fields is None:
         fields = pn.items
@@ -213,7 +219,10 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         ax = fig.add_subplot(gs[h+1+i, 0], **subplot_kws)
         ax_cb = fig.add_subplot(gs[h+1+i, 1])
         axarr.append(ax)
-        scalekws, cb_label = _pn_scalekws(field, scaled, has_ml)
+        if lim_override:
+            scalekws, cb_label = _pn_scalekws(field, scaled, not has_ml)
+        else:
+            scalekws, cb_label = _pn_scalekws(field, scaled, has_ml)
         kws.update(scalekws)
         x = _pn_x(pn[field], x_is_date)
         im = ax.pcolormesh(x, pn[field].index,
@@ -559,6 +568,8 @@ def handle_ax(ax):
 def prepend_class_xticks(ax, has_ml):
     """Prepend class names with chars."""
     seasonchar = 'r' if has_ml else 's'
-    #xticklabels = ax.get_xticks().astype(str)
-    xticklabels = [str(int(float(t.get_text()))) for t in ax.get_xticklabels()]
+    try:
+        xticklabels = [str(int(float(t.get_text()))) for t in ax.get_xticklabels()]
+    except ValueError:
+        xticklabels = ax.get_xticks().astype(str)
     ax.set_xticklabels(np.array([seasonchar + l for l in xticklabels]))
