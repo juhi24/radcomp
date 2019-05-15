@@ -482,7 +482,7 @@ class Case:
         self.set_xlim(ax)
         return ax
 
-    def plot_t(self, ax, tmin=-20, tmax=10):
+    def plot_t(self, ax, tmin=-25, tmax=10):
         """Plot surface temperature."""
         self.plot_series(self.t_surface(), ax=ax)
         ax.set_ylabel(plotting.LABELS['temp_mean'])

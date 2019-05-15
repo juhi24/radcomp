@@ -180,7 +180,7 @@ def plot_occ_in_cases(cases, order, class_color=None, ax=None):
         ax.bar(order, occ_in_cases(cases)*100, width=0.5)
         plotting.bar_plot_colors(ax, order, class_color_fun=class_color,
                                  cm=plotting.cm_blue())
-    ax.set_ylabel('% of events')
+    ax.set_ylabel('Frequency,\n% of cases')
     ax.grid(axis='y')
     ax.set_ylim(bottom=0, top=100)
     ax.set_yticks((0, 25, 50, 75, 100))
@@ -235,7 +235,7 @@ def boxplot_class_count(cases, class_color, ax=None):
     ax = ax or plt.gca()
     pos = range(0, cases.case[0].vpc.n_clusters)
     class_agg(cases, agg_fun=class_count).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
-    ax.set_ylabel('Profile count per case')
+    ax.set_ylabel('Profile count\nper case')
     ax.set_yscale('log')
     ax.set_ylim(bottom=0.9, top=100)
 
@@ -276,6 +276,8 @@ if __name__ == '__main__':
         boxplot_class_count(cases, class_color, ax=axarr[free_ax+2])
         plotting.set_h_label(axarr[0], cc.has_ml, narrow=True)
         plotting.prepend_class_xticks(axarr[-1], cc.has_ml)
+        if not cc.has_ml:
+            axarr[1].set_ylabel('$T_s$ at class\ncentroid, $^{\circ}$C')
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight')
