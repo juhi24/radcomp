@@ -128,7 +128,7 @@ def prepare_pn(pn, kdpmax=np.nan):
     # ensure all small case keys are in place
     pn_new = filtering.create_filtered_fields_if_missing(pn_new, DEFAULT_PARAMS)
     #pn_new = filtering.fltr_ground_clutter_median(pn_new)
-    pn_new['kdpg'] = downward_gradient(pn_new['kdp'])
+    pn_new['kdpg'] = 1000*downward_gradient(pn_new['kdp'])
     pn_new['zdrg'] = downward_gradient(pn_new['zdr'])
     return pn_new
 
