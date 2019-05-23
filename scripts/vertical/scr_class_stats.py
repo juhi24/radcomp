@@ -264,10 +264,11 @@ if __name__ == '__main__':
         kws = d['kws']
         free_ax = d['free_ax']
         season = 'rain' if cc.has_ml else 'snow'
+        ab = 'a' if cc.has_ml else 'b'
         class_color = cases.case[0].vpc.class_color
         kws.update(plot_counts=False, n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 80})
         fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=1.1, **kws)
-        axarr[0].set_title('{}'.format(season).capitalize())
+        axarr[0].set_title('{ab}) {season}'.format(ab=ab, season=season.capitalize()))
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
