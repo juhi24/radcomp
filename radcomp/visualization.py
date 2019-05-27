@@ -6,13 +6,14 @@ import matplotlib.pyplot as plt
 VMINS = {'ZH': -10, 'ZDR': -0.25, 'RHO': 0.8, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
          'R': 0.05, 'MLI': 0, 'ML': 0, 'RH': 0.9, 'LR': -0.5, 'KDPG': -8,
          'ZDRG': -0.1, 'OMEGA': -2, 'T': -30}
-VMAXS = {'ZH': 35, 'ZDR': 2, 'RHO': 1, 'KDP': 0.25, 'DP': 360, 'PHIDP': 30,
+VMAXS = {'ZH': 35, 'ZDR': 2, 'RHO': 1, 'KDP': 0.3, 'DP': 360, 'PHIDP': 30,
          'R': 16, 'MLI': 10, 'ML': 1, 'RH': 1, 'LR': 0.5, 'KDPG': 8,
          'ZDRG': 0.1, 'OMEGA': 2, 'T': 5}
 VMINS_RAIN = {}
 VMAXS_RAIN = {'ZH': 40, 'KDP': 0.5, 'ZDR': 3}
 VMINS_NARROW = {}
 VMAXS_NARROW = {}
+GAMMA = {'KDP': 0.6}
 LABELS = {'ZH': '$Z_{e}$, dBZ',
           'ZDR': '$Z_{dr}$, dB',
           'RHO': '$\\rho_{hv}$',
