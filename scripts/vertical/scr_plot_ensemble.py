@@ -64,7 +64,7 @@ def lineboxplots(c, rain_season, fields=None, xlim_override=False, savedir=None)
 if __name__ == '__main__':
     plt.ioff()
     plt.close('all')
-    cases_id = 'rain'
+    cases_id = 'snow'
     rain_season = cases_id in ('rain',)
     flag = 'ml_ok' if rain_season else None
     c = multicase.MultiCase.from_caselist(cases_id, filter_flag=flag,
@@ -75,7 +75,7 @@ if __name__ == '__main__':
                           'class_vp_ensemble')
     axarrlist = lineboxplots(c, rain_season, savedir=savedir,
                              #xlim_override=True,
-                             fields=('kdp', 'zdr', 'zh'))#, 'T'))
+                             fields=('kdp', 'zdr', 'zh', 'T'))
     if not rain_season:
         fig, ax, lines = plotting.boxplot_t_surf(c)
         fig.savefig(path.join(savedir, 't_boxplot.png'), **SAVE_KWS)
