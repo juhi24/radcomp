@@ -76,7 +76,9 @@ def ts_case_ids(cases):
     cids_list = []
     for cid, c in cases.case.iteritems():
         cids_list.append(c.timestamps().apply(lambda x: cid))
-    return pd.concat(cids_list)
+    ts = pd.concat(cids_list)
+    ts.name = 'case'
+    return ts
 
 
 def n_class_in_cases(class_n, cases, combined_cases=None):
