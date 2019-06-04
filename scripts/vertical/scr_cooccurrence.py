@@ -28,6 +28,7 @@ def cl_coocc(cases, cc, index_str=True, logical_or=False):
 
 
 def imshow_coocc(coocc, percent=True, ax=None):
+    """visualize profile class co-occurrence matrix"""
     ax = ax or plt.gca()
     size = coocc.shape[0]
     annot = (coocc*100).round().astype(int).values if percent else coocc.values
