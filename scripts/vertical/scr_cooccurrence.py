@@ -35,21 +35,33 @@ def imshow_coocc(coocc, percent=True, ax=None):
     ax.imshow(coocc.T)
     for x in range(size):
         for y in range(size):
-            val = annot[x][y]
+            val = annot.T[x][y]
             color = 'white' if percent and (val < 50) else 'black'
             ax.annotate('{}'.format(val), xy=(y, x),
                         horizontalalignment='center',
                         verticalalignment='center', color=color)
-    plt.xticks(range(size), coocc.index)
-    plt.yticks(range(size), coocc.index)
+    ax.set_xticks(range(size))
+    ax.set_xticklabels(coocc.index)
+    ax.set_yticks(range(size))
+    ax.set_yticklabels(coocc.index)
+    return ax
 
 
 
 if __name__ == '__main__':
     plt.ion()
     plt.close('all')
-    coocc = cl_coocc(cases, cc, logical_or=True)
+    cases = cases_s
+    cc = cc_s
+    coocc = cl_coocc(cases, cc, logical_or=False)
+    # co-occurrence fraction of all profiles
     coocc_frac = coocc/cases.shape[0]
     coocc_rel = coocc/coocc.values.diagonal()
-    fig, ax = plt.subplots()
-    imshow_coocc(coocc_frac, percent=True, ax=ax)
+    fig, axarr = plt.subplots(1, 2, figsize=(10, 5))
+    axrel = axarr[1]
+    axfrac = axarr[0]
+    imshow_coocc(coocc_frac, percent=True, ax=axfrac)
+    imshow_coocc(coocc_rel, percent=True, ax=axrel)
+    axrel.set_ylabel('B')
+    axrel.set_xlabel('A')
+    axrel.set_title('Frequency of A given presence of B')
