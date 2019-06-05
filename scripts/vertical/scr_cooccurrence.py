@@ -50,9 +50,9 @@ def imshow_coocc(coocc, percent=True, ax=None):
 
 if __name__ == '__main__':
     plt.ion()
-    plt.close('all')
-    cases = cases_s
-    cc = cc_s
+    #plt.close('all')
+    cases = cases_r
+    cc = cc_r
     coocc = cl_coocc(cases, cc, logical_or=False)
     # co-occurrence fraction of all profiles
     coocc_frac = coocc/cases.shape[0]
@@ -62,6 +62,8 @@ if __name__ == '__main__':
     axfrac = axarr[0]
     imshow_coocc(coocc_frac, percent=True, ax=axfrac)
     imshow_coocc(coocc_rel, percent=True, ax=axrel)
-    axrel.set_ylabel('B')
-    axrel.set_xlabel('A')
-    axrel.set_title('Frequency of A given presence of B')
+    for ax in axarr:
+        ax.set_ylabel('B')
+        ax.set_xlabel('A')
+    axrel.set_title('$P(A|B)$')
+    axfrac.set_title('$P(A \wedge B)$')
