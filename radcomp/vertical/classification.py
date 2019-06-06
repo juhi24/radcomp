@@ -198,6 +198,7 @@ class VPC:
         self._n_clusters = n_clusters
         self._inverse_data = None
         self._inverse_extra = None
+        self._cl_ax = None
         self.invalid_classes = invalid_classes
         self.transformers = {}
         self.has_ml = has_ml
@@ -270,6 +271,10 @@ class VPC:
     def get_class_list(self):
         """class number range"""
         return range(self.n_clusters)
+
+    def class_labels(self):
+        prefix = 'r' if self.has_ml else 's'
+        return [prefix + str(cl) for cl in self.get_class_list()]
 
     def save(self, **kws):
         """Save scheme to default location in pickle format."""

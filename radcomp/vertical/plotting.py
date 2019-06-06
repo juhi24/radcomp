@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.ticker import MaxNLocator
+from matplotlib import colors
 import pyart # for colormaps
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -187,6 +188,14 @@ def _pn_x(df, x_is_date):
     return x.append(x_last)
 
 
+def field_gamma(field):
+    """cmap normalization gamma per radar parameter"""
+    try:
+        return vis.GAMMA[field.upper()]
+    except KeyError:
+        return 1
+
+
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 110},
            n_ax_shift=0, has_ml=False, cmap_override={}, lim_override=False,
@@ -225,9 +234,10 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
             scalekws, cb_label = _pn_scalekws(field, scaled, has_ml)
         kws.update(scalekws)
         x = _pn_x(pn[field], x_is_date)
+        gamma = field_gamma(field)
         im = ax.pcolormesh(x, pn[field].index,
                            np.ma.masked_invalid(pn[field].values), cmap=cm,
-                           label=field, **kws)
+                           label=field, norm=colors.PowerNorm(gamma), **kws)
         # coordinate string formatting
         fmt_coord = lambda x, y: format_coord_pn(x, y, pn.loc[coords, :, :],
                                                  x_is_date=x_is_date)

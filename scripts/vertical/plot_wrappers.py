@@ -13,7 +13,7 @@ import conf
 
 
 SAVE_DEFAULT = True
-SAVE_KWS = dict(bbox_inches='tight')
+SAVE_KWS = dict(bbox_inches='tight', dpi=300)
 
 
 def subdir_vpc(vpc, subdir):

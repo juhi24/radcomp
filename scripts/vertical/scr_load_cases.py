@@ -7,7 +7,7 @@ import conf
 
 
 if __name__ == '__main__':
-    cases_id = 'snow'
+    cases_id = 'rain'
     rain_season = cases_id in ('rain',)
     flag = 'ml_ok' if rain_season else None
     cc = multicase.MultiCase.from_caselist(cases_id, filter_flag=flag, has_ml=rain_season)

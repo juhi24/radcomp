@@ -2,6 +2,7 @@
 """class statistics and comparison"""
 
 import datetime
+import pickle
 from os import path
 
 import numpy as np
@@ -9,6 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
+from radcomp import CACHE_DIR
 from radcomp.vertical import multicase, plotting, recase, RESULTS_DIR
 from j24.datetools import strfdelta
 
@@ -24,8 +26,27 @@ def consecutive_grouper(s):
     return (s != s.shift()).cumsum()
 
 
-def init_data(cases_id, scheme_id, has_ml=False, **kws):
+def pkl_dump(var, filepath):
+    with open(filepath, 'wb') as f:
+        pickle.dump(var, f)
+
+
+def pkl_load(filepath):
+    """pickle.load wrapper"""
+    with open(filepath, 'rb') as f:
+        return pickle.load(f)
+
+
+def init_data(cases_id, scheme_id, has_ml=False, use_cache=False, **kws):
     """initialize cases data"""
+    if use_cache:
+        cases_fname = 'cases_{}{}.pkl'.format(cases_id, scheme_id)
+        cases_file = path.join(CACHE_DIR, cases_fname)
+        cc_fname = 'cc_{}{}.pkl'.format(cases_id, scheme_id)
+        cc_file = path.join(CACHE_DIR, cc_fname)
+        if path.exists(cases_file) and path.exists(cc_file):
+            print('Using cached profile data.')
+            return pkl_load(cases_file), pkl_load(cc_file)
     cases = multicase.read_cases(cases_id)
     if has_ml:
         cases = cases[cases.ml_ok.astype(bool)]
@@ -36,17 +57,20 @@ def init_data(cases_id, scheme_id, has_ml=False, **kws):
     cc.load_classification(scheme_id)
     for i, c in cases.case.iteritems():
         c.load_classification(scheme_id)
+    if use_cache:
+        pkl_dump(cases, cases_file)
+        pkl_dump(cc, cc_file)
     return cases, cc
 
 
-def init_snow(cases_id=conf.CASES_SNOW, scheme_id=conf.SCHEME_ID_SNOW):
+def init_snow(cases_id=conf.CASES_SNOW, scheme_id=conf.SCHEME_ID_SNOW, **kws):
     """initialize snow data"""
-    return init_data(cases_id, scheme_id, has_ml=False)
+    return init_data(cases_id, scheme_id, has_ml=False, **kws)
 
 
-def init_rain(cases_id=conf.CASES_RAIN, scheme_id=conf.SCHEME_ID_RAIN):
+def init_rain(cases_id=conf.CASES_RAIN, scheme_id=conf.SCHEME_ID_RAIN, **kws):
     """initialize rain data"""
-    return init_data(cases_id, scheme_id, has_ml=True)
+    return init_data(cases_id, scheme_id, has_ml=True, **kws)
 
 
 def streaks_table(g_counts):
@@ -240,6 +264,20 @@ def boxplot_class_count(cases, class_color, ax=None):
     ax.set_ylim(bottom=0.9, top=100)
 
 
+def boxplot_class_time(cases, class_color, ax=None): # TODO
+    ax = ax or plt.gca()
+    pos = range(0, cases.case[0].vpc.n_clusters)
+    minorlocator = mpl.ticker.FixedLocator((20,30,40,50,2*60,3*60,4*60,5*60))
+    formatter = mpl.ticker.FuncFormatter(time_ticks)
+    class_agg(cases, agg_fun=class_count).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
+    ax.yaxis.set_major_formatter(formatter)
+    ax.yaxis.set_minor_locator(minorlocator)
+    ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    ax.set_ylabel('Class persistence\nper case')
+    ax.set_yscale('log')
+    ax.set_ylim(bottom=0.9, top=100)
+
+
 def barplot_mean_class_count(cases, class_color, ax=None):
     ax = ax or plt.gca()
     barplot_class_stats(class_agg(cases, agg_fun=class_count).fillna(0).mean(axis=1),
@@ -251,8 +289,8 @@ def barplot_mean_class_count(cases, class_color, ax=None):
 if __name__ == '__main__':
     save = True
     plt.close('all')
-    #cases_r, cc_r = init_rain()
-    #cases_s, cc_s = init_snow()
+    cases_r, cc_r = init_rain(use_cache=True)
+    cases_s, cc_s = init_snow(use_cache=True)
     rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -4},
                 free_ax=2)
     snow = dict(id='s', cases=cases_s, cc=cc_s, kws={'lim_override': True}, free_ax=2)

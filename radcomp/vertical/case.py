@@ -198,7 +198,6 @@ class Case:
         self.is_convective = is_convective
         self._timedelta = timedelta
         self._data_above_ml = None
-        self._cl_ax = None
         self._dt_ax = None
         self.cursor = None
 
