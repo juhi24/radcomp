@@ -66,7 +66,8 @@ def plot_convective_occurrence(occ, ax=None, **kws):
         occ (Series)
     """
     ax = ax or plt.gca()
-    occ.plot.bar(ax=ax, **kws)
+    #occ.plot.bar(ax=ax, **kws) # there is a bug in pandas of mpl
+    ax.bar(occ.index, occ.values, width=0.5, **kws)
     ax.set_ylabel('rel. freq. in\nconvection')
     ax.yaxis.grid(True)
 
