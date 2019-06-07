@@ -109,6 +109,10 @@ def time_ticks(t, pos):
     return strfdelta(dt, '%H:%M')
 
 
+def count2time_ticks(n, pos):
+    return time_ticks(n*15, pos)
+
+
 def class_count(classes):
     """count of each class in series of classes"""
     return classes.groupby(classes).count()
@@ -204,7 +208,7 @@ def plot_occ_in_cases(cases, order, class_color=None, ax=None):
         ax.bar(order, occ_in_cases(cases)*100, width=0.5)
         plotting.bar_plot_colors(ax, order, class_color_fun=class_color,
                                  cm=plotting.cm_blue())
-    ax.set_ylabel('Frequency,\n% of cases')
+    ax.set_ylabel('Frequency,\n% of events')
     ax.grid(axis='y')
     ax.set_ylim(bottom=0, top=100)
     ax.set_yticks((0, 25, 50, 75, 100))
@@ -236,7 +240,7 @@ def boxplot_class_frac(cases, class_color, ax=None):
     ax = ax or plt.gca()
     pos = range(0, cases.case[0].vpc.n_clusters)
     class_agg(cases, agg_fun=class_frac).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
-    ax.set_ylabel('Fraction of profiles\nper case')
+    ax.set_ylabel('Fraction of profiles\nper event')
     ax.set_ylim(bottom=0, top=1.02)
 
 
@@ -259,7 +263,7 @@ def boxplot_class_count(cases, class_color, ax=None):
     ax = ax or plt.gca()
     pos = range(0, cases.case[0].vpc.n_clusters)
     class_agg(cases, agg_fun=class_count).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
-    ax.set_ylabel('Profile count\nper case')
+    ax.set_ylabel('Profile count\nper event')
     ax.set_yscale('log')
     ax.set_ylim(bottom=0.9, top=100)
 
@@ -267,15 +271,19 @@ def boxplot_class_count(cases, class_color, ax=None):
 def boxplot_class_time(cases, class_color, ax=None): # TODO
     ax = ax or plt.gca()
     pos = range(0, cases.case[0].vpc.n_clusters)
-    minorlocator = mpl.ticker.FixedLocator((20,30,40,50,2*60,3*60,4*60,5*60))
-    formatter = mpl.ticker.FuncFormatter(time_ticks)
+    locs = np.array([20,30,40,50,2*60,3*60,4*60,5*60,6*60,7*60,8*60,9*60,20*60])/15
+    minorlocator = mpl.ticker.FixedLocator(locs)
+    formatter = mpl.ticker.FuncFormatter(count2time_ticks)
     class_agg(cases, agg_fun=class_count).T.boxplot(ax=ax, positions=pos, **BOXPROPS)
+    ax.set_yscale('log')
     ax.yaxis.set_major_formatter(formatter)
     ax.yaxis.set_minor_locator(minorlocator)
     ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-    ax.set_ylabel('Class persistence\nper case')
-    ax.set_yscale('log')
-    ax.set_ylim(bottom=0.9, top=100)
+    yticks = np.array([10, 30, 60, 120, 5*60, 10*60])/15
+    ax.set_yticks(yticks)
+    ax.set_yticklabels([count2time_ticks(tick, None) for tick in yticks])
+    ax.set_ylabel('Persistence\nper event')
+    ax.set_ylim(bottom=10/15, top=16*60/15)
 
 
 def barplot_mean_class_count(cases, class_color, ax=None):
@@ -287,6 +295,7 @@ def barplot_mean_class_count(cases, class_color, ax=None):
 
 
 if __name__ == '__main__':
+    plt.ion()
     save = True
     plt.close('all')
     cases_r, cc_r = init_rain(use_cache=True)
@@ -304,15 +313,15 @@ if __name__ == '__main__':
         season = 'rain' if cc.has_ml else 'snow'
         ab = 'a' if cc.has_ml else 'b'
         class_color = cases.case[0].vpc.class_color
-        kws.update(plot_counts=False, n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 80})
-        fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=1.1, **kws)
+        kws.update(plot_counts=False, n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 100})
+        fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=0.8, **kws)
         axarr[0].set_title('{ab}) {season}'.format(ab=ab, season=season.capitalize()))
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
         boxplot_class_frac(cases, class_color, ax=axarr[free_ax+1])
         #barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
-        boxplot_class_count(cases, class_color, ax=axarr[free_ax+2])
+        boxplot_class_time(cases, class_color, ax=axarr[free_ax+2])
         plotting.set_h_label(axarr[0], cc.has_ml, narrow=True)
         plotting.prepend_class_xticks(axarr[-1], cc.has_ml)
         if not cc.has_ml:
