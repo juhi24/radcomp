@@ -298,8 +298,9 @@ if __name__ == '__main__':
     plt.ion()
     save = True
     plt.close('all')
-    cases_r, cc_r = init_rain(use_cache=True)
-    cases_s, cc_s = init_snow(use_cache=True)
+    use_cache = True
+    cases_r, cc_r = init_rain(use_cache=use_cache)
+    cases_s, cc_s = init_snow(use_cache=use_cache)
     rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -4},
                 free_ax=2)
     snow = dict(id='s', cases=cases_s, cc=cc_s, kws={'lim_override': True}, free_ax=2)

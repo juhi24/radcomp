@@ -1,6 +1,7 @@
 # coding: utf-8
 """Visualization related tools."""
 
+#import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,6 +25,12 @@ LABELS = dict(density='$\\rho$, kg$\,$m$^{-3}$',
               temp_mean='$T_s$, $^{\circ}C$',
               azs='$\\alpha_{ZS}$')
 DEFAULT_DISCRETE_CMAP = 'tab20'
+
+
+#converter = mpl.dates.ConciseDateConverter()
+#mpl.units.registry[np.datetime64] = converter
+#mpl.units.registry[datetime.date] = converter
+#mpl.units.registry[datetime.datetime] = converter
 
 
 def plot_data(data, ax=None, **kws):
@@ -255,13 +262,23 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         axarr.append(ax)
     if x_is_date:
         axarr[-1].set_xlabel('Time, UTC')
-        #axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H'))
-        axarr[-1].xaxis.set_major_formatter(mpl.dates.AutoDateFormatter(mpl.dates.AutoDateLocator()))
+        formatter = concise_formatter()
+        axarr[-1].xaxis.set_major_formatter(formatter)
         axarr[0].set_title(str(pn[field].columns[0].date()))
     # Hide xticks for all but last.
     for ax in axarr[:-1]:
         plt.setp(ax.get_xticklabels(), visible=False)
     return fig, axarr
+
+
+def concise_formatter():
+    """formatting nice looking date ticks"""
+    auto = mpl.dates.AutoDateLocator()
+    formats = ['%Y', '%b', '%d', '%H', '%H:%M', '%S.%f']
+    zero_formats = ['', '%Y', '%b', '%b-%d', '%H:%M', '%H:%M']
+    return mpl.dates.ConciseDateFormatter(auto, formats=formats,
+                                          zero_formats=zero_formats,
+                                          show_offset=False)
 
 
 def class_color(cid, cmap=DEFAULT_DISCRETE_CMAP, **kws):

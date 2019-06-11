@@ -449,8 +449,6 @@ class Case:
             ax.yaxis.grid(True)
         self.set_xlim(ax)
         axarr[0].set_title(date_us_fmt(self.t_start(), self.t_end()))
-        #axarr[-1].xaxis.set_major_formatter(mpl.dates.AutoDateFormatter(locator, defaultfmt='%H'))
-        axarr[-1].xaxis.set_major_formatter(mpl.dates.DateFormatter('%H:%M'))
         return fig, axarr
 
     def plot_growth_zones(self, **kws):

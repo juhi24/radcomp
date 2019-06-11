@@ -40,6 +40,8 @@ def plot_rain_case(cases_r, save=SAVE_DEFAULT):
                         t_contour_ax_ind='all',
                         t_levels=[-40, -20, -10, -8, -3],
                         fig_scale_factor=0.75)
+    formatter = plotting.concise_formatter()
+    axarr[-1].xaxis.set_major_formatter(formatter)
     if save:
         fig.savefig(path.join(conf.P1_FIG_DIR, 'case_rain.png'), **SAVE_KWS)
     return fig, axarr
@@ -53,6 +55,8 @@ def plot_snow_case(cases_s, save=SAVE_DEFAULT):
                         t_contour_ax_ind='all',
                         t_levels=[-40, -20, -10, -8, -3],
                         fig_scale_factor=0.75)
+    formatter = plotting.concise_formatter()
+    axarr[-1].xaxis.set_major_formatter(formatter)
     if save:
         fig.savefig(path.join(conf.P1_FIG_DIR, 'case_snow.png'), **SAVE_KWS)
     return fig, axarr
@@ -93,7 +97,9 @@ if __name__ == '__main__':
     #fig.savefig(path.join(conf.P1_FIG_DIR, 't_tops.png'), **SAVE_KWS)
 
     #plot_cluster_centroids(cc_r.vpc)
-    plot_cluster_centroids(cc_s.vpc)
+    #plot_cluster_centroids(cc_s.vpc)
 
-    #fig_r, _ = plot_rain_case(cases_r)
-    #fig_s, _ = plot_snow_case(cases_s)
+    fig_r, axarr_r = plot_rain_case(cases_r)
+    fig_s, axarr_s = plot_snow_case(cases_s)
+
+
