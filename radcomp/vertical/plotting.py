@@ -549,7 +549,9 @@ def plot_occurrence_counts(count, ax=None, bottom=0, top=900):
         count (Series)
     """
     ax = ax or plt.gca()
-    count.plot.bar(ax=ax)
+    #count.plot.bar(ax=ax) # bug in pd or mpl
+    ax.bar(count.index, count.values, width=0.5) # workaround
+    ax.set_xticks(count.index) # workaround
     ax.set_ylabel('Profile count')
     ax.yaxis.grid(True)
     ax.set_ylim(bottom=bottom, top=top)
