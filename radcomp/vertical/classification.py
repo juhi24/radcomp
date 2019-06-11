@@ -135,7 +135,7 @@ def plot_cluster_centroids(vpc, colorful_bars='blue', order=None,
     if n_extra > 0:
         extra.plot.bar(ax=ax_extra, color='black')
         ax_extra.get_legend().set_visible(False)
-        ax_extra.set_ylim([-20, 1])
+        ax_extra.set_ylim([-21, 1])
         ax_extra.set_ylabel(plotting.LABELS['temp_mean'])
         ax_extra.yaxis.grid(True)
     n_comp = vpc.km.n_clusters
