@@ -328,7 +328,7 @@ if __name__ == '__main__':
             axarr[1].set_ylabel('$T_s$ at class\ncentroid, $^{\circ}$C')
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
-            fig.savefig(path.join(savedir, fname), bbox_inches='tight')
+            fig.savefig(path.join(savedir, fname), bbox_inches='tight', dpi=300)
         #plot_wrappers.boxplot_t_combined(cc)
     #fig_h, ax_h = plt.subplots(dpi=100, figsize=(4, 3))
     #frac_in_case_hist(cases, 5, log=False, frac=True, ax=ax_h)

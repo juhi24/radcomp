@@ -10,10 +10,10 @@ VMAXS = {'ZH': 35, 'ZDR': 2, 'RHO': 1, 'KDP': 0.3, 'DP': 360, 'PHIDP': 30,
          'R': 16, 'MLI': 10, 'ML': 1, 'RH': 1, 'LR': 0.5, 'KDPG': 8,
          'ZDRG': 0.1, 'OMEGA': 2, 'T': 5}
 VMINS_RAIN = {}
-VMAXS_RAIN = {'ZH': 40, 'KDP': 0.5, 'ZDR': 3}
+VMAXS_RAIN = {'KDP': 0.5, 'ZDR': 2}
 VMINS_NARROW = {}
 VMAXS_NARROW = {}
-GAMMA = {'KDP': 0.6}
+GAMMA = {'KDP': 0.64}
 LABELS = {'ZH': '$Z_{e}$, dBZ',
           'ZDR': '$Z_{dr}$, dB',
           'RHO': '$\\rho_{hv}$',

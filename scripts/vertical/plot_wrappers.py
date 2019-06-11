@@ -33,6 +33,24 @@ def plot_silhouette():
     return
 
 
+def plot_rain_case(cases_r):
+    c = cases_r.loc['140812T02'].case
+    return c.plot(params=['kdp', 'zh', 'zdr'],
+                  n_extra_ax=0, plot_extras=['silh', 'cl'],
+                  t_contour_ax_ind='all',
+                  t_levels=[-40, -20, -10, -8, -3],
+                  fig_scale_factor=0.75)
+
+
+def plot_snow_case(cases_s):
+    c = cases_s.loc['140215T17-16T02'].case
+    return c.plot(params=['kdp', 'zh', 'zdr'],
+                  n_extra_ax=0, plot_extras=['ts', 'silh', 'cl'],
+                  t_contour_ax_ind='all',
+                  t_levels=[-40, -20, -10, -8, -3],
+                  fig_scale_factor=0.75)
+
+
 def boxplot_t_combined(c, save=SAVE_DEFAULT, **kws):
     """boxplot_t_combined wrapper"""
     fig, ax, bp_top = plotting.boxplot_t_combined(c, i_dis=range(5), **kws)
@@ -63,5 +81,13 @@ if __name__ == '__main__':
     plt.close('all')
     #fig, ax, bp_top = plotting.boxplot_t_combined(cc, i_dis=range(5))
     #boxplot_t_combined(cc)
-    fig, _ = boxplot_t_comb_both(cc_r, cc_s)
-    fig.savefig(path.join(conf.P1_FIG_DIR, 't_tops.png'), **SAVE_KWS)
+
+    #fig, _ = boxplot_t_comb_both(cc_r, cc_s)
+    #fig.savefig(path.join(conf.P1_FIG_DIR, 't_tops.png'), **SAVE_KWS)
+
+    plot_cluster_centroids(cc_r.vpc)
+    plot_cluster_centroids(cc_s.vpc)
+
+    fig, _ = plot_rain_case(cases_r)
+    fig, _ = plot_snow_case(cases_s)
+    #fig.savefig(path.join(conf.P1_FIG_DIR, 'case_rain.png'), **SAVE_KWS)
