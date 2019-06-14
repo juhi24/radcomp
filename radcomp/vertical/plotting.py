@@ -133,7 +133,7 @@ def set_h_label(ax, has_ml, narrow=False):
     ax.set_ylabel(label)
 
 
-def set_h_ax(ax, hlims=(0, 10000), has_ml=False, label=None, nbins=3, **kws):
+def set_h_ax(ax, hlims=(0, 10e3), has_ml=False, label=None, nbins=3, **kws):
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(vertical.m2km))
     steps = [1, 2, 5, 10] # acceptable step multipliers
     locator = MaxNLocator(nbins=nbins, integer=True, steps=steps, **kws)
@@ -206,6 +206,7 @@ def field_gamma(field):
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 110},
            n_ax_shift=0, has_ml=False, cmap_override={}, lim_override=False,
+           hlims=(0, 10e3),
            **kws):
     """Plot Panel of VPs"""
     if fields is None:
@@ -251,7 +252,7 @@ def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
         ax.format_coord = fmt_coord
         #
         use_ml_label = has_ml and not x_is_date
-        set_h_ax(ax, has_ml=use_ml_label) if i == 1 else set_h_ax(ax, label='')
+        set_h_ax(ax, has_ml=use_ml_label, hlims=hlims) if i == 1 else set_h_ax(ax, label='', hlims=hlims)
         ax.autoscale(False)
         cb = fig.colorbar(im, cax=ax_cb, label=cb_label)
         nice_cb_ticks(cb)

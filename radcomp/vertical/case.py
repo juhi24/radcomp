@@ -171,6 +171,92 @@ def round_time_index(data, resolution='1min'):
     return dat
 
 
+def plot_case(c, params=None, interactive=True, raw=True, n_extra_ax=0,
+             t_contour_ax_ind=False, above_ml_only=False, t_levels=[0],
+             inverse_transformed=False, plot_extras=['ts', 'silh', 'cl', 'lwe'],
+             **kws):
+    """Visualize a Case object."""
+    c.load_model_temperature()
+    if not c.has_ml:
+        above_ml_only = False
+    if raw:
+        data = c.data
+    else:
+        data = c.cl_data.transpose(0, 2, 1)
+    if above_ml_only:
+        data = c.data_above_ml if raw else c.only_data_above_ml(data)
+    elif inverse_transformed:
+        if c.has_ml:
+            above_ml_only = True
+        data = c.inverse_transform()
+    if params is None:
+        if c.vpc is not None:
+            params = c.vpc.params
+        else:
+            params = DEFAULT_PARAMS
+    plot_classes = ('cl' in plot_extras) and (c.vpc is not None)
+    plot_silh = ('silh' in plot_extras) and (c.vpc is not None)
+    plot_lwe = ('lwe' in plot_extras) and (c.pluvio is not None)
+    if plot_lwe:
+        plot_lwe = not c.pluvio.data.empty
+    plot_azs = ('azs' in plot_extras) and (c.azs().size > 0)
+    plot_fr = ('fr' in plot_extras) and (c.fr().size > 0)
+    plot_t = ('ts' in plot_extras) and (c.t_surface().size > 0)
+    plot_lr = ('lr' in plot_extras)
+    n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
+    next_free_ax = -n_extra_ax
+    cmap_override = {'LR': 'seismic', 'kdpg': 'bwr', 'zdrg': 'bwr',
+                     'omega': 'seismic_r'}
+    if plot_lr:
+        data['LR'] = data['T'].diff()
+        params = np.append(params, 'LR')
+    hlims = (0, 11.5e3) if (c.has_ml and not above_ml_only) else (0, 10e3)
+    fig, axarr = plotting.plotpn(data, fields=params,
+                                 n_extra_ax=n_extra_ax, has_ml=c.has_ml,
+                                 cmap_override=cmap_override,
+                                 hlims=hlims, **kws)
+    plotfuns = OrderedDict()
+    plotfuns[c.plot_t] = plot_t
+    plotfuns[c.plot_silh] = plot_silh
+    plotfuns[c.plot_lwe] = plot_lwe
+    plotfuns[c.plot_azs] = plot_azs
+    plotfuns[c.plot_fr] = plot_fr
+    for plotfun, flag in plotfuns.items():
+        if flag:
+            plotfun(ax=axarr[next_free_ax])
+            next_free_ax += 1
+    # plot temperature contours
+    if t_contour_ax_ind:
+        if t_contour_ax_ind == 'all':
+            t_contour_ax_ind = range(len(params))
+        try:
+            for i in t_contour_ax_ind:
+                c.plot_growth_zones(ax=axarr[i], levels=t_levels)
+        except TypeError:
+            warnfmt = '{}: Could not plot temperature contours.'
+            print(warnfmt.format(c.name()))
+    if plot_classes:
+        for iax in range(len(axarr)-1):
+            c.vpc.class_colors(classes=c.classes(), ax=axarr[iax])
+    has_vpc = (c.vpc is not None)
+    if c.has_ml and has_vpc and not above_ml_only:
+        for i in range(len(params)):
+            c.plot_ml(ax=axarr[i])
+    c.cursor = mpl.widgets.MultiCursor(fig.canvas, axarr, color='black',
+                                       horizOn=True, vertOn=True, lw=0.5)
+    if interactive:
+        on_click_fun = lambda event: c._on_click_plot_dt_cs(event, params=params,
+                                                            inverse_transformed=inverse_transformed,
+                                                            above_ml_only=above_ml_only)
+        fig.canvas.mpl_connect('button_press_event', on_click_fun)
+    for ax in axarr:
+        ax.xaxis.grid(True)
+        ax.yaxis.grid(True)
+    c.set_xlim(ax)
+    axarr[0].set_title(date_us_fmt(c.t_start(), c.t_end()))
+    return fig, axarr
+
+
 class Case:
     """
     Precipitation event class for VP studies.
@@ -367,89 +453,10 @@ class Case:
         """plot_classes wrapper"""
         return plotting.plot_classes(self.cl_data_scaled, self.classes())
 
-    def plot(self, params=None, interactive=True, raw=True, n_extra_ax=0,
-             t_contour_ax_ind=False, above_ml_only=False, t_levels=[0],
-             inverse_transformed=False,
-             plot_extras=['ts', 'silh', 'cl', 'lwe'], **kws):
+    def plot(self, **kws):
         """Visualize the case."""
-        self.load_model_temperature()
-        if not self.has_ml:
-            above_ml_only = False
-        if raw:
-            data = self.data
-        else:
-            data = self.cl_data.transpose(0, 2, 1)
-        if above_ml_only:
-            data = self.data_above_ml if raw else self.only_data_above_ml(data)
-        elif inverse_transformed:
-            if self.has_ml:
-                above_ml_only = True
-            data = self.inverse_transform()
-        if params is None:
-            if self.vpc is not None:
-                params = self.vpc.params
-            else:
-                params = DEFAULT_PARAMS
-        plot_classes = ('cl' in plot_extras) and (self.vpc is not None)
-        plot_silh = ('silh' in plot_extras) and (self.vpc is not None)
-        plot_lwe = ('lwe' in plot_extras) and (self.pluvio is not None)
-        if plot_lwe:
-            plot_lwe = not self.pluvio.data.empty
-        plot_azs = ('azs' in plot_extras) and (self.azs().size > 0)
-        plot_fr = ('fr' in plot_extras) and (self.fr().size > 0)
-        plot_t = ('ts' in plot_extras) and (self.t_surface().size > 0)
-        plot_lr = ('lr' in plot_extras)
-        n_extra_ax += plot_t + plot_lwe + plot_fr + plot_azs + plot_silh
-        next_free_ax = -n_extra_ax
-        cmap_override = {'LR': 'seismic', 'kdpg': 'bwr', 'zdrg': 'bwr',
-                         'omega': 'seismic_r'}
-        if plot_lr:
-            data['LR'] = data['T'].diff()
-            params = np.append(params, 'LR')
-        fig, axarr = plotting.plotpn(data, fields=params,
-                                     n_extra_ax=n_extra_ax, has_ml=self.has_ml,
-                                     cmap_override=cmap_override, **kws)
-        plotfuns = OrderedDict()
-        plotfuns[self.plot_t] = plot_t
-        plotfuns[self.plot_silh] = plot_silh
-        plotfuns[self.plot_lwe] = plot_lwe
-        plotfuns[self.plot_azs] = plot_azs
-        plotfuns[self.plot_fr] = plot_fr
-        for plotfun, flag in plotfuns.items():
-            if flag:
-                plotfun(ax=axarr[next_free_ax])
-                next_free_ax += 1
-        # plot temperature contours
-        if t_contour_ax_ind:
-            if t_contour_ax_ind == 'all':
-                t_contour_ax_ind = range(len(params))
-            try:
-                for i in t_contour_ax_ind:
-                    self.plot_growth_zones(ax=axarr[i], levels=t_levels)
-            except TypeError:
-                warnfmt = '{}: Could not plot temperature contours.'
-                print(warnfmt.format(self.name()))
-        if plot_classes:
-            for iax in range(len(axarr)-1):
-                self.vpc.class_colors(classes=self.classes(), ax=axarr[iax])
-        has_vpc = (self.vpc is not None)
-        if self.has_ml and has_vpc and not above_ml_only:
-            for i in range(len(params)):
-                self.plot_ml(ax=axarr[i])
-        self.cursor = mpl.widgets.MultiCursor(fig.canvas, axarr,
-                                              color='black', horizOn=True,
-                                              vertOn=True, lw=0.5)
-        if interactive:
-            on_click_fun = lambda event: self._on_click_plot_dt_cs(event, params=params,
-                                                                   inverse_transformed=inverse_transformed,
-                                                                   above_ml_only=above_ml_only)
-            fig.canvas.mpl_connect('button_press_event', on_click_fun)
-        for ax in axarr:
-            ax.xaxis.grid(True)
-            ax.yaxis.grid(True)
-        self.set_xlim(ax)
-        axarr[0].set_title(date_us_fmt(self.t_start(), self.t_end()))
-        return fig, axarr
+        return plot_case(self, **kws)
+
 
     def plot_growth_zones(self, **kws):
         """plotting.plot_growth_zones wrapper"""

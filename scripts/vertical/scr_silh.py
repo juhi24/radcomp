@@ -2,6 +2,7 @@
 """silhouette score analysis script"""
 
 from os import path
+import copy
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ def silh_score_avgs(cc, n_iter=12, vpc_conf=conf.VPC_PARAMS_SNOW, **kws):
             cc.classify()
             #fig, ax = plt.subplots()
             #cc.plot_silhouette(ax=ax)
-            scores.loc[i, n_classes] = cc.silhouette_score(**kws)
+            scores.loc[i, n_classes] = vpc.silhouette_score(**kws)
     return scores
 
 
@@ -61,10 +62,11 @@ if __name__ == '__main__':
     plt.close('all')
     season = 'snow'
     vpc_conf = conf.VPC_PARAMS_RAIN if season=='rain' else conf.VPC_PARAMS_SNOW
-    cc = multicase.MultiCase.from_caselist(season, has_ml=(season == 'rain'))
+    #cc = multicase.MultiCase.from_caselist(season, has_ml=(season == 'rain'))
+    cc = copy.deepcopy(cc_s)
     #fig, ax = score_analysis(cc, cols=(0, 1, 2, 'temp_mean'), weights=(1,1,1,0.8), vpc_conf=vpc_conf)
     #fig, ax = score_analysis(cc, cols=(0, 1, 2), weights=(1,1,1), vpc_conf=vpc_conf)
     fig, ax, scores = score_analysis(cc, cols='all', vpc_conf=vpc_conf)
-    fname = 'silh_score_{}.svg'.format(vpc_conf['basename'])
+    fname = 'silh_score_{}.svg'.format(cc.vpc.name())
     savefile = path.join(conf.P1_FIG_DIR, fname)
-    fig.savefig(savefile, bbox_inches='tight')
+    fig.savefig(savefile, bbox_inches='tight', dpi=300)
