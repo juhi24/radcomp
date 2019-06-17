@@ -294,6 +294,18 @@ def barplot_mean_class_count(cases, class_color, ax=None):
     ax.set_ylim(bottom=0, top=30)
 
 
+def axlabels(axarr, has_ml):
+    """Label axes A1, A2, ..."""
+    ab = 'a' if has_ml else 'b'
+    x = 0.896 if has_ml else 0.94
+    y = 0.89 if has_ml else 0.81
+    for i, ax in enumerate(axarr):
+        axlabel = '{}{}'.format(ab.capitalize(), i+1)
+        color = 'white' if i==0 else 'black'
+        ax.text(x, y, axlabel, verticalalignment='top', color=color,
+                horizontalalignment='center', transform=ax.transAxes)
+
+
 if __name__ == '__main__':
     plt.ion()
     save = True
@@ -312,11 +324,10 @@ if __name__ == '__main__':
         kws = d['kws']
         free_ax = d['free_ax']
         season = 'rain' if cc.has_ml else 'snow'
-        ab = 'a' if cc.has_ml else 'b'
         class_color = cases.case[0].vpc.class_color
         kws.update(plot_counts=False, n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 100})
         fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=0.8, **kws)
-        axarr[0].set_title('{ab}) {season}'.format(ab=ab, season=season.capitalize()))
+        axarr[0].set_title('{season}'.format(season=season.capitalize()))
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
@@ -327,6 +338,7 @@ if __name__ == '__main__':
         plotting.prepend_class_xticks(axarr[-1], cc.has_ml)
         if not cc.has_ml:
             axarr[1].set_ylabel('$T_s$ at class\ncentroid, $^{\circ}$C')
+        axlabels(axarr, cc.has_ml)
         fname = 'clusters_{}.png'.format(d['id'])
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight', dpi=300)
