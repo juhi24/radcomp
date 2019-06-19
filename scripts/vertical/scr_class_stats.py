@@ -282,7 +282,7 @@ def boxplot_class_time(cases, class_color, ax=None): # TODO
     yticks = np.array([10, 30, 60, 120, 5*60, 10*60])/15
     ax.set_yticks(yticks)
     ax.set_yticklabels([count2time_ticks(tick, None) for tick in yticks])
-    ax.set_ylabel('Persistence\nper event')
+    ax.set_ylabel('Tot. duration\nper event')
     ax.set_ylim(bottom=10/15, top=16*60/15)
 
 

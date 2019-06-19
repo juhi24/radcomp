@@ -446,8 +446,8 @@ class VPC:
         return plotting.class_colors(classes, mapping=mapping, **kws)
 
     def class_counts(self):
-        """occurrences of each class"""
-        count = self.classes.groupby(self.classes).count()
+        """counts of each class"""
+        count = self.classes.value_counts().sort_index()
         count.name = 'count'
         return count
 

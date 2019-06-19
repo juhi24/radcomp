@@ -561,7 +561,7 @@ def boxplot_t_combined(c, i_dis=tuple(), ax=None):
 
 
 def plot_occurrence_counts(count, ax=None, bottom=0, top=900):
-    """Bar plot occurrence counts.
+    """Bar plot class counts and percentage.
 
     Args:
         count (Series)
@@ -573,6 +573,13 @@ def plot_occurrence_counts(count, ax=None, bottom=0, top=900):
     ax.set_ylabel('Profile count')
     ax.yaxis.grid(True)
     ax.set_ylim(bottom=bottom, top=top)
+    ax2 = ax.twinx()
+    ax2.set_ylim(ax.get_ylim())
+    ticks2 = np.array([0, 0.05, 0.1, 0.15])
+    locs2 = ticks2*count.sum()
+    ax2.set_yticks(locs2)
+    ax2.set_yticklabels((ticks2*100).astype(int))
+    ax2.set_ylabel('%')
 
 
 def handle_ax(ax):
