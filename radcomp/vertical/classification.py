@@ -143,7 +143,7 @@ def plot_cluster_centroids(vpc, colorful_bars='blue', order=None,
     ax_last.set_xlim(-0.5, n_comp-0.5)
     fig = ax_last.get_figure()
     precip_type = 'rain' if vpc.has_ml else 'snow'
-    axarr[0].set_title('Class centroids for {} cases'.format(precip_type))
+    axarr[0].set_title('Class centroids for {} events'.format(precip_type))
     if colorful_bars == 'blue':
         cmkw = {}
         cmkw['cm'] = plotting.cm_blue()
