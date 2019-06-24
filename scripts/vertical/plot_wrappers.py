@@ -88,6 +88,31 @@ def boxplot_t_comb_both(cc_r, cc_s, **kws):
     return fig, axarr
 
 
+def conv_fmt(flag):
+    """convective formatter"""
+    if flag<0.5:
+        return 's'
+    if flag>0.5:
+        return 'c'
+    return ''
+
+
+def datetime_fmt(t):
+    """datetime formatter"""
+    return t.strftime('%Y-%m-%d %H:%M')
+
+
+def cases2latex(cases):
+    """cases dataframe to latex table"""
+    outfmt = path.join(conf.P1_FIG_DIR, 'cases_{}.tex')
+    if 'convective' in cases:
+        cases_out = cases.loc[:,('start','end','convective')]
+        outfile = outfmt.format('r')
+        formatters = (datetime_fmt, datetime_fmt, conv_fmt)
+    cases_out.to_latex(outfile, index=False, formatters=formatters)
+
+
+
 if __name__ == '__main__':
     plt.close('all')
     #fig, ax, bp_top = plotting.boxplot_t_combined(cc, i_dis=range(5))
