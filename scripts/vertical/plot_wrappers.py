@@ -109,11 +109,29 @@ def cases2latex(cases):
         cases_out = cases.loc[:,('start','end','convective')]
         outfile = outfmt.format('r')
         formatters = (datetime_fmt, datetime_fmt, conv_fmt)
+    else:
+        cases_out = cases.loc[:, ('start', 'end')]
+        outfile = outfmt.format('s')
+        formatters = (datetime_fmt, datetime_fmt)
     cases_out.to_latex(outfile, index=False, formatters=formatters)
 
 
 
+def plot_centroids_ensemble(cc):
+    """"""
+    from scr_plot_ensemble import lineboxplots
+    name = conf.SCHEME_ID_RAIN if cc.has_ml else conf.SCHEME_ID_SNOW
+    savedir = ensure_join(RESULTS_DIR, 'classes_summary', name, 'class_vp_ensemble')
+    fields = ['kdp', 'zdr', 'zh']
+    if cc.has_ml:
+        fields.append('T')
+    axarrlist = lineboxplots(cc, savedir=savedir, fields=fields)
+    return axarrlist
+
+
+
 if __name__ == '__main__':
+    plt.ioff()
     plt.close('all')
     #fig, ax, bp_top = plotting.boxplot_t_combined(cc, i_dis=range(5))
     #boxplot_t_combined(cc)
@@ -124,7 +142,10 @@ if __name__ == '__main__':
     #plot_cluster_centroids(cc_r.vpc)
     #plot_cluster_centroids(cc_s.vpc)
 
-    fig_r, axarr_r = plot_rain_case(cases_r)
-    fig_s, axarr_s = plot_snow_case(cases_s)
+    #fig_r, axarr_r = plot_rain_case(cases_r)
+    #fig_s, axarr_s = plot_snow_case(cases_s)
+
+    plot_centroids_ensemble(cc_r)
+    plot_centroids_ensemble(cc_s)
 
 

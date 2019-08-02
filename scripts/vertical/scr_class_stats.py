@@ -313,9 +313,9 @@ if __name__ == '__main__':
     use_cache = True
     cases_r, cc_r = init_rain(use_cache=use_cache)
     cases_s, cc_s = init_snow(use_cache=use_cache)
-    rain = dict(id='r', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -4},
+    rain = dict(id='R', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -4},
                 free_ax=2)
-    snow = dict(id='s', cases=cases_s, cc=cc_s, kws={'lim_override': True}, free_ax=2)
+    snow = dict(id='S', cases=cases_s, cc=cc_s, kws={'lim_override': True}, free_ax=2)
     savedir = conf.P1_FIG_DIR
     n_convective = sum([c.is_convective or False for i, c in cases_r.case.iteritems()])
     for d in (rain, snow):

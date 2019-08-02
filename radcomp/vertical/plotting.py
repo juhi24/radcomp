@@ -604,9 +604,28 @@ def handle_ax(ax):
 
 def prepend_class_xticks(ax, has_ml):
     """Prepend class names with chars."""
-    seasonchar = 'r' if has_ml else 's'
+    seasonchar = 'R' if has_ml else 'S'
     try:
         xticklabels = [str(int(float(t.get_text()))) for t in ax.get_xticklabels()]
     except ValueError:
         xticklabels = ax.get_xticks().astype(str)
     ax.set_xticklabels(np.array([seasonchar + l for l in xticklabels]))
+
+
+def lineboxplot(dat, rain_season, color='blue', cen=None):
+    """Plot individual profile lines, quantiles and optionally centroid."""
+    axarr = plot_vps(dat.iloc[:,:,0], linewidth=0.5, alpha=0)
+    kws = dict(has_ml=rain_season, axarr=axarr)
+    for dt in dat.minor_axis:
+        plot_vps(dat.loc[:,:,dt], linewidth=0.5, alpha=0.05,
+                          color=color, color2='dimgrey', **kws)
+    q1 = dat.apply(lambda df: df.quantile(q=0.25), axis=2)
+    q3 = dat.apply(lambda df: df.quantile(q=0.75), axis=2)
+    med = dat.median(axis=2)
+    plot_vps(med, color='yellow', label='median', **kws)
+    if cen is not None:
+        cenn = cen.reindex_like(med) # add missing columns
+        plot_vps(cenn, color='darkred', label='centroid', **kws)
+    plot_vps_betweenx(q1, q3, alpha=0.5, label='50%', color2='dimgrey', **kws)
+    axarr[-1].legend()
+    return axarr

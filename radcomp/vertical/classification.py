@@ -142,8 +142,9 @@ def plot_cluster_centroids(vpc, colorful_bars='blue', order=None,
     ax_last.set_xticks(extra.index.values)
     ax_last.set_xlim(-0.5, n_comp-0.5)
     fig = ax_last.get_figure()
-    precip_type = 'rain' if vpc.has_ml else 'snow'
-    axarr[0].set_title('Class centroids for {} events'.format(precip_type))
+    #precip_type = 'rain' if vpc.has_ml else 'snow'
+    model_name = 'R' if vpc.has_ml else 'S'
+    axarr[0].set_title('{}-model class centroids'.format(model_name))
     if colorful_bars == 'blue':
         cmkw = {}
         cmkw['cm'] = plotting.cm_blue()
@@ -273,7 +274,7 @@ class VPC:
         return range(self.n_clusters)
 
     def class_labels(self):
-        prefix = 'r' if self.has_ml else 's'
+        prefix = 'R' if self.has_ml else 'S'
         return [prefix + str(cl) for cl in self.get_class_list()]
 
     def save(self, **kws):

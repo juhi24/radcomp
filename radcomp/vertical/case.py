@@ -171,6 +171,12 @@ def round_time_index(data, resolution='1min'):
     return dat
 
 
+def inversion_score(c):
+    """Score indicating inversion"""
+    tdiff = c.data['T'].diff()
+    return tdiff[tdiff>0].sum().median()
+
+
 def plot_case(c, params=None, interactive=True, raw=True, n_extra_ax=0,
              t_contour_ax_ind=False, above_ml_only=False, t_levels=[0],
              inverse_transformed=False, plot_extras=['ts', 'silh', 'cl', 'lwe'],

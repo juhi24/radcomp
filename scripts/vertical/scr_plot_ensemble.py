@@ -12,32 +12,13 @@ import conf
 from plot_wrappers import SAVE_KWS
 
 
-def lineboxplot(dat, rain_season, color='blue', cen=None):
-    """Plot individual profile lines, quantiles and optionally centroid."""
-    axarr = plotting.plot_vps(dat.iloc[:,:,0], linewidth=0.5, alpha=0)
-    kws = dict(has_ml=rain_season, axarr=axarr)
-    for dt in dat.minor_axis:
-        plotting.plot_vps(dat.loc[:,:,dt], linewidth=0.5, alpha=0.05,
-                          color=color, color2='dimgrey', **kws)
-    q1 = dat.apply(lambda df: df.quantile(q=0.25), axis=2)
-    q3 = dat.apply(lambda df: df.quantile(q=0.75), axis=2)
-    med = dat.median(axis=2)
-    plotting.plot_vps(med, color='yellow', label='median', **kws)
-    if cen is not None:
-        cenn = cen.reindex_like(med) # add missing columns
-        plotting.plot_vps(cenn, color='darkred', label='centroid', **kws)
-    plotting.plot_vps_betweenx(q1, q3, alpha=0.5, label='50%',
-                               color2='dimgrey', **kws)
-    axarr[-1].legend()
-    return axarr
-
-
-def lineboxplots(c, rain_season, fields=None, xlim_override=False, savedir=None):
+def lineboxplots(c, fields=None, xlim_override=False, savedir=None):
     """Plot line boxplots of profiles for each class"""
     fields = fields or ('kdp', 'zdr', 'zh') # alphabet order for xlim_override
+    rain_season = c.has_ml
     data = c.data_above_ml
     axarrlist = []
-    seasonchar = 'r' if rain_season else 's'
+    seasonchar = 'R' if rain_season else 'S'
     fname_extra = 'i' if xlim_override else ''
     if 'T' in fields:
         fname_extra += 't'
@@ -46,7 +27,7 @@ def lineboxplots(c, rain_season, fields=None, xlim_override=False, savedir=None)
     for cl in c.vpc.get_class_list():
         dat = case.fillna(data.loc[fields, :10000, c.vpc.classes==cl])
         cen = c.vpc.clus_centroids()[0].loc[:,:,cl]
-        axarr = lineboxplot(dat, rain_season, cen=cen)
+        axarr = plotting.lineboxplot(dat, rain_season, cen=cen)
         if xlim_override:
             for i, ax in enumerate(axarr):
                 plotting.vp_xlim(fields[i], ax, not rain_season)
@@ -73,7 +54,7 @@ if __name__ == '__main__':
     c.load_classification(name)
     savedir = ensure_join(RESULTS_DIR, 'classes_summary', name,
                           'class_vp_ensemble')
-    axarrlist = lineboxplots(c, rain_season, savedir=savedir,
+    axarrlist = lineboxplots(c, savedir=savedir,
                              #xlim_override=True,
                              fields=('kdp', 'zdr', 'zh', 'T'))
     if not rain_season:
