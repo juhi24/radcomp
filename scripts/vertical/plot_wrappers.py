@@ -123,7 +123,7 @@ def plot_centroids_ensemble(cc):
     name = conf.SCHEME_ID_RAIN if cc.has_ml else conf.SCHEME_ID_SNOW
     savedir = ensure_join(RESULTS_DIR, 'classes_summary', name, 'class_vp_ensemble')
     fields = ['kdp', 'zdr', 'zh']
-    if cc.has_ml:
+    if not cc.has_ml:
         fields.append('T')
     axarrlist = lineboxplots(cc, savedir=savedir, fields=fields)
     return axarrlist
