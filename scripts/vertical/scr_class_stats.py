@@ -313,9 +313,9 @@ if __name__ == '__main__':
     use_cache = True
     cases_r, cc_r = init_rain(use_cache=use_cache)
     cases_s, cc_s = init_snow(use_cache=use_cache)
-    rain = dict(id='R', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': -4},
-                free_ax=2)
-    snow = dict(id='S', cases=cases_s, cc=cc_s, kws={'lim_override': True}, free_ax=2)
+    rain = dict(id='R', cases=cases_r, cc=cc_r, kws={'plot_conv_occ': 1},
+                free_ax=1)
+    snow = dict(id='S', cases=cases_s, cc=cc_s, kws={'lim_override': True}, free_ax=1)
     savedir = conf.P1_FIG_DIR
     n_convective = sum([c.is_convective or False for i, c in cases_r.case.iteritems()])
     for d in (rain, snow):
@@ -325,13 +325,13 @@ if __name__ == '__main__':
         free_ax = d['free_ax']
         season = 'rain' if cc.has_ml else 'snow'
         class_color = cases.case[0].vpc.class_color
-        kws.update(plot_counts=False, n_extra_ax=3, colorful_bars='blue', fig_kws={'dpi': 100})
+        kws.update(plot_counts=False, n_extra_ax=2, colorful_bars='blue', fig_kws={'dpi': 100})
         fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=0.8, **kws)
-        axarr[0].set_title('{season}'.format(season=season.capitalize()))
+        axarr[0].set_title('{season}-model'.format(season=season[0].capitalize()))
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
-        plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax])
+        plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax+1])
         #barplot_mean_class_frac(cases, class_color, ax=axarr[free_ax+2])
-        boxplot_class_frac(cases, class_color, ax=axarr[free_ax+1])
+        #boxplot_class_frac(cases, class_color, ax=axarr[free_ax+1])
         #barplot_mean_class_count(cases, class_color, ax=axarr[free_ax+4])
         boxplot_class_time(cases, class_color, ax=axarr[free_ax+2])
         plotting.set_h_label(axarr[0], cc.has_ml, narrow=True)
@@ -339,7 +339,7 @@ if __name__ == '__main__':
         if not cc.has_ml:
             axarr[1].set_ylabel('$T_s$ at class\ncentroid, $^{\circ}$C')
         axlabels(axarr, cc.has_ml)
-        fname = 'clusters_{}.png'.format(d['id'])
+        fname = 'clusters_{}.png'.format(d['id'].lower())
         if save:
             fig.savefig(path.join(savedir, fname), bbox_inches='tight', dpi=300)
         #plot_wrappers.boxplot_t_combined(cc)
