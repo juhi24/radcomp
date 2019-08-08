@@ -203,9 +203,9 @@ def plot_occ_in_cases(cases, order, class_color=None, ax=None):
     ax = ax or plt.gca()
     if class_color is None:
         color = plotting.cm_blue().colors[0]
-        ax.bar(order, occ_in_cases(cases)*100, width=0.5, color=color)
+        ax.bar(order, occ_in_cases(cases)*100, width=0.58, color=color)
     else:
-        ax.bar(order, occ_in_cases(cases)*100, width=0.5)
+        ax.bar(order, occ_in_cases(cases)*100, width=0.58)
         plotting.bar_plot_colors(ax, order, class_color_fun=class_color,
                                  cm=plotting.cm_blue())
     ax.set_ylabel('Frequency,\n% of events')
@@ -297,7 +297,7 @@ def barplot_mean_class_count(cases, class_color, ax=None):
 def axlabels(axarr, has_ml):
     """Label axes A1, A2, ..."""
     ab = 'a' if has_ml else 'b'
-    x = 0.896 if has_ml else 0.94
+    x = 0.89 if has_ml else 0.94
     y = 0.89 if has_ml else 0.81
     for i, ax in enumerate(axarr):
         axlabel = '{}{}'.format(ab.capitalize(), i+1)
@@ -325,8 +325,11 @@ if __name__ == '__main__':
         free_ax = d['free_ax']
         season = 'rain' if cc.has_ml else 'snow'
         class_color = cases.case[0].vpc.class_color
-        kws.update(plot_counts=False, n_extra_ax=2, colorful_bars='blue', fig_kws={'dpi': 100})
-        fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], fig_scale_factor=0.8, **kws)
+        fig_w_factor = 0.75 if cc.has_ml else 1.05
+        fig_kws = dict(fig_h_factor=1.3, fig_w_factor=fig_w_factor)
+        kws.update(plot_counts=False, n_extra_ax=2, colorful_bars='blue',
+                   fig_scale_factor=0.68, fig_kws=fig_kws)
+        fig, axarr, i = cc.plot_cluster_centroids(fields=['zh'], **kws)
         axarr[0].set_title('{season}-model'.format(season=season[0].capitalize()))
         #plot_class_streak_counts(cases, ax=axarr[free_ax], order=i)
         plot_occ_in_cases(cases, class_color=None, order=i, ax=axarr[free_ax+1])
@@ -336,6 +339,10 @@ if __name__ == '__main__':
         boxplot_class_time(cases, class_color, ax=axarr[free_ax+2])
         plotting.set_h_label(axarr[0], cc.has_ml, narrow=True)
         plotting.prepend_class_xticks(axarr[-1], cc.has_ml)
+        plotting.rotate_tick_labels(60, ax=axarr[-1])
+        if not cc.has_ml:
+            for i in (-1, -2):
+                axarr[i].set_ylabel('')
         if not cc.has_ml:
             axarr[1].set_ylabel('$T_s$ at class\ncentroid, $^{\circ}$C')
         axlabels(axarr, cc.has_ml)
