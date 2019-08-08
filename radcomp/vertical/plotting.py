@@ -150,10 +150,11 @@ def nice_cb_ticks(cb, nbins=5, steps=(1, 5, 10), **kws):
     cb.update_ticks()
 
 
-def _pn_fig(fig_scale_factor, n_rows, **fig_kws):
+def _pn_fig(fig_scale_factor, n_rows, fig_h_factor=1.1, fig_w_factor=1,
+            **fig_kws):
     """Initialize figure for plotpn."""
-    fw = fig_scale_factor*8
-    fh = fig_scale_factor*(3+1.1*n_rows)
+    fw = fig_scale_factor*fig_w_factor*8
+    fh = fig_scale_factor*(3+fig_h_factor*n_rows)
     return plt.figure(figsize=(fw, fh), **fig_kws)
 
 
