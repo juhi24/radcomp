@@ -34,7 +34,8 @@ def lineboxplots(c, fields=None, xlim_override=False, savedir=None):
         if savedir is not None:
             fig = axarr[0].get_figure()
             fig.suptitle(titlefmt.format(seasonchar=seasonchar, cl=cl))
-            fname = fnamefmt.format(seasonchar=seasonchar+fname_extra, cl=cl)
+            fileseasonchar = seasonchar.lower()+fname_extra
+            fname = fnamefmt.format(seasonchar=fileseasonchar, cl=cl)
             fpath = path.join(savedir, fname)
             print(fpath)
             fig.savefig(fpath, **SAVE_KWS)

@@ -102,9 +102,7 @@ def datetime_fmt(t):
     return t.strftime('%Y-%m-%d %H:%M')
 
 
-def cases2latex(cases):
-    """cases dataframe to latex table"""
-    outfmt = path.join(conf.P1_FIG_DIR, 'cases_{}.tex')
+def _formatters(cases, outfmt):
     if 'convective' in cases:
         cases_out = cases.loc[:,('start','end','convective')]
         outfile = outfmt.format('r')
@@ -113,19 +111,38 @@ def cases2latex(cases):
         cases_out = cases.loc[:, ('start', 'end')]
         outfile = outfmt.format('s')
         formatters = (datetime_fmt, datetime_fmt)
+    return cases_out, formatters, outfile
+
+
+def cases2latex(cases):
+    """cases dataframe to latex table"""
+    outfmt = path.join(conf.P1_FIG_DIR, 'cases_{}.tex')
+    cases_out, formatters, outfile = _formatters(cases, outfmt)
     cases_out.to_latex(outfile, index=False, formatters=formatters)
 
 
+def cases2csv(cases):
+    """cases dataframe to csv"""
+    outfmt = path.join(conf.P1_FIG_DIR, 'cases_{}.csv')
+    cases_out, formatters, outfile = _formatters(cases, outfmt)
+    cases_out.convective = cases_out.convective.apply(conv_fmt)
+    cases_out.to_csv(outfile, index=False)
 
-def plot_centroids_ensemble(cc):
-    """"""
+
+def plot_centroids_ensemble(cc, kdp_max=None, no_t=False, **kws):
+    """class centroids as separate figs"""
     from scr_plot_ensemble import lineboxplots
+    if kdp_max is not None:
+        plotting.vis.VMAXS['KDP'] = kdp_max
     name = conf.SCHEME_ID_RAIN if cc.has_ml else conf.SCHEME_ID_SNOW
     savedir = ensure_join(RESULTS_DIR, 'classes_summary', name, 'class_vp_ensemble')
     fields = ['kdp', 'zdr', 'zh']
-    if not cc.has_ml:
+    if not (cc.has_ml or no_t):
         fields.append('T')
-    axarrlist = lineboxplots(cc, savedir=savedir, fields=fields)
+    axarrlist = lineboxplots(cc, savedir=savedir, fields=fields, **kws)
+    if kdp_max is not None:
+        import importlib
+        importlib.reload(plotting.vis)
     return axarrlist
 
 
@@ -139,13 +156,19 @@ if __name__ == '__main__':
     #fig, _ = boxplot_t_comb_both(cc_r, cc_s)
     #fig.savefig(path.join(conf.P1_FIG_DIR, 't_tops.png'), **SAVE_KWS)
 
-    #plot_cluster_centroids(cc_r.vpc)
-    #plot_cluster_centroids(cc_s.vpc)
+    plot_cluster_centroids(cc_r.vpc)
+    plot_cluster_centroids(cc_s.vpc)
 
     #fig_r, axarr_r = plot_rain_case(cases_r)
     #fig_s, axarr_s = plot_snow_case(cases_s)
 
-    plot_centroids_ensemble(cc_r)
-    plot_centroids_ensemble(cc_s)
+    kdp_max = 0.2
+    #plot_centroids_ensemble(cc_r, kdp_max=kdp_max, xlim_override=True)
+    #plot_centroids_ensemble(cc_s, kdp_max=kdp_max, no_t=True)
+    #plot_centroids_ensemble(cc_s, kdp_max=kdp_max, no_t=False)
+    # supplementary
+    #plot_centroids_ensemble(cc_r, kdp_max=0.6)
+    #plot_centroids_ensemble(cc_s, kdp_max=0.3)
+
 
 
