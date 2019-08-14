@@ -297,10 +297,10 @@ def barplot_mean_class_count(cases, class_color, ax=None):
 def axlabels(axarr, has_ml):
     """Label axes A1, A2, ..."""
     ab = 'a' if has_ml else 'b'
-    x = 0.89 if has_ml else 0.94
-    y = 0.89 if has_ml else 0.81
+    x = 0.87 if has_ml else 0.955
     for i, ax in enumerate(axarr):
-        axlabel = '{}{}'.format(ab.capitalize(), i+1)
+        y = 0.8 if (not has_ml and (i==1)) else 0.9
+        axlabel = '({}$_{}$)'.format(ab, i+1)
         color = 'white' if i==0 else 'black'
         ax.text(x, y, axlabel, verticalalignment='top', color=color,
                 horizontalalignment='center', transform=ax.transAxes)
