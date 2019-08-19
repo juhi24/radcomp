@@ -4,6 +4,8 @@
 from os import path
 from radcomp.vertical import classification, multicase, RESULTS_DIR
 
+from j24 import ensure_join
+
 
 CASES_SNOW = 'snow'
 CASES_RAIN = 'rain'
@@ -32,7 +34,8 @@ SEED = 0
 SCHEME_ID_SNOW = classification.scheme_name(**VPC_PARAMS_SNOW)
 SCHEME_ID_RAIN = classification.scheme_name(**VPC_PARAMS_RAIN)
 
-P1_FIG_DIR = path.join(RESULTS_DIR, 'paper1')
+P1_FIG_DIR = ensure_join(RESULTS_DIR, 'paper1')
+POSTER_FIG_DIR = ensure_join(RESULTS_DIR, 'poster')
 
 
 def init_cases(cases_id=None, season=''):

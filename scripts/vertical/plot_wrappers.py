@@ -1,6 +1,7 @@
 # coding: utf-8
 """wrappers for vpc paper 1 plots"""
 
+import copy
 from os import path
 
 import matplotlib.pyplot as plt
@@ -33,6 +34,38 @@ def plot_silhouette():
     return
 
 
+def plot_rain_case_poster(cases_r, save=SAVE_DEFAULT):
+    c = copy.deepcopy(cases_r.loc['140812T02'].case)
+    c.data = c.data.loc[:,:, '2014-08-12 03:40':].copy()
+    fig_kws = dict(fig_w_factor=0.6)
+    fig, axarr = c.plot(params=['kdp', 'zh', 'zdr'],
+                        n_extra_ax=0, plot_extras=['cl'],
+                        t_contour_ax_ind='all',
+                        t_levels=[-40, -20, -10, -8, -3],
+                        fig_scale_factor=0.85, fig_kws=fig_kws)
+    formatter = plotting.concise_formatter()
+    axarr[-1].xaxis.set_major_formatter(formatter)
+    if save:
+        fig.savefig(path.join(conf.POSTER_FIG_DIR, 'case_rain.png'), **SAVE_KWS)
+    return fig, axarr
+
+
+def plot_snow_case_poster(cases_s, save=SAVE_DEFAULT):
+    c = cases_s.loc['140215T17-16T02'].case
+    c.data = c.data.loc[:,:, '2014-02-15 20:40':'2014-02-16 02:40'].copy()
+    fig_kws = dict(fig_w_factor=0.6)
+    fig, axarr = c.plot(params=['kdp', 'zh', 'zdr'],
+                        n_extra_ax=0, plot_extras=['ts', 'cl'],
+                        t_contour_ax_ind='all',
+                        t_levels=[-40, -20, -10, -8, -3],
+                        fig_scale_factor=0.85, fig_kws=fig_kws)
+    formatter = plotting.concise_formatter()
+    axarr[-1].xaxis.set_major_formatter(formatter)
+    if save:
+        fig.savefig(path.join(conf.POSTER_FIG_DIR, 'case_snow.png'), **SAVE_KWS)
+    return fig, axarr
+
+
 def plot_rain_case(cases_r, save=SAVE_DEFAULT):
     c = cases_r.loc['140812T02'].case
     fig, axarr = c.plot(params=['kdp', 'zh', 'zdr'],
@@ -45,7 +78,6 @@ def plot_rain_case(cases_r, save=SAVE_DEFAULT):
     if save:
         fig.savefig(path.join(conf.P1_FIG_DIR, 'case_rain.png'), **SAVE_KWS)
     return fig, axarr
-
 
 
 def plot_snow_case(cases_s, save=SAVE_DEFAULT):
@@ -156,13 +188,13 @@ if __name__ == '__main__':
     #fig, _ = boxplot_t_comb_both(cc_r, cc_s)
     #fig.savefig(path.join(conf.P1_FIG_DIR, 't_tops.png'), **SAVE_KWS)
 
-    plot_cluster_centroids(cc_r.vpc)
-    plot_cluster_centroids(cc_s.vpc)
+    #plot_cluster_centroids(cc_r.vpc)
+    #plot_cluster_centroids(cc_s.vpc)
 
     #fig_r, axarr_r = plot_rain_case(cases_r)
     #fig_s, axarr_s = plot_snow_case(cases_s)
 
-    kdp_max = 0.2
+    #kdp_max = 0.2
     #plot_centroids_ensemble(cc_r, kdp_max=kdp_max, xlim_override=True)
     #plot_centroids_ensemble(cc_s, kdp_max=kdp_max, no_t=True)
     #plot_centroids_ensemble(cc_s, kdp_max=kdp_max, no_t=False)
@@ -170,5 +202,7 @@ if __name__ == '__main__':
     #plot_centroids_ensemble(cc_r, kdp_max=0.6)
     #plot_centroids_ensemble(cc_s, kdp_max=0.3)
 
+    plot_rain_case_poster(cases_r)
+    plot_snow_case_poster(cases_s)
 
 
