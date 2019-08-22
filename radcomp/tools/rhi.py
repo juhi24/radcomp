@@ -4,13 +4,17 @@
 Authors: Dmitri Moisseev and Jussi Tiira
 """
 
-import pyart
-import numpy as np
-import scipy.io as sio
 from glob import glob
 from os import path
 from datetime import datetime
+
+import pyart
+import numpy as np
+import pandas as pd
+import scipy.io as sio
+
 from radcomp.tools import db2lin, lin2db
+
 from j24 import eprint
 
 
@@ -62,18 +66,55 @@ def extract_radar_vars(radar, recalculate_kdp=True):
     return dict(zh=ZH, zdr=ZDR, kdp=KDP, rho=RHO, dp=DP)
 
 
-def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
-           fname_supl='IKA_vprhi', r_hyde=R_IKA_HYDE, overwrite=False):
+def scan_timestamp(radar):
+    """scan timestamp in minute resolution"""
+    median_ts = np.median(radar.time['data'])
+    return datetime.fromtimestamp(median_ts).replace(second=0)
+
+
+def filter_range(rdr_vars, r, r_poi, r_agg):
+    rvars = rdr_vars.copy()
+    rmin = r_poi - r_agg
+    rmax = r_poi + r_agg
+    for key in ['zh', 'zdr', 'kdp', 'rho']:
+        var = rvars[key]
+        var.set_fill_value(np.nan)
+        var.mask[r<=rmin] = True
+        var.mask[r>=rmax] = True
+        rvars.update({key: var.filled()})
+    return rvars
+
+
+def height(radar, r, r_poi):
+    dr = np.abs(r-r_poi)
+    ix = dr.argmin(axis=1)
+    return radar.gate_z['data'][range(ix.size),ix]
+
+
+def vrhi2vp(radar, r_poi=R_IKA_HYDE, agg_fun=np.nanmedian, r_agg=1e3):
+    calibration(radar, 'differential_reflectivity', 0.5)
+    calibration(radar, 'reflectivity', 3)
+    rdr_vars = extract_radar_vars(radar)
+    r = radar.gate_x['data'] # horizontal range
+    rdr_vars = filter_range(rdr_vars, r, r_poi, r_agg)
+    hght = height(radar, r, r_poi)
+    df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
+    return scan_timestamp(radar), df.drop('dp', axis=1)
+
+
+
+def rhi2vp(path_in, path_out, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
+           fname_supl='IKA_vprhi', r_poi=R_IKA_HYDE, overwrite=False):
     """Extract profiles and save as mat."""
     n_hbins = 297
     hbins = hbins or np.linspace(200, 15000, n_hbins)
-    files = np.sort(glob(path.join(pathIn, "*RHI_HV*.raw")))
+    files = np.sort(glob(path.join(path_in, "*RHI_HV*.raw")))
     nfile = len(files)
     init = np.full([nfile, n_hbins], np.nan)
     zh_vp, zdr_vp, kdp_vp, rho_vp, dp_vp = (init.copy() for i in range(5))
     ObsTime  = []
     time_filename = path.basename(files[0])[0:8]
-    fileOut = path.join(pathOut, time_filename + '_' + fname_supl + '.mat')
+    fileOut = path.join(path_out, time_filename + '_' + fname_supl + '.mat')
     if path.exists(fileOut) and not overwrite:
         print('{} [notice] file already exists, skipping.'.format(fileOut))
         return
@@ -93,20 +134,11 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
             eprint('{fname} [extract error] {e}'.format(fname=filename, e=e))
             continue
         r = radar.gate_x['data'] # horizontal range
-        rmin = r_hyde - r_agg
-        rmax = r_hyde + r_agg
-        for key in ['zh', 'zdr', 'kdp', 'rho']:
-            var = rdr_vars[key]
-            var.set_fill_value(np.nan)
-            var.mask[r<=rmin] = True
-            var.mask[r>=rmax] = True
-            rdr_vars.update({key: var.filled()})
-        #diff_r = np.abs(r[0,:] - r_hyde)
+        rdr_vars = filter_range(rdr_vars, r, r_poi, r_agg)
+        #diff_r = np.abs(r[0,:] - r_poi)
         #indx = diff_r.argmin()
         #hght = radar.gate_z['data'][:, indx]
-        dr = np.abs(r-r_hyde)
-        ix = dr.argmin(axis=1)
-        hght = radar.gate_z['data'][range(ix.size),ix]
+        hght = height(radar, r, r_poi)
 
         def agg_fun_db(x, **kws):
             """aggregation of db-scale variables"""
@@ -122,6 +154,6 @@ def rhi2vp(pathIn, pathOut, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
         tstr = path.basename(filename)[0:12]
         ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
     print(fileOut)
-    VP_RHI = {'ObsTime': ObsTime, 'ZH': zh_vp, 'ZDR': zdr_vp, 'KDP': kdp_vp,
+    vp_rhi = {'ObsTime': ObsTime, 'ZH': zh_vp, 'ZDR': zdr_vp, 'KDP': kdp_vp,
               'RHO': rho_vp, 'DP': dp_vp, 'height': hbins}
-    sio.savemat(fileOut, {'VP_RHI':VP_RHI})
+    sio.savemat(fileOut, {'VP_RHI': vp_rhi})

@@ -8,8 +8,10 @@ import pyart
 import numpy as np
 import matplotlib.pyplot as plt
 
+import radcomp.visualization as vis
 
-HYDE_AZIMUTH = 81.89208
+
+AZIM_IKA_HYDE = 81.89208
 
 
 def create_volume_scan(files):
@@ -23,11 +25,16 @@ def create_volume_scan(files):
     return r
 
 
-def plot_vrhi_vs_rhi(vrhi, rhi, field='reflectivity'):
+def plot_vrhi_vs_rhi(vrhi, rhi, field='ZH'):
     fig, axarr = plt.subplots(1, 2, figsize=(12, 5))
     vdisp = pyart.graph.RadarDisplay(vrhi)
     rhidisp = pyart.graph.RadarDisplay(rhi)
-    vkw = dict(vmin=-10, vmax=40)
+    vkw = dict(vmin=vis.VMINS[field], vmax=vis.VMAXS[field])
+    mapping = dict(ZH='reflectivity',
+                   KDP='specific_differential_phase',
+                   ZDR='differential reflectivity')
+    if field in mapping:
+        field = mapping[field]
     vdisp.plot(field, ax=axarr[0], **vkw)
     rhidisp.plot(field, ax=axarr[1], **vkw)
     for ax in axarr:
@@ -44,6 +51,6 @@ if __name__ == '__main__':
     files = glob(path.join(testdir, '*[A-F].raw'))
     files.sort()
     vr = create_volume_scan(files)
-    vrhi = pyart.util.cross_section_ppi(vr, [HYDE_AZIMUTH])
-    axarr = plot_vrhi_vs_rhi(vrhi, rhi)
+    vrhi = pyart.util.cross_section_ppi(vr, [AZIM_IKA_HYDE])
+    axarr = plot_vrhi_vs_rhi(vrhi, rhi, field='KDP')
 
