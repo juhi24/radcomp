@@ -19,6 +19,7 @@ from j24 import eprint
 
 
 R_IKA_HYDE = 64450 # m
+DB_SCALED_VARS = ('ZH', 'ZDR')
 
 
 def lin_agg(db, agg_fun=np.nanmean, **kws):
@@ -35,9 +36,10 @@ def calibration(radar, field_name, addition):
     radar.fields.update({field_name: field})
 
 
-def _interp(h_target, h_orig, var, agg_fun=np.nanmedian):
+def _interp(h_target, h_orig, var, agg_fun=np.nanmedian, **kws):
     """numpy.interp wrapper with aggregation on axis 1"""
-    var_agg = agg_fun(var, axis=1)
+    fun = agg_fun_chooser(agg_fun, **kws)
+    var_agg = fun(var, axis=1)
     return np.interp(h_target, h_orig, var_agg)
 
 
@@ -63,7 +65,7 @@ def extract_radar_vars(radar, recalculate_kdp=True):
         KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=ZH.mask)
     else:
         KDP = radar.fields['specific_differential_phase'].copy()['data']
-    return dict(zh=ZH, zdr=ZDR, kdp=KDP, rho=RHO, dp=DP)
+    return dict(ZH=ZH, ZDR=ZDR, KDP=KDP, RHO=RHO, DP=DP)
 
 
 def scan_timestamp(radar):
@@ -76,7 +78,7 @@ def filter_range(rdr_vars, r, r_poi, r_agg):
     rvars = rdr_vars.copy()
     rmin = r_poi - r_agg
     rmax = r_poi + r_agg
-    for key in ['zh', 'zdr', 'kdp', 'rho']:
+    for key in ['ZH', 'ZDR', 'KDP', 'RHO']:
         var = rvars[key]
         var.set_fill_value(np.nan)
         var.mask[r<=rmin] = True
@@ -91,27 +93,53 @@ def height(radar, r, r_poi):
     return radar.gate_z['data'][range(ix.size),ix]
 
 
-def vrhi2vp(radar, r_poi=R_IKA_HYDE, agg_fun=np.nanmedian, r_agg=1e3):
+def vrhi2vp(radar, **kws):
+    rdr_vars, hght = rhi_preprocess(radar, **kws)
+    df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
+    return scan_timestamp(radar), df
+
+
+def rhi_preprocess(radar, r_poi=R_IKA_HYDE, r_agg=1e3):
     calibration(radar, 'differential_reflectivity', 0.5)
     calibration(radar, 'reflectivity', 3)
-    rdr_vars = extract_radar_vars(radar)
+    try: # extracting variables
+        fix_elevation(radar)
+        rdr_vars = extract_radar_vars(radar)
+    except Exception as e:
+        eprint('[extract error] {e}'.format(e=e))
+        return None, None
     r = radar.gate_x['data'] # horizontal range
     rdr_vars = filter_range(rdr_vars, r, r_poi, r_agg)
     hght = height(radar, r, r_poi)
-    df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
-    return scan_timestamp(radar), df.drop('dp', axis=1)
+    return rdr_vars, hght
 
 
+def agg_fun_chooser(agg_fun, db_scale=False):
+    """aggregation of db-scale variables"""
+    if (agg_fun == np.nanmedian) or not db_scale:
+        return agg_fun
+    return lambda x: lin_agg(x, agg_fun=agg_fun)
 
-def rhi2vp(path_in, path_out, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
-           fname_supl='IKA_vprhi', r_poi=R_IKA_HYDE, overwrite=False):
+
+def rhi2vp(radar, n_hbins=None, hbins=None, agg_fun=np.nanmedian, **kws):
+    hbins = hbins or np.linspace(200, 15000, n_hbins)
+    rdr_vars, hght = rhi_preprocess(radar, **kws)
+    if hght is None:
+        return None, None
+    rvars = dict()
+    for key in rdr_vars.keys():
+        db_scale = key in DB_SCALED_VARS
+        rvars[key] = _interp(hbins, hght, rdr_vars[key], agg_fun,
+                             db_scale=db_scale)
+    df = pd.DataFrame(index=hbins, data=rvars)
+    return scan_timestamp(radar), df
+
+
+def mat_workflow(path_in, path_out, agg_fun=np.nanmedian,
+           fname_supl='IKA_vprhi', overwrite=False, **kws):
     """Extract profiles and save as mat."""
     n_hbins = 297
-    hbins = hbins or np.linspace(200, 15000, n_hbins)
     files = np.sort(glob(path.join(path_in, "*RHI_HV*.raw")))
-    nfile = len(files)
-    init = np.full([nfile, n_hbins], np.nan)
-    zh_vp, zdr_vp, kdp_vp, rho_vp, dp_vp = (init.copy() for i in range(5))
     ObsTime  = []
     time_filename = path.basename(files[0])[0:8]
     fileOut = path.join(path_out, time_filename + '_' + fname_supl + '.mat')
@@ -125,35 +153,12 @@ def rhi2vp(path_in, path_out, hbins=None, agg_fun=np.nanmedian, r_agg=1e3,
         except Exception as e:
             eprint('{fname} [read error] {e}'.format(fname=filename, e=e))
             continue
-        calibration(radar, 'differential_reflectivity', 0.5)
-        calibration(radar, 'reflectivity', 3)
-        try: # extracting variables
-            fix_elevation(radar)
-            rdr_vars = extract_radar_vars(radar)
-        except Exception as e:
-            eprint('{fname} [extract error] {e}'.format(fname=filename, e=e))
+        ts, df = rhi2vp(radar, n_hbins=n_hbins)
+        if ts is None:
             continue
-        r = radar.gate_x['data'] # horizontal range
-        rdr_vars = filter_range(rdr_vars, r, r_poi, r_agg)
-        #diff_r = np.abs(r[0,:] - r_poi)
-        #indx = diff_r.argmin()
-        #hght = radar.gate_z['data'][:, indx]
-        hght = height(radar, r, r_poi)
-
-        def agg_fun_db(x, **kws):
-            """aggregation of db-scale variables"""
-            if agg_fun == np.nanmedian:
-                return agg_fun(x, **kws)
-            return lin_agg(x, agg_fun=agg_fun, **kws)
-        zh_vp[file_indx,:]  = _interp(hbins, hght, rdr_vars['zh'], agg_fun_db)
-        zdr_vp[file_indx,:] = _interp(hbins, hght, rdr_vars['zdr'], agg_fun_db)
-        kdp_vp[file_indx,:] = _interp(hbins, hght, rdr_vars['kdp'], agg_fun)
-        rho_vp[file_indx,:] = _interp(hbins, hght, rdr_vars['rho'], agg_fun)
-        dp_vp[file_indx,:]  = _interp(hbins, hght, rdr_vars['dp'], agg_fun)
-
         tstr = path.basename(filename)[0:12]
         ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
     print(fileOut)
-    vp_rhi = {'ObsTime': ObsTime, 'ZH': zh_vp, 'ZDR': zdr_vp, 'KDP': kdp_vp,
-              'RHO': rho_vp, 'DP': dp_vp, 'height': hbins}
+    vp_rhi = {'ObsTime': ObsTime, 'height': df.index.values}
+    vp_rhi.update(df.to_dict(orient='list'))
     sio.savemat(fileOut, {'VP_RHI': vp_rhi})

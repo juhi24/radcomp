@@ -3,7 +3,7 @@
 import pandas as pd
 from os import path
 from datetime import datetime
-from radcomp.tools.rhi import rhi2vp
+from radcomp.tools.rhi import mat_workflow
 
 
 DATE_FMT = '%Y%m%d%H%M'
@@ -32,5 +32,5 @@ if __name__ == '__main__':
     files = read_filelist(listfile)
     for dirname in files.dirname.unique():
         datadir = path.join(datapath, dirname)
-        rhi2vp(datadir, resultsdir)
+        mat_workflow(datadir, resultsdir)
 
