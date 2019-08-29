@@ -334,6 +334,11 @@ class Case:
     def timedelta(self, timedelta):
         self._timedelta = timedelta
 
+    def dataset(self):
+        """data Panel as xarray DataSet"""
+        mapping = dict(major_axis='height', minor_axis='time')
+        return self.data.to_xarray().to_dataset(dim='items').rename(mapping)
+
     def only_data_above_ml(self, data=None):
         """Data above ml"""
         if data is None:
