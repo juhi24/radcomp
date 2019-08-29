@@ -6,7 +6,7 @@ Authors: Dmitri Moisseev and Jussi Tiira
 
 from glob import glob
 from os import path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pyart
 import numpy as np
@@ -70,8 +70,10 @@ def extract_radar_vars(radar, recalculate_kdp=True):
 
 def scan_timestamp(radar):
     """scan timestamp in minute resolution"""
+    t_start = radar.time['units'].split(' ')[-1]
     median_ts = np.median(radar.time['data'])
-    return datetime.fromtimestamp(median_ts).replace(second=0)
+    t = pd.to_datetime(t_start) + timedelta(seconds=median_ts)
+    return t.replace(second=0, microsecond=0).to_datetime64()
 
 
 def filter_range(rdr_vars, r, r_poi, r_agg):
@@ -99,6 +101,11 @@ def vrhi2vp(radar, **kws):
     """Extract vertical profile from volume scan slice."""
     rdr_vars, hght = rhi_preprocess(radar, **kws)
     df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
+    df.index.name = 'height'
+    h = np.array([580, 1010, 1950, 3650, 5950, 10550])
+    if np.linalg.norm(df.index.values-h) > 50:
+        raise ValueError('Altitudes do not match preset values.')
+    df.index = h
     return scan_timestamp(radar), df
 
 
@@ -140,8 +147,12 @@ def agg_fun_chooser(agg_fun, db_scale=False):
     return lambda x: lin_agg(x, agg_fun=agg_fun)
 
 
-def mat_workflow(path_in, path_out, agg_fun=np.nanmedian,
-           fname_supl='IKA_vprhi', overwrite=False, **kws):
+def xarray_workflow(path_in, path_out):
+    return
+
+
+def mat_workflow(path_in, path_out, fname_supl='IKA_vprhi', overwrite=False,
+                 **kws):
     """Extract profiles and save as mat."""
     n_hbins = 297
     files = np.sort(glob(path.join(path_in, "*RHI_HV*.raw")))
