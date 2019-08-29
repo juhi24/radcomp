@@ -44,6 +44,7 @@ def date_us_fmt(t_start, t_end, dtformat='{day} {month} {year}', day_fmt='%d',
 
 def vprhimat2pn(datapath):
     """Read vertical profile mat files to Panel."""
+    # TODO: Panel
     try:
         data = loadmat(datapath)['VP_RHI']
     except FileNotFoundError as e:

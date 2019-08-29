@@ -75,6 +75,8 @@ def scan_timestamp(radar):
 
 
 def filter_range(rdr_vars, r, r_poi, r_agg):
+    """Discard all data that is not within a range from a distance of interest.
+    """
     rvars = rdr_vars.copy()
     rmin = r_poi - r_agg
     rmax = r_poi + r_agg
@@ -94,12 +96,29 @@ def height(radar, r, r_poi):
 
 
 def vrhi2vp(radar, **kws):
+    """Extract vertical profile from volume scan slice."""
     rdr_vars, hght = rhi_preprocess(radar, **kws)
     df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
     return scan_timestamp(radar), df
 
 
+def rhi2vp(radar, n_hbins=None, hbins=None, agg_fun=np.nanmedian, **kws):
+    hbins = hbins or np.linspace(200, 15000, n_hbins)
+    """Extract vertical profile from RHI."""
+    rdr_vars, hght = rhi_preprocess(radar, **kws)
+    if hght is None:
+        return None, None
+    rvars = dict()
+    for key in rdr_vars.keys():
+        db_scale = key in DB_SCALED_VARS
+        rvars[key] = _interp(hbins, hght, rdr_vars[key], agg_fun,
+                             db_scale=db_scale)
+    df = pd.DataFrame(index=hbins, data=rvars)
+    return scan_timestamp(radar), df
+
+
 def rhi_preprocess(radar, r_poi=R_IKA_HYDE, r_agg=1e3):
+    """Process RHI data for aggregation."""
     calibration(radar, 'differential_reflectivity', 0.5)
     calibration(radar, 'reflectivity', 3)
     try: # extracting variables
@@ -119,20 +138,6 @@ def agg_fun_chooser(agg_fun, db_scale=False):
     if (agg_fun == np.nanmedian) or not db_scale:
         return agg_fun
     return lambda x: lin_agg(x, agg_fun=agg_fun)
-
-
-def rhi2vp(radar, n_hbins=None, hbins=None, agg_fun=np.nanmedian, **kws):
-    hbins = hbins or np.linspace(200, 15000, n_hbins)
-    rdr_vars, hght = rhi_preprocess(radar, **kws)
-    if hght is None:
-        return None, None
-    rvars = dict()
-    for key in rdr_vars.keys():
-        db_scale = key in DB_SCALED_VARS
-        rvars[key] = _interp(hbins, hght, rdr_vars[key], agg_fun,
-                             db_scale=db_scale)
-    df = pd.DataFrame(index=hbins, data=rvars)
-    return scan_timestamp(radar), df
 
 
 def mat_workflow(path_in, path_out, agg_fun=np.nanmedian,
