@@ -19,6 +19,7 @@ from j24 import eprint
 
 
 R_IKA_HYDE = 64450 # m
+AZIM_IKA_HYDE = 81.89208 # deg
 DB_SCALED_VARS = ('ZH', 'ZDR')
 
 
@@ -147,15 +148,40 @@ def agg_fun_chooser(agg_fun, db_scale=False):
     return lambda x: lin_agg(x, agg_fun=agg_fun)
 
 
-def xarray_workflow(path_in, path_out):
-    return
+def create_volume_scan(files):
+    """volume scan from multiple radar data files"""
+    r = None
+    for f in files:
+        if r is None:
+            r = pyart.io.read(f)
+            continue
+        r = pyart.util.join_radar(r, pyart.io.read(f))
+    return r
 
 
-def mat_workflow(path_in, path_out, fname_supl='IKA_vprhi', overwrite=False,
+def xarray_workflow(dir_in):
+    """Extract profiles from volume scans as xarray Dataset."""
+    fnames = pd.Series(glob(path.join(dir_in, '*PPI3_[A-F].raw')))
+    tstrs = fnames.apply(lambda s: s[-27:-15])
+    g = fnames.groupby(tstrs)
+    vrhis = dict()
+    for tstr, df in g:
+        print(tstr)
+        df.sort_values(inplace=True)
+        vs = create_volume_scan(df)
+        vrhi = pyart.util.cross_section_ppi(vs, [AZIM_IKA_HYDE])
+        t, vp = vrhi2vp(vrhi)
+        vrhis[t] = vp
+    df = pd.concat(vrhis)
+    df.index.rename(['time', 'height'], inplace=True)
+    return df.to_xarray()
+
+
+def mat_workflow(dir_in, path_out, fname_supl='IKA_vprhi', overwrite=False,
                  **kws):
     """Extract profiles and save as mat."""
     n_hbins = 297
-    files = np.sort(glob(path.join(path_in, "*RHI_HV*.raw")))
+    files = np.sort(glob(path.join(dir_in, "*RHI_HV*.raw")))
     ObsTime  = []
     time_filename = path.basename(files[0])[0:8]
     fileOut = path.join(path_out, time_filename + '_' + fname_supl + '.mat')
