@@ -62,6 +62,7 @@ def extract_radar_vars(radar, recalculate_kdp=True):
             kdp_m = pyart.retrieve.kdp_maesaka(radar)
         except IndexError:
             # outlier checking sometimes causes trouble (with weak kdp?)
+            eprint('Skipping outlier check.')
             kdp_m = pyart.retrieve.kdp_maesaka(radar, check_outliers=False)
         KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=ZH.mask)
     else:
@@ -98,14 +99,17 @@ def height(radar, r, r_poi):
     return radar.gate_z['data'][range(ix.size),ix]
 
 
-def vrhi2vp(radar, **kws):
+def vrhi2vp(radar, h_thresh=60, **kws):
     """Extract vertical profile from volume scan slice."""
     rdr_vars, hght = rhi_preprocess(radar, **kws)
+    # TODO: Panel
     df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
     df.index.name = 'height'
     h = np.array([580, 1010, 1950, 3650, 5950, 10550])
-    if np.linalg.norm(df.index.values-h) > 50:
-        raise ValueError('Altitudes do not match preset values.')
+    h_norm = np.linalg.norm(df.index.values-h)
+    if h_norm > h_thresh:
+        efmt = 'Altitudes do not match preset values: {} > {}'
+        raise ValueError(efmt.format(h_norm, h_thresh))
     df.index = h
     return scan_timestamp(radar), df
 
@@ -125,13 +129,13 @@ def rhi2vp(radar, n_hbins=None, hbins=None, agg_fun=np.nanmedian, **kws):
     return scan_timestamp(radar), df
 
 
-def rhi_preprocess(radar, r_poi=R_IKA_HYDE, r_agg=1e3):
+def rhi_preprocess(radar, r_poi=R_IKA_HYDE, r_agg=1e3, **kws):
     """Process RHI data for aggregation."""
     calibration(radar, 'differential_reflectivity', 0.5)
     calibration(radar, 'reflectivity', 3)
     try: # extracting variables
         fix_elevation(radar)
-        rdr_vars = extract_radar_vars(radar)
+        rdr_vars = extract_radar_vars(radar, **kws)
     except Exception as e:
         eprint('[extract error] {e}'.format(e=e))
         return None, None
@@ -159,7 +163,7 @@ def create_volume_scan(files):
     return r
 
 
-def xarray_workflow(dir_in):
+def xarray_workflow(dir_in, dir_out=None, **kws):
     """Extract profiles from volume scans as xarray Dataset."""
     fnames = pd.Series(glob(path.join(dir_in, '*PPI3_[A-F].raw')))
     tstrs = fnames.apply(lambda s: s[-27:-15])
@@ -170,21 +174,26 @@ def xarray_workflow(dir_in):
         df.sort_values(inplace=True)
         vs = create_volume_scan(df)
         vrhi = pyart.util.cross_section_ppi(vs, [AZIM_IKA_HYDE])
-        t, vp = vrhi2vp(vrhi)
+        t, vp = vrhi2vp(vrhi, **kws)
         vrhis[t] = vp
     df = pd.concat(vrhis)
     df.index.rename(['time', 'height'], inplace=True)
-    return df.to_xarray()
+    ds = df.to_xarray()
+    if dir_out is not None:
+        t = ds.time.values[0]
+        fname = pd.to_datetime(t).strftime('%Y%m%d_IKA_vpvol.nc')
+        ds.to_netcdf(path.join(dir_out, fname))
+    return ds
 
 
-def mat_workflow(dir_in, path_out, fname_supl='IKA_vprhi', overwrite=False,
+def mat_workflow(dir_in, dir_out, fname_supl='IKA_vprhi', overwrite=False,
                  **kws):
     """Extract profiles and save as mat."""
     n_hbins = 297
     files = np.sort(glob(path.join(dir_in, "*RHI_HV*.raw")))
     ObsTime  = []
     time_filename = path.basename(files[0])[0:8]
-    fileOut = path.join(path_out, time_filename + '_' + fname_supl + '.mat')
+    fileOut = path.join(dir_out, time_filename + '_' + fname_supl + '.mat')
     if path.exists(fileOut) and not overwrite:
         print('{} [notice] file already exists, skipping.'.format(fileOut))
         return
