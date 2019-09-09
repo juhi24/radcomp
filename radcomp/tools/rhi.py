@@ -12,6 +12,7 @@ import pyart
 import numpy as np
 import pandas as pd
 import scipy.io as sio
+import matplotlib.pyplot as plt
 
 from radcomp.tools import db2lin, lin2db
 
@@ -51,7 +52,7 @@ def fix_elevation(radar):
            radar.elevation['data'][i] = 0.0
 
 
-def extract_radar_vars(radar, recalculate_kdp=True):
+def extract_radar_vars(radar, recalculate_kdp=True, **kws):
     """Extract radar variables."""
     ZH  = radar.fields['reflectivity'].copy()['data']
     ZDR = radar.fields['differential_reflectivity'].copy()['data']
@@ -59,12 +60,13 @@ def extract_radar_vars(radar, recalculate_kdp=True):
     DP = radar.fields['differential_phase'].copy()['data']
     if recalculate_kdp:
         try:
-            kdp_m = pyart.retrieve.kdp_maesaka(radar)
+            kdp_m = pyart.retrieve.kdp_maesaka(radar, **kws)
         except IndexError:
             # outlier checking sometimes causes trouble (with weak kdp?)
             eprint('Skipping outlier check.')
-            kdp_m = pyart.retrieve.kdp_maesaka(radar, check_outliers=False)
-        KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=ZH.mask)
+            kdp_m = pyart.retrieve.kdp_maesaka(radar, check_outliers=False,
+                                               **kws)
+        KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=DP.mask)
     else:
         KDP = radar.fields['specific_differential_phase'].copy()['data']
     return dict(ZH=ZH, ZDR=ZDR, KDP=KDP, RHO=RHO, DP=DP)
@@ -99,9 +101,22 @@ def height(radar, r, r_poi):
     return radar.gate_z['data'][range(ix.size),ix]
 
 
-def vrhi2vp(radar, h_thresh=60, **kws):
+def plot_compare_kdp(vrhi):
+    mask = vrhi.fields['differential_phase']['data'].mask
+    kdp = pyart.retrieve.kdp_maesaka(vrhi, Clpf=5000)[0]
+    kdp['data'] = np.ma.masked_array(data=kdp['data'], mask=mask)
+    vrhi.fields['kdp'] = kdp
+    fig, axarr = plt.subplots(ncols=2, figsize=(12,5))
+    disp = pyart.graph.RadarDisplay(vrhi)
+    disp.plot('specific_differential_phase', vmin=0, vmax=0.3, ax=axarr[0], cmap='viridis')
+    disp.plot('kdp', vmin=0, vmax=0.3, ax=axarr[1])
+    return disp, axarr
+
+
+def vrhi2vp(radar, h_thresh=60, Clpf=5000, **kws):
     """Extract vertical profile from volume scan slice."""
-    rdr_vars, hght = rhi_preprocess(radar, **kws)
+    #plot_compare_kdp(radar)
+    rdr_vars, hght = rhi_preprocess(radar, Clpf=Clpf, **kws)
     # TODO: Panel
     df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
     df.index.name = 'height'

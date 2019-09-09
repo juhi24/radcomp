@@ -43,16 +43,10 @@ if __name__ == '__main__':
     vrhi = pyart.util.cross_section_ppi(vr, [rhi.AZIM_IKA_HYDE])
     #axarr = plot_vrhi_vs_rhi(vrhi, rrhi, field='KDP')
     #filedir = path.join(hdd, 'test_volscan3')
-#    filedir = path.join(hdd, 'IKA_final', '20140221')
-#    outdir = ensure_dir(path.expanduser('~/DATA/vpvol'))
-#    ds = rhi.xarray_workflow(filedir, dir_out=None, recalculate_kdp=False)
-#    plt.figure()
-#    ds.KDP.T.plot()
-    kdp = pyart.retrieve.kdp_maesaka(vrhi, Clpf=5000)[0]
-    kdp['data'] = np.ma.masked_array(data=kdp['data'], mask=vrhi.fields['differential_phase']['data'].mask)
-    vrhi.fields['kdp'] = kdp
-    fig, axarr = plt.subplots(ncols=2, figsize=(12,5))
-    disp = pyart.graph.RadarDisplay(vrhi)
-    disp.plot('specific_differential_phase', vmin=0, vmax=0.3, ax=axarr[0], cmap='viridis')
-    disp.plot('kdp', vmin=0, vmax=0.3, ax=axarr[1])
+    filedir = path.join(hdd, 'IKA_final', '20140221')
+    outdir = ensure_dir(path.expanduser('~/DATA/vpvol'))
+    ds = rhi.xarray_workflow(filedir, dir_out=None, recalculate_kdp=True)
+    plt.figure()
+    ds.KDP.T.plot(vmax=0.3)
+    #rhi.plot_compare_kdp(vrhi)
 
