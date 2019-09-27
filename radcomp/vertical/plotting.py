@@ -207,8 +207,7 @@ def field_gamma(field):
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 110},
            n_ax_shift=0, has_ml=False, cmap_override={}, lim_override=False,
-           hlims=(0, 10e3),
-           **kws):
+           hlims=(0, 10e3), **kws):
     """Plot Panel of VPs"""
     if fields is None:
         fields = pn.items

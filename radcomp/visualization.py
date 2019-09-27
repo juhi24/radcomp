@@ -5,10 +5,12 @@ import matplotlib.pyplot as plt
 
 VMINS = {'ZH': -10, 'ZDR': -0.25, 'RHO': 0.8, 'KDP': 0, 'DP': 0, 'PHIDP': 0,
          'R': 0.05, 'MLI': 0, 'ML': 0, 'RH': 0.9, 'LR': -0.5, 'KDPG': -8,
-         'ZDRG': -0.1, 'OMEGA': -2, 'T': -30}
+         'ZDRG': -0.1, 'OMEGA': -2, 'T': -30, 'ZHC': -6, 'ZDRC': -0.6,
+         'KDPC': -0.06}
 VMAXS = {'ZH': 35, 'ZDR': 2, 'RHO': 1, 'KDP': 0.3, 'DP': 360, 'PHIDP': 30,
          'R': 16, 'MLI': 10, 'ML': 1, 'RH': 1, 'LR': 0.5, 'KDPG': 8,
-         'ZDRG': 0.1, 'OMEGA': 2, 'T': 5}
+         'ZDRG': 0.1, 'OMEGA': 2, 'T': 5, 'ZHC': 6, 'ZDRC': 0.6,
+         'KDPC': 0.06}
 VMINS_RAIN = {}
 VMAXS_RAIN = {'KDP': 0.5, 'ZDR': 2}
 VMINS_NARROW = {}
@@ -28,7 +30,10 @@ LABELS = {'ZH': '$Z_{e}$, dBZ',
           'KDPG': '$K_{dp}$ gradient',
           'ZDRG': '$Z_{dr}$ gradient',
           'OMEGA': '$\omega$, Pa/s',
-          'T': '$T$, $^{\circ}$C'}
+          'T': '$T$, $^{\circ}$C',
+          'ZHC': '$Z_{e}$, dBZ', # TODO
+          'ZDRC': '$Z_{dr}$, dB',
+          'KDPC': '$K_{dp}$, $^{\circ}$ km$^{-1}$'}
 
 
 def plot_base(r, lon=None, lat=None, fig=None, ax=None, vmin=0.05, vmax=10,

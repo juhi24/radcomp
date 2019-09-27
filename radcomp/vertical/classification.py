@@ -160,6 +160,20 @@ def plot_cluster_centroids(vpc, colorful_bars='blue', order=None,
     return fig, axarr, order_out
 
 
+def extract_components(vpc):
+    trs = vpc.transformers
+    comp = pd.DataFrame(vpc.pca.components_).T
+    comps = np.array_split(comp, 3)
+    compd = {k:v for k, v in zip(vpc.params, comps)}
+    d = {}
+    for key in vpc.params:
+        df = pd.DataFrame(trs[key].inverse_transform(compd[key]))
+        df.index = vpc.height_index
+        d[key] = df
+    d['zh'] += 10
+    return pd.Panel(d)
+
+
 class VPC:
     """
     vertical profile classification scheme
@@ -255,7 +269,7 @@ class VPC:
         for field, df in scaled.iteritems():
             tr = self.transformers[field]
             if inverse:
-                scaled[field] = tr.inverse_transform(df.T).T
+                scaled[field] = tr.inverse_transform(df)
             else:
                 scaled[field] = tr.fit_transform(df)
         return scaled
