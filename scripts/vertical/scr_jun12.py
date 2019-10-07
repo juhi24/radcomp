@@ -11,7 +11,7 @@ if __name__ == '__main__':
     plt.close('all')
     cases = multicase.read_cases('jun12')
     c = cases.case.iloc[0]
-    c.load_classification(conf.SCHEME_ID_MELT)
+    c.load_classification(conf.SCHEME_ID_RAIN)
     #c.plot(params=['zdr', 'rho', 'zh', 'MLI'], interactive=False)
     c.load_model_data(variable='omega')
     fig, axarr = c.plot(params=['kdp', 'kdpg', 'zdr', 'zh', 'omega'],

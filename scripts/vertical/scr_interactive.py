@@ -12,9 +12,9 @@ if __name__ == '__main__':
     plt.ion()
     #plt.close('all')
     rain_season = True
-    case_set = conf.CASES_MELT if rain_season else conf.CASES_SNOW
+    case_set = conf.CASES_RAIN if rain_season else conf.CASES_SNOW
     #case_set = 'tmp'
-    name = conf.SCHEME_ID_MELT if rain_season else conf.SCHEME_ID_SNOW
+    name = conf.SCHEME_ID_RAIN if rain_season else conf.SCHEME_ID_SNOW
     #name = 'snow_t08_kdp17_18eig19clus_pca'
     cases = conf.init_cases(cases_id=case_set)
     for i, c in cases.case.iteritems():
