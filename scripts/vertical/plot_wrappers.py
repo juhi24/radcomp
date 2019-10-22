@@ -66,13 +66,13 @@ def plot_snow_case_poster(cases_s, save=SAVE_DEFAULT):
     return fig, axarr
 
 
-def plot_rain_case(cases_r, save=SAVE_DEFAULT):
+def plot_rain_case(cases_r, save=SAVE_DEFAULT, **kws):
     c = cases_r.loc['140812T02'].case
     fig, axarr = c.plot(params=['kdp', 'zh', 'zdr'],
                         n_extra_ax=0, plot_extras=['silh', 'cl'],
                         t_contour_ax_ind='all',
                         t_levels=[-40, -20, -10, -8, -3],
-                        fig_scale_factor=0.75)
+                        fig_scale_factor=0.75, **kws)
     formatter = plotting.concise_formatter()
     axarr[-1].xaxis.set_major_formatter(formatter)
     if save:
