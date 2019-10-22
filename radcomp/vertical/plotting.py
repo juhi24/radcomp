@@ -158,13 +158,23 @@ def _pn_fig(fig_scale_factor, n_rows, fig_h_factor=1.1, fig_w_factor=1,
     return plt.figure(figsize=(fw, fh), **fig_kws)
 
 
-def _pn_gs(fig_scale_factor, n_rows):
+def _pn_gs(fig_scale_factor, n_rows, left_extra=0):
     """Initialize gridspec for plotpn."""
-    left = 0.1*(11/(10+fig_scale_factor))
+    left = 0.1*(11/(10+fig_scale_factor)) + left_extra
     right = 0.905*(10+fig_scale_factor)/11
+    top = 1-0.22/n_rows
+    bottom = 0.35/n_rows
     return mpl.gridspec.GridSpec(n_rows, 2, width_ratios=(35, 1), wspace=0.02,
-                                 top=1-0.22/n_rows, bottom=0.35/n_rows,
+                                 top=top, bottom=bottom,
                                  left=left, right=right)
+
+
+def _gs_extra(fig_scale_factor, n_rows, right=0.14):
+    left = 0.07*(11/(10+fig_scale_factor))
+    top = 1-0.22/n_rows
+    bottom = 0.35/n_rows
+    return mpl.gridspec.GridSpec(n_rows, 1, left=left, right=right,
+                                 top=top, bottom=bottom)
 
 
 def _pn_scalekws(field, scaled, has_ml):
@@ -207,13 +217,13 @@ def field_gamma(field):
 def plotpn(pn, fields=None, scaled=False, cmap='pyart_RefDiff', n_extra_ax=0,
            x_is_date=True, fig_scale_factor=0.65, fig_kws={'dpi': 110},
            n_ax_shift=0, has_ml=False, cmap_override={}, lim_override=False,
-           hlims=(0, 10e3), **kws):
+           hlims=(0, 10e3), gs_kws={}, **kws):
     """Plot Panel of VPs"""
     if fields is None:
         fields = pn.items
     n_rows = len(fields) + n_extra_ax
     fig = _pn_fig(fig_scale_factor, n_rows, **fig_kws)
-    gs = _pn_gs(fig_scale_factor, n_rows)
+    gs = _pn_gs(fig_scale_factor, n_rows, **gs_kws)
     axarr = []
     h = -1
     # coordinate string formatting
@@ -629,3 +639,22 @@ def lineboxplot(dat, rain_season, color='blue', cen=None):
     plot_vps_betweenx(q1, q3, alpha=0.5, label='50%', color2='dimgrey', **kws)
     axarr[-1].legend()
     return axarr
+
+
+def cl_colorbar(vpc, ax, title='', label='', **kws):
+    """VPC colorbar with colors of each class"""
+    vals = vpc.precip_classes()
+    labels = np.array(vpc.class_labels())[vals]
+    colors = [vpc.class_color(cl) for cl in vpc.precip_classes()]
+    cmap = mpl.colors.ListedColormap(colors)
+    bounds = np.array(list(vals)+[vals[-1]+1]) - 0.5
+    norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm, boundaries=bounds,
+                                   ticks=vals, ticklocation='left', **kws)
+    cb.set_ticklabels(labels)
+    if label:
+        cb.set_label(label)
+    if title:
+        fontdict = dict(size=10)
+        ax.set_title(title, loc='right', fontdict=fontdict)
+    return cb
