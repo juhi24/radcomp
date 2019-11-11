@@ -67,28 +67,42 @@ def plot_snow_case_poster(cases_s, save=SAVE_DEFAULT):
 
 
 def plot_rain_case(cases_r, save=SAVE_DEFAULT, **kws):
+    split = 0.14
+    gs_kws = dict(left_extra=split)
     c = cases_r.loc['140812T02'].case
+    fig_kws = dict(fig_w_factor=1.2)
     fig, axarr = c.plot(params=['kdp', 'zh', 'zdr'],
                         n_extra_ax=0, plot_extras=['silh', 'cl'],
                         t_contour_ax_ind='all',
                         t_levels=[-40, -20, -10, -8, -3],
-                        fig_scale_factor=0.75, **kws)
+                        fig_scale_factor=0.75, gs_kws=gs_kws, fig_kws=fig_kws,
+                        **kws)
     formatter = plotting.concise_formatter()
     axarr[-1].xaxis.set_major_formatter(formatter)
+    gs = plotting._gs_extra(1, 4, right=split*0.7)
+    ax = fig.add_subplot(gs[1:3])
+    plotting.cl_colorbar(c.vpc, ax, title='Class\nID')
     if save:
         fig.savefig(path.join(conf.P1_FIG_DIR, 'case_rain.png'), **SAVE_KWS)
     return fig, axarr
 
 
-def plot_snow_case(cases_s, save=SAVE_DEFAULT):
+def plot_snow_case(cases_s, save=SAVE_DEFAULT, **kws):
+    split = 0.14
+    gs_kws = dict(left_extra=split)
     c = cases_s.loc['140215T17-16T02'].case
+    fig_kws = dict(fig_w_factor=1.2)
     fig, axarr = c.plot(params=['kdp', 'zh', 'zdr'],
                         n_extra_ax=0, plot_extras=['ts', 'silh', 'cl'],
                         t_contour_ax_ind='all',
                         t_levels=[-40, -20, -10, -8, -3],
-                        fig_scale_factor=0.75)
+                        fig_scale_factor=0.75, gs_kws=gs_kws, fig_kws=fig_kws,
+                        **kws)
     formatter = plotting.concise_formatter()
     axarr[-1].xaxis.set_major_formatter(formatter)
+    gs = plotting._gs_extra(1, 5, right=split*0.7)
+    ax = fig.add_subplot(gs[1:4])
+    plotting.cl_colorbar(c.vpc, ax, title='Class\nID')
     if save:
         fig.savefig(path.join(conf.P1_FIG_DIR, 'case_snow.png'), **SAVE_KWS)
     return fig, axarr
@@ -202,7 +216,10 @@ if __name__ == '__main__':
     #plot_centroids_ensemble(cc_r, kdp_max=0.6)
     #plot_centroids_ensemble(cc_s, kdp_max=0.3)
 
-    plot_rain_case_poster(cases_r)
-    plot_snow_case_poster(cases_s)
+    #plot_rain_case_poster(cases_r)
+    #plot_snow_case_poster(cases_s)
+
+    plot_rain_case(cases_r)
+    plot_snow_case(cases_s)
 
 
