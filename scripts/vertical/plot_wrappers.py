@@ -6,7 +6,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-from radcomp.vertical import plotting, RESULTS_DIR
+from radcomp.vertical import plotting, classification, RESULTS_DIR
 
 from j24 import ensure_join
 
@@ -192,6 +192,23 @@ def plot_centroids_ensemble(cc, kdp_max=None, no_t=False, **kws):
     return axarrlist
 
 
+def plot_n_components(cc, n, save=SAVE_DEFAULT):
+    vpc = cc.vpc
+    comp = classification.extract_components(vpc)
+    comp.minor_axis += .5
+    n_first_comp = comp.loc[:,:,:n]
+    fig, axarr = plotting.plotpn(n_first_comp, x_is_date=False,
+                                 has_ml=cc.has_ml, cmap='RdBu_r')
+    seasonchar = 'R' if cc.has_ml else 'S'
+    titlefmt = 'The first {n} PCA components of the {char}-model'
+    fig.suptitle(titlefmt.format(n=n, char=seasonchar))
+    axarr[-1].set_xlabel('component')
+    if save:
+        season = 'rain' if cc.has_ml else 'snow'
+        fname = 'comp_{}.png'.format(season)
+        fig.savefig(path.join(conf.P1_FIG_DIR, fname), **SAVE_KWS)
+    return fig, axarr
+
 
 if __name__ == '__main__':
     plt.ioff()
@@ -219,7 +236,10 @@ if __name__ == '__main__':
     #plot_rain_case_poster(cases_r)
     #plot_snow_case_poster(cases_s)
 
-    plot_rain_case(cases_r)
-    plot_snow_case(cases_s)
+    #plot_rain_case(cases_r)
+    #plot_snow_case(cases_s)
+
+    for cc in [cc_r, cc_s]:
+        plot_n_components(cc, n=8)
 
 

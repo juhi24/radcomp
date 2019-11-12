@@ -169,8 +169,8 @@ def extract_components(vpc):
     for key in vpc.params:
         df = pd.DataFrame(trs[key].inverse_transform(compd[key]))
         df.index = vpc.height_index
-        d[key] = df
-    d['zh'] += 10
+        d[key+'c'] = df
+    d['zhc'] += 10
     return pd.Panel(d)
 
 
