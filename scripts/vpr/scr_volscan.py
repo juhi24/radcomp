@@ -6,6 +6,7 @@ from glob import glob
 import pyart
 import numpy as np
 import pandas as pd
+import xarray as xr
 import matplotlib.pyplot as plt
 
 import radcomp.visualization as vis
@@ -34,13 +35,13 @@ def plot_vrhi_vs_rhi(vrhi, rhi, field='ZH'):
 
 if __name__ == '__main__':
     hdd = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
-    rhifile = path.join(hdd, 'IKA_final/20140221/201402212355_IKA.RHI_HV.raw')
-    rrhi = pyart.io.read(rhifile)
-    testdir = path.expanduser(path.join(hdd, 'test_volscan2'))
-    files = glob(path.join(testdir, '*[A-F].raw'))
-    files.sort()
-    vr = rhi.create_volume_scan(files)
-    vrhi = pyart.util.cross_section_ppi(vr, [rhi.AZIM_IKA_HYDE])
+    #rhifile = path.join(hdd, 'IKA_final/20140221/201402212355_IKA.RHI_HV.raw')
+    #rrhi = pyart.io.read(rhifile)
+    #testdir = path.expanduser(path.join(hdd, 'test_volscan2'))
+    #files = glob(path.join(testdir, '*[A-F].raw'))
+    #files.sort()
+    #vr = rhi.create_volume_scan(files)
+    #vrhi = pyart.util.cross_section_ppi(vr, [rhi.AZIM_IKA_HYDE])
     #axarr = plot_vrhi_vs_rhi(vrhi, rrhi, field='KDP')
     #filedir = path.join(hdd, 'test_volscan3')
     filedir = path.join(hdd, 'IKA_final', '20140221')
@@ -49,4 +50,5 @@ if __name__ == '__main__':
     plt.figure()
     ds.KDP.T.plot(vmax=0.3)
     #rhi.plot_compare_kdp(vrhi)
+    xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
 
