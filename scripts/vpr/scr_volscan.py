@@ -46,9 +46,11 @@ if __name__ == '__main__':
     #filedir = path.join(hdd, 'test_volscan3')
     filedir = path.join(hdd, 'IKA_final', '20140221')
     outdir = ensure_dir(path.expanduser('~/DATA/vpvol'))
-    ds = rhi.xarray_workflow(filedir, dir_out=None, recalculate_kdp=True)
-    plt.figure()
-    ds.KDP.T.plot(vmax=0.3)
+    #ds1 = rhi.xarray_workflow(filedir, dir_out=None, recalculate_kdp=True)
     #rhi.plot_compare_kdp(vrhi)
-    xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
+    ds2 = xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
+    plt.figure()
+    ds2.KDP.T.plot(vmax=0.3)
+    hax = cc.cl_data.minor_axis.values
+    dsi = ds2.interp(height=hax)
 
