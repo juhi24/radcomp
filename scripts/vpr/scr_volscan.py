@@ -11,8 +11,10 @@ import matplotlib.pyplot as plt
 
 import radcomp.visualization as vis
 from radcomp.tools import rhi
-
+from radcomp.vertical import case, classification
 from j24 import ensure_dir
+
+#import conf
 
 
 def plot_vrhi_vs_rhi(vrhi, rhi, field='ZH'):
@@ -51,6 +53,12 @@ if __name__ == '__main__':
     ds2 = xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
     plt.figure()
     ds2.KDP.T.plot(vmax=0.3)
-    hax = cc.cl_data.minor_axis.values
+    hax = np.arange(200, 10050, 50)
     dsi = ds2.interp(height=hax)
+    scheme_snow = 'snow_t075_30eig16clus_pca'
+    da = dsi.to_array()
+    df = dsi.to_dataframe()
+    c = case.Case.from_xarray(ds=dsi, has_ml=False)
+    c.load_classification(scheme_snow)
+    c.plot()
 

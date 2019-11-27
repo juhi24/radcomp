@@ -153,7 +153,11 @@ def fillna(dat, field=''):
 
 def prepare_data(pn, fields=DEFAULT_PARAMS, hlimits=(190, 10e3), kdpmax=None):
     """Prepare data for classification. Scaling has do be done separately."""
-    data = pn[fields, hlimits[0]:hlimits[1], :].transpose(0, 2, 1)
+    try:
+        data = pn[fields, hlimits[0]:hlimits[1], :].transpose(0, 2, 1)
+    except TypeError: # assume xarray dataset
+        pn = pn.to_dataframe().to_panel() # TODO: Panel
+        data = pn[fields, hlimits[0]:hlimits[1], :].transpose(0, 2, 1)
     if kdpmax is not None:
         data['KDP'][data['KDP'] > kdpmax] = np.nan
     return fillna(data)
@@ -183,7 +187,10 @@ def plot_case(c, params=None, interactive=True, raw=True, n_extra_ax=0,
              inverse_transformed=False, plot_extras=['ts', 'silh', 'cl', 'lwe'],
              **kws):
     """Visualize a Case object."""
-    c.load_model_temperature()
+    try:
+        c.load_model_temperature()
+    except ValueError:
+        pass
     if not c.has_ml:
         above_ml_only = False
     if raw:
@@ -272,14 +279,13 @@ class Case:
         data (Panel)
         cl_data (Panel): non-scaled classifiable data
         cl_data_scaled (Panel): scaled classifiable data
-        classes (Series): stored classification results
         vpc (radcomp.vertical.VPC): classification scheme
         temperature (Series): stored temperature
         pluvio (baecc.instruments.Pluvio)
     """
 
     def __init__(self, data=None, cl_data=None, cl_data_scaled=None,
-                 classes=None, vpc=None, has_ml=False, timedelta=None,
+                 vpc=None, has_ml=False, timedelta=None,
                  is_convective=None):
         self.data = data
         self.cl_data = cl_data
@@ -293,6 +299,7 @@ class Case:
         self._data_above_ml = None
         self._dt_ax = None
         self.cursor = None
+        self._classes = None
 
     @classmethod
     def from_dtrange(cls, t0, t1, **kws):
@@ -309,6 +316,13 @@ class Case:
         """Case object from a single mat file"""
         pn = vprhimat2pn(matfile)
         data = prepare_pn(pn)
+        return cls(data=data, **kws)
+
+    @classmethod
+    def from_xarray(cls, ds, **kws):
+        """Case from xarray dataset"""
+        pn = ds.to_dataframe().to_panel()
+        data = filtering.create_filtered_fields_if_missing(pn, DEFAULT_PARAMS)
         return cls(data=data, **kws)
 
     @property
@@ -383,19 +397,19 @@ class Case:
 
     def prepare_cl_data(self, save=True, force_no_crop=False):
         """Prepare unscaled classification data."""
-        if self.data is not None:
-            cl_data = prep_data(self.data, self.vpc)
-            if self.has_ml and not force_no_crop:
-                top = self.ml_limits()[1]
-                collapsefun = lambda df: ml.collapse2top(df.T, top=top).T
-                cl_data = cl_data.apply(collapsefun, axis=(1, 2))
-                cl_data = fillna(cl_data)
-                if cl_data.size == 0:
-                    return None
-            if save and not force_no_crop:
-                self.cl_data = cl_data
-            return cl_data
-        return None
+        if self.data is None:
+            return None
+        cl_data = prep_data(self.data, self.vpc)
+        if self.has_ml and not force_no_crop:
+            top = self.ml_limits()[1]
+            collapsefun = lambda df: ml.collapse2top(df.T, top=top).T
+            cl_data = cl_data.apply(collapsefun, axis=(1, 2))
+            cl_data = fillna(cl_data)
+            if cl_data.size == 0:
+                return None
+        if save and not force_no_crop:
+            self.cl_data = cl_data
+        return cl_data
 
     def scale_cl_data(self, save=True, force_no_crop=False):
         """scaled version of classification data
@@ -451,6 +465,7 @@ class Case:
             classes.name = 'class'
             if save:
                 self.silh_score = silh.reindex(self.data.minor_axis)
+                self._classes = classes
             return classes, silh
         return None, None
 
@@ -730,6 +745,11 @@ class Case:
 
     def classes(self):
         """classification results"""
+        if self._classes is not None:
+            return self._classes
         if self.vpc is None:
             raise RuntimeError('No classification scheme configured.')
-        return self.vpc.classes.loc[self.data.minor_axis].copy()
+        try:
+            return self.vpc.classes.loc[self.data.minor_axis].copy()
+        except KeyError:
+            return None
