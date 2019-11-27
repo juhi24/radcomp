@@ -35,8 +35,25 @@ def plot_vrhi_vs_rhi(vrhi, rhi, field='ZH'):
     return axarr
 
 
+def hyycase(outdir):
+    ds = xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
+    hax = np.arange(200, 10050, 50)
+    dsi = ds.interp(height=hax)
+    c = case.Case.from_xarray(ds=dsi, has_ml=False)
+    scheme_snow = 'snow_t075_30eig16clus_pca'
+    c.load_classification(scheme_snow)
+    return c
+
+
+def raw2vpvol_nc_batch():
+    """Batch process raw volume scans to hyde VPs"""
+
+
+
 if __name__ == '__main__':
     hdd = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
+    filedir = path.join(hdd, 'IKA_final', '20140221')
+    outdir = ensure_dir(path.expanduser('~/DATA/vpvol'))
     #rhifile = path.join(hdd, 'IKA_final/20140221/201402212355_IKA.RHI_HV.raw')
     #rrhi = pyart.io.read(rhifile)
     #testdir = path.expanduser(path.join(hdd, 'test_volscan2'))
@@ -46,19 +63,21 @@ if __name__ == '__main__':
     #vrhi = pyart.util.cross_section_ppi(vr, [rhi.AZIM_IKA_HYDE])
     #axarr = plot_vrhi_vs_rhi(vrhi, rrhi, field='KDP')
     #filedir = path.join(hdd, 'test_volscan3')
-    filedir = path.join(hdd, 'IKA_final', '20140221')
-    outdir = ensure_dir(path.expanduser('~/DATA/vpvol'))
     #ds1 = rhi.xarray_workflow(filedir, dir_out=None, recalculate_kdp=True)
     #rhi.plot_compare_kdp(vrhi)
-    ds2 = xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
-    plt.figure()
-    ds2.KDP.T.plot(vmax=0.3)
-    hax = np.arange(200, 10050, 50)
-    dsi = ds2.interp(height=hax)
-    scheme_snow = 'snow_t075_30eig16clus_pca'
-    da = dsi.to_array()
-    df = dsi.to_dataframe()
-    c = case.Case.from_xarray(ds=dsi, has_ml=False)
-    c.load_classification(scheme_snow)
-    c.plot()
+    #ds2 = xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
+    #plt.figure()
+    #ds2.KDP.T.plot(vmax=0.3)
+    #c = hyycase(outdir)
+    #c.plot()
+    fnames = pd.Series(glob(path.join(filedir, '*PPI3_[A-F].raw')))
+    tstrs = fnames.apply(lambda s: s[-27:-15])
+    g = fnames.groupby(tstrs)
+    vrhis = dict()
+    for tstr, df in g:
+        print(tstr)
+        df.sort_values(inplace=True)
+        vs = rhi.create_volume_scan(df)
+        vrhi = pyart.util.cross_section_ppi(vs, [rhi.AZIM_IKA_HYDE])
+        t, vp = rhi.vrhi2vp(vrhi)
 

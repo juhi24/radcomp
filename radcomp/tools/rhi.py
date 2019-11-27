@@ -1,5 +1,5 @@
 # coding: utf-8
-"""Extract vertical profiles over Hyytiälä from IKA RHI.
+"""Extract vertical profiles from RHI and PPI.
 
 Authors: Dmitri Moisseev and Jussi Tiira
 """
