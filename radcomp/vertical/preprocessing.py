@@ -1,4 +1,5 @@
 # coding: utf-8
+""""radar data scaling for classification"""
 
 from sklearn import preprocessing
 

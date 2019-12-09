@@ -80,4 +80,8 @@ if __name__ == '__main__':
         vs = rhi.create_volume_scan(df)
         vrhi = pyart.util.cross_section_ppi(vs, [rhi.AZIM_IKA_HYDE])
         t, vp = rhi.vrhi2vp(vrhi)
+        vrhis[t] = vp
+    df = pd.concat(vrhis)
+    df.index.rename(['time', 'height'], inplace=True)
+    ds = df.to_xarray()
 

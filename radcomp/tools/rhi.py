@@ -113,19 +113,20 @@ def plot_compare_kdp(vrhi):
     return disp, axarr
 
 
-def vrhi2vp(radar, h_thresh=60, Clpf=5000, **kws):
+def vrhi2vp(radar, h_thresh=60, Clpf=5000, use_hyy_h=False, **kws):
     """Extract vertical profile from volume scan slice."""
     #plot_compare_kdp(radar)
     rdr_vars, hght = rhi_preprocess(radar, Clpf=Clpf, **kws)
     # TODO: Panel
     df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
     df.index.name = 'height'
-    h = np.array([580, 1010, 1950, 3650, 5950, 10550])
-    h_norm = np.linalg.norm(df.index.values-h)
-    if h_norm > h_thresh:
-        efmt = 'Altitudes do not match preset values: {} > {}'
-        raise ValueError(efmt.format(h_norm, h_thresh))
-    df.index = h
+    if use_hyy_h:
+        h = np.array([580, 1010, 1950, 3650, 5950, 10550])
+        h_norm = np.linalg.norm(df.index.values-h)
+        if h_norm > h_thresh:
+            efmt = 'Altitudes do not match preset values: {} > {}'
+            raise ValueError(efmt.format(h_norm, h_thresh))
+        df.index = h
     return scan_timestamp(radar), df
 
 
