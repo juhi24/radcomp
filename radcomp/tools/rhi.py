@@ -113,12 +113,19 @@ def plot_compare_kdp(vrhi):
     return disp, axarr
 
 
+def agg2vp(hght, rdr_vars, agg_fun=np.nanmedian):
+    """Aggregate along r axis to a vertical profile."""
+    # TODO: Panel
+    df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
+    df.index.name = 'height'
+    return df
+
+
 def vrhi2vp(radar, h_thresh=60, Clpf=5000, use_hyy_h=False, **kws):
     """Extract vertical profile from volume scan slice."""
     #plot_compare_kdp(radar)
     rdr_vars, hght = rhi_preprocess(radar, Clpf=Clpf, **kws)
-    # TODO: Panel
-    df = pd.Panel(major_axis=hght, data=rdr_vars).apply(np.nanmedian, axis=2)
+    df = agg2vp(hght, rdr_vars)
     df.index.name = 'height'
     if use_hyy_h:
         h = np.array([580, 1010, 1950, 3650, 5950, 10550])
@@ -179,20 +186,25 @@ def create_volume_scan(files):
     return r
 
 
-def xarray_workflow(dir_in, dir_out=None, **kws):
-    """Extract profiles from volume scans as xarray Dataset."""
+def volscan_groups(dir_in):
+    """Group by time for volume scan processing."""
     fnames = pd.Series(glob(path.join(dir_in, '*PPI3_[A-F].raw')))
     tstrs = fnames.apply(lambda s: s[-27:-15])
-    g = fnames.groupby(tstrs)
-    vrhis = dict()
+    return fnames.groupby(tstrs)
+
+
+def xarray_workflow(dir_in, dir_out=None, **kws):
+    """Extract profiles from volume scans as xarray Dataset."""
+    g = volscan_groups(dir_in)
+    vps = dict()
     for tstr, df in g:
         print(tstr)
         df.sort_values(inplace=True)
         vs = create_volume_scan(df)
         vrhi = pyart.util.cross_section_ppi(vs, [AZIM_IKA_HYDE])
         t, vp = vrhi2vp(vrhi, **kws)
-        vrhis[t] = vp
-    df = pd.concat(vrhis)
+        vps[t] = vp
+    df = pd.concat(vps)
     df.index.rename(['time', 'height'], inplace=True)
     ds = df.to_xarray()
     if dir_out is not None:
@@ -200,6 +212,10 @@ def xarray_workflow(dir_in, dir_out=None, **kws):
         fname = pd.to_datetime(t).strftime('%Y%m%d_IKA_vpvol.nc')
         ds.to_netcdf(path.join(dir_out, fname))
     return ds
+
+
+def xarray_ppi():
+    pass
 
 
 def mat_workflow(dir_in, dir_out, fname_supl='IKA_vprhi', overwrite=False,
