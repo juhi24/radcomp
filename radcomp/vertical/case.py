@@ -6,6 +6,7 @@ from datetime import timedelta
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
@@ -117,13 +118,13 @@ def prepare_pn(pn, kdpmax=np.nan):
     dr_km = dr/1000
     pn_new = pn.copy()
     pn_new['KDP_orig'] = pn_new['KDP'].copy()
-    pn_new['KDP'][pn_new['KDP'] < 0] = np.nan
+    #pn_new['KDP'][pn_new['KDP'] < 0] = np.nan
     pn_new['phidp'] = kdp2phidp(pn_new['KDP'], dr_km)
     kdp = pn_new['KDP'] # a view
     # remove extreme KDP values in the panel using a view
     if USE_LEGACY_DATA:
         kdp[kdp > kdpmax] = 0
-    kdp[kdp < 0] = 0
+    #kdp[kdp < 0] = 0
     pn_new = filtering.fltr_median(pn_new)
     pn_new = filtering.fltr_nonmet(pn_new)
     # ensure all small case keys are in place
@@ -322,8 +323,15 @@ class Case:
     def from_xarray(cls, ds, **kws):
         """Case from xarray dataset"""
         pn = ds.to_dataframe().to_panel()
-        data = filtering.create_filtered_fields_if_missing(pn, DEFAULT_PARAMS)
+        #data = filtering.create_filtered_fields_if_missing(pn, DEFAULT_PARAMS)
+        data = prepare_pn(pn)
         return cls(data=data, **kws)
+
+    @classmethod
+    def from_nc(cls, ncfile, **kws):
+        #y u no work?
+        ds = xr.open_dataset(ncfile)
+        return cls.from_xarray(ds **kws)
 
     @property
     def data_above_ml(self):

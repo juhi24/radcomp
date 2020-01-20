@@ -60,7 +60,7 @@ def extract_radar_vars(radar, recalculate_kdp=True, kdp_debug=False, **kws):
     DP = radar.fields['differential_phase'].copy()['data']
     if kdp_debug:
         radar = kdp_all(radar)
-        KDP = radar.fields['kdp_v'].copy()['data']
+        KDP = radar.fields['kdp_csu'].copy()['data']
     elif recalculate_kdp:
         try:
             kdp_m = pyart.retrieve.kdp_maesaka(radar, **kws)
@@ -223,7 +223,7 @@ def xarray_ppi():
 
 def mat_workflow(dir_in, dir_out, fname_supl='IKA_vprhi', overwrite=False,
                  **kws):
-    """Extract profiles and save as mat."""
+    """LEGACY method to extract profiles and save as mat."""
     n_hbins = 297
     files = np.sort(glob(path.join(dir_in, "*RHI_HV*.raw")))
     ObsTime  = []
@@ -239,6 +239,7 @@ def mat_workflow(dir_in, dir_out, fname_supl='IKA_vprhi', overwrite=False,
         except Exception as e:
             eprint('{fname} [read error] {e}'.format(fname=filename, e=e))
             continue
+        # TODO: very much broken after this line
         ts, df = rhi2vp(radar, n_hbins=n_hbins, **kws)
         if ts is None:
             raise ValueError('no timestamp')
@@ -249,6 +250,34 @@ def mat_workflow(dir_in, dir_out, fname_supl='IKA_vprhi', overwrite=False,
     vp_rhi.update(df.to_dict(orient='list'))
     sio.savemat(fileOut, {'VP_RHI': vp_rhi})
     return df # for debugging
+
+
+def nc_workflow(dir_in, dir_out, fname_supl='IKA_vprhi', overwrite=False,
+                 **kws):
+    """Extract profiles and save as nc."""
+    n_hbins = 297
+    files = np.sort(glob(path.join(dir_in, "*RHI_HV*.raw")))
+    time_filename = path.basename(files[0])[0:8]
+    fileOut = path.join(dir_out, time_filename + '_' + fname_supl + '.nc')
+    vps = dict()
+    if path.exists(fileOut) and not overwrite:
+        print('{} [notice] file already exists, skipping.'.format(fileOut))
+        return
+    for file_indx, filename in enumerate(files):
+        print(filename)
+        try: # reading radar data
+            radar = pyart.io.read(filename)
+        except Exception as e:
+            eprint('{fname} [read error] {e}'.format(fname=filename, e=e))
+            continue
+        ts, df = rhi2vp(radar, n_hbins=n_hbins, **kws)
+        vps[ts] = df
+    df = pd.concat(vps)
+    df.index.rename(['time', 'height'], inplace=True)
+    ds = df.to_xarray()
+    if dir_out is not None:
+        ds.to_netcdf(fileOut)
+    return ds
 
 
 def add_field_to_radar_object(field, radar, field_name='FH', units='unitless',
@@ -311,8 +340,8 @@ def kdp_all(radar):
     opt = dict(psidp_field='FDP')
     #kdp_m=pyart.retrieve.kdp_maesaka(radar)
     #kdp_s=pyart.retrieve.kdp_schneebeli(radar, **opt)
-    kdp_v=pyart.retrieve.kdp_vulpiani(radar, **opt)
+    #kdp_v=pyart.retrieve.kdp_vulpiani(radar, **opt)
     #radar.add_field('kdp_maesaka', kdp_m[0])
     #radar.add_field('kdp_s', kdp_s[0])
-    radar.add_field('kdp_v', kdp_v[0])
+    #radar.add_field('kdp_v', kdp_v[0])
     return radar
