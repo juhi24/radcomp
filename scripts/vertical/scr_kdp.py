@@ -5,7 +5,7 @@ import pyart.io
 import matplotlib.pyplot as plt
 from os import path
 from glob import glob
-from scr_rhi2vp import R_IKA_HYDE
+from radcomp.tools import rhi
 
 
 if __name__ == '__main__':
@@ -19,19 +19,34 @@ if __name__ == '__main__':
     z = radar.fields['reflectivity']['data']
     gatefilter = pyart.correct.GateFilter(radar)
     gatefilter.exclude_below('cross_correlation_ratio', 0.8)
+    radar = rhi.kdp_csu(radar)
+
+    opt = dict(psidp_field='FDP')
     kdp_m=pyart.retrieve.kdp_maesaka(radar)
-    #kdp_s=pyart.retrieve.kdp_schneebeli(radar)
-    #kdp_v=pyart.retrieve.kdp_vulpiani(radar)
+    kdp_s=pyart.retrieve.kdp_schneebeli(radar, **opt)
+    kdp_v=pyart.retrieve.kdp_vulpiani(radar, **opt)
     radar.add_field('kdp_maesaka', kdp_m[0])
-    fig, ax = plt.subplots(2, sharex=True, sharey=True)
+    radar.add_field('kdp_s', kdp_s[0])
+    radar.add_field('kdp_v', kdp_v[0])
+
+    fig, ax = plt.subplots(2, 4, sharex=True, sharey=True)
     display = pyart.graph.RadarDisplay(radar)
-    display.plot_rhi('kdp_maesaka', vmin=0, vmax=0.2, ax=ax[0], cmap='viridis')
-    display.plot_rhi('specific_differential_phase', cmap='viridis', vmin=0, vmax=0.2, ax=ax[1])
-    r_km = R_IKA_HYDE/1000
+    kws = dict(vmin=-0.05, vmax=0.2, cmap='viridis')
+    dpkws = dict(vmin=100, vmax=150, cmap='cubehelix')
+    display.plot_rhi('differential_phase', ax=ax[0,0], **dpkws)
+    display.plot_rhi('kdp_csu', ax=ax[0,2], **kws)
+    display.plot_rhi('kdp_maesaka', ax=ax[1,1], **kws)
+    display.plot_rhi('kdp_s', ax=ax[1,3], **kws)
+    display.plot_rhi('FDP', ax=ax[1,0], **dpkws)
+    display.plot_rhi('kdp_v', ax=ax[1,2], **kws)
+    display.plot_rhi('specific_differential_phase', ax=ax[0,1], **kws)
+    r_km = rhi.R_IKA_HYDE/1000
     margin = 1
-    for axi in ax:
+    for axi in ax.flatten():
         axi.axvline(r_km+margin)
         axi.axvline(r_km-margin)
         axi.axvline(r_km, color='gray', alpha=0.2)
+        axi.set_ylim(0,6)
+    plt.tight_layout()
 
 

@@ -52,13 +52,16 @@ def fix_elevation(radar):
            radar.elevation['data'][i] = 0.0
 
 
-def extract_radar_vars(radar, recalculate_kdp=True, **kws):
+def extract_radar_vars(radar, recalculate_kdp=True, kdp_debug=False, **kws):
     """Extract radar variables."""
     ZH  = radar.fields['reflectivity'].copy()['data']
     ZDR = radar.fields['differential_reflectivity'].copy()['data']
     RHO = radar.fields['cross_correlation_ratio'].copy()['data']
     DP = radar.fields['differential_phase'].copy()['data']
-    if recalculate_kdp:
+    if kdp_debug:
+        radar = kdp_all(radar)
+        KDP = radar.fields['kdp_v'].copy()['data']
+    elif recalculate_kdp:
         try:
             kdp_m = pyart.retrieve.kdp_maesaka(radar, **kws)
         except IndexError:
@@ -236,12 +239,80 @@ def mat_workflow(dir_in, dir_out, fname_supl='IKA_vprhi', overwrite=False,
         except Exception as e:
             eprint('{fname} [read error] {e}'.format(fname=filename, e=e))
             continue
-        ts, df = rhi2vp(radar, n_hbins=n_hbins)
+        ts, df = rhi2vp(radar, n_hbins=n_hbins, **kws)
         if ts is None:
-            continue
+            raise ValueError('no timestamp')
         tstr = path.basename(filename)[0:12]
         ObsTime.append(datetime.strptime(tstr, '%Y%m%d%H%M').isoformat())
     print(fileOut)
     vp_rhi = {'ObsTime': ObsTime, 'height': df.index.values}
     vp_rhi.update(df.to_dict(orient='list'))
     sio.savemat(fileOut, {'VP_RHI': vp_rhi})
+    return df # for debugging
+
+
+def add_field_to_radar_object(field, radar, field_name='FH', units='unitless',
+                              long_name='Hydrometeor ID', standard_name='Hydrometeor ID',
+                              dz_field='ZC'):
+    """
+    Adds a newly created field to the Py-ART radar object. If reflectivity is a masked array,
+    make the new field masked the same as reflectivity.
+
+    Adapted from https://github.com/CSU-Radarmet/CSU_RadarTools
+    Licensed under GPL 2.0
+    """
+    fill_value = -32768
+    masked_field = np.ma.asanyarray(field)
+    masked_field.mask = masked_field == fill_value
+    if hasattr(radar.fields[dz_field]['data'], 'mask'):
+        setattr(masked_field, 'mask',
+                np.logical_or(masked_field.mask, radar.fields[dz_field]['data'].mask))
+        fill_value = radar.fields[dz_field]['_FillValue']
+    field_dict = {'data': masked_field,
+                  'units': units,
+                  'long_name': long_name,
+                  'standard_name': standard_name,
+                  '_FillValue': fill_value}
+    radar.add_field(field_name, field_dict, replace_existing=True)
+    return radar
+
+
+def extract_unmasked_data(radar, field, bad=-32768):
+    """Simplify getting unmasked radar fields from Py-ART
+
+    Adapted from https://github.com/CSU-Radarmet/CSU_RadarTools
+    Licensed under GPL 2.0
+    """
+    return radar.fields[field]['data'].filled(fill_value=bad)
+
+
+def kdp_csu(radar):
+    """"CSU kdp and processed phidp to radar object"""
+    from csu_radartools import csu_kdp
+    dz = extract_unmasked_data(radar, 'reflectivity')
+    dp = extract_unmasked_data(radar, 'differential_phase')
+    rng2d, ele2d = np.meshgrid(radar.range['data'], radar.elevation['data'])
+    kd, fd, sd = csu_kdp.calc_kdp_bringi(dp=dp, dz=dz, rng=rng2d/1000.0,
+                                            thsd=12, gs=125.0, window=10)
+    radar = add_field_to_radar_object(kd, radar, field_name='kdp_csu', units='deg/km',
+                                   long_name='Specific Differential Phase',
+                                   standard_name='Specific Differential Phase',
+                                   dz_field='reflectivity')
+    radar = add_field_to_radar_object(fd, radar, field_name='FDP', units='deg',
+                                   long_name='Filtered Differential Phase',
+                                   standard_name='Filtered Differential Phase',
+                                   dz_field='reflectivity')
+    return radar
+
+
+def kdp_all(radar):
+    """all kdp processing methods"""
+    radar = kdp_csu(radar)
+    opt = dict(psidp_field='FDP')
+    #kdp_m=pyart.retrieve.kdp_maesaka(radar)
+    #kdp_s=pyart.retrieve.kdp_schneebeli(radar, **opt)
+    kdp_v=pyart.retrieve.kdp_vulpiani(radar, **opt)
+    #radar.add_field('kdp_maesaka', kdp_m[0])
+    #radar.add_field('kdp_s', kdp_s[0])
+    radar.add_field('kdp_v', kdp_v[0])
+    return radar
