@@ -69,7 +69,7 @@ def plot_convective_occurrence(occ, ax=None, **kws):
     #occ.plot.bar(ax=ax, **kws) # bug in pandas or mpl
     ax.bar(occ.index, occ.values, width=0.5, **kws) # workaround
     ax.set_xticks(occ.index) # workaround
-    ax.set_ylabel('rel. freq. in\nconvection')
+    ax.set_ylabel('norm. freq. in\nconvection')
     ax.yaxis.grid(True)
 
 

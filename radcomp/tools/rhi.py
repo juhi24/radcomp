@@ -101,6 +101,10 @@ def kdp_retrieval(radar, method='maesaka', **kws):
     """wrapper for selecting KDP method"""
     if method == 'maesaka':
         return kdp_maesaka(radar, **kws)
+    elif method == 'csu':
+        radar = kdp_csu(radar)
+        return radar.fields['kdp_csu'].copy()['data']
+    raise ValueError('Unknown KDP method.')
 
 
 def extract_radar_vars(radar, recalculate_kdp=True, kdp_debug=False, **kws):
