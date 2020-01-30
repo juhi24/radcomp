@@ -52,9 +52,60 @@ def fix_elevation(radar):
            radar.elevation['data'][i] = 0.0
 
 
+def kdp_csu(radar):
+    """"CSU kdp and processed phidp to radar object"""
+    from csu_radartools import csu_kdp
+    dz = extract_unmasked_data(radar, 'reflectivity')
+    dp = extract_unmasked_data(radar, 'differential_phase')
+    rng2d, ele2d = np.meshgrid(radar.range['data'], radar.elevation['data'])
+    kd, fd, sd = csu_kdp.calc_kdp_bringi(dp=dp, dz=dz, rng=rng2d/1000.0,
+                                            thsd=12, gs=125.0, window=10)
+    radar = add_field_to_radar_object(kd, radar, field_name='kdp_csu', units='deg/km',
+                                   long_name='Specific Differential Phase',
+                                   standard_name='Specific Differential Phase',
+                                   dz_field='reflectivity')
+    radar = add_field_to_radar_object(fd, radar, field_name='FDP', units='deg',
+                                   long_name='Filtered Differential Phase',
+                                   standard_name='Filtered Differential Phase',
+                                   dz_field='reflectivity')
+    return radar
+
+
+def kdp_maesaka(radar, **kws):
+    """Compute KDP using Maesaka algo from a radar object."""
+    mask = radar.fields['differential_phase']['data'].mask
+    try:
+        kdp_m = pyart.retrieve.kdp_maesaka(radar, **kws)
+    except IndexError:
+        # outlier checking sometimes causes trouble (with weak kdp?)
+        eprint('Skipping outlier check.')
+        kdp_m = pyart.retrieve.kdp_maesaka(radar, check_outliers=False,
+                                           **kws)
+    return np.ma.masked_array(data=kdp_m[0]['data'], mask=mask)
+
+
+def kdp_all(radar):
+    """all kdp processing methods"""
+    radar = kdp_csu(radar)
+    opt = dict(psidp_field='FDP')
+    #kdp_m=pyart.retrieve.kdp_maesaka(radar)
+    #kdp_s=pyart.retrieve.kdp_schneebeli(radar, **opt)
+    #kdp_v=pyart.retrieve.kdp_vulpiani(radar, **opt)
+    #radar.add_field('kdp_maesaka', kdp_m[0])
+    #radar.add_field('kdp_s', kdp_s[0])
+    #radar.add_field('kdp_v', kdp_v[0])
+    return radar
+
+
+def kdp_retrieval(radar, method='maesaka', **kws):
+    """wrapper for selecting KDP method"""
+    if method == 'maesaka':
+        return kdp_maesaka(radar, **kws)
+
+
 def extract_radar_vars(radar, recalculate_kdp=True, kdp_debug=False, **kws):
     """Extract radar variables."""
-    ZH  = radar.fields['reflectivity'].copy()['data']
+    ZH = radar.fields['reflectivity'].copy()['data']
     ZDR = radar.fields['differential_reflectivity'].copy()['data']
     RHO = radar.fields['cross_correlation_ratio'].copy()['data']
     DP = radar.fields['differential_phase'].copy()['data']
@@ -62,14 +113,7 @@ def extract_radar_vars(radar, recalculate_kdp=True, kdp_debug=False, **kws):
         radar = kdp_all(radar)
         KDP = radar.fields['kdp_csu'].copy()['data']
     elif recalculate_kdp:
-        try:
-            kdp_m = pyart.retrieve.kdp_maesaka(radar, **kws)
-        except IndexError:
-            # outlier checking sometimes causes trouble (with weak kdp?)
-            eprint('Skipping outlier check.')
-            kdp_m = pyart.retrieve.kdp_maesaka(radar, check_outliers=False,
-                                               **kws)
-        KDP = np.ma.masked_array(data=kdp_m[0]['data'], mask=DP.mask)
+        KDP = kdp_retrieval(radar, **kws)
     else:
         KDP = radar.fields['specific_differential_phase'].copy()['data']
     return dict(ZH=ZH, ZDR=ZDR, KDP=KDP, RHO=RHO, DP=DP)
@@ -313,35 +357,3 @@ def extract_unmasked_data(radar, field, bad=-32768):
     Licensed under GPL 2.0
     """
     return radar.fields[field]['data'].filled(fill_value=bad)
-
-
-def kdp_csu(radar):
-    """"CSU kdp and processed phidp to radar object"""
-    from csu_radartools import csu_kdp
-    dz = extract_unmasked_data(radar, 'reflectivity')
-    dp = extract_unmasked_data(radar, 'differential_phase')
-    rng2d, ele2d = np.meshgrid(radar.range['data'], radar.elevation['data'])
-    kd, fd, sd = csu_kdp.calc_kdp_bringi(dp=dp, dz=dz, rng=rng2d/1000.0,
-                                            thsd=12, gs=125.0, window=10)
-    radar = add_field_to_radar_object(kd, radar, field_name='kdp_csu', units='deg/km',
-                                   long_name='Specific Differential Phase',
-                                   standard_name='Specific Differential Phase',
-                                   dz_field='reflectivity')
-    radar = add_field_to_radar_object(fd, radar, field_name='FDP', units='deg',
-                                   long_name='Filtered Differential Phase',
-                                   standard_name='Filtered Differential Phase',
-                                   dz_field='reflectivity')
-    return radar
-
-
-def kdp_all(radar):
-    """all kdp processing methods"""
-    radar = kdp_csu(radar)
-    opt = dict(psidp_field='FDP')
-    #kdp_m=pyart.retrieve.kdp_maesaka(radar)
-    #kdp_s=pyart.retrieve.kdp_schneebeli(radar, **opt)
-    #kdp_v=pyart.retrieve.kdp_vulpiani(radar, **opt)
-    #radar.add_field('kdp_maesaka', kdp_m[0])
-    #radar.add_field('kdp_s', kdp_s[0])
-    #radar.add_field('kdp_v', kdp_v[0])
-    return radar
