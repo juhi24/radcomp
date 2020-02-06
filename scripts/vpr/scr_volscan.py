@@ -1,7 +1,8 @@
 # coding: utf-8
 
-from os import path
+import os
 from glob import glob
+from copy import deepcopy
 
 import pyart
 import numpy as np
@@ -12,7 +13,6 @@ import matplotlib.pyplot as plt
 import radcomp.visualization as vis
 from radcomp.tools import rhi
 from radcomp.vertical import case, classification
-from j24 import ensure_dir
 
 #import conf
 
@@ -36,7 +36,7 @@ def plot_vrhi_vs_rhi(vrhi, rhi, field='ZH'):
 
 
 def hyycase(outdir):
-    ds = xr.open_dataset(path.join(outdir, '20140221_IKA_vpvol.nc'))
+    ds = xr.open_dataset(os.path.join(outdir, '20140221_IKA_vpvol.nc'))
     hax = np.arange(200, 10050, 50)
     dsi = ds.interp(height=hax)
     c = case.Case.from_xarray(ds=dsi, has_ml=False)
@@ -49,11 +49,49 @@ def raw2vpvol_nc_batch():
     """Batch process raw volume scans to hyde VPs"""
 
 
+def jotain():
+    g = get_g()
+    vrhis = dict()
+    for tstr, df in g:
+        print(tstr)
+        df.sort_values(inplace=True)
+        vs = rhi.create_volume_scan(df)
+        vrhi = pyart.util.cross_section_ppi(vs, [rhi.AZIM_IKA_HYDE])
+        t, vp = rhi.vrhi2vp(vrhi)
+        vrhis[t] = vp
+    df = pd.concat(vrhis)
+    df.index.rename(['time', 'height'], inplace=True)
+    ds = df.to_xarray()
+
+
+def get_vs(tstr='201402212355'):
+    g = get_g()
+    df = g.get_group(tstr)
+    df.sort_values(inplace=True)
+    return rhi.create_volume_scan(df)
+
+
+def get_vrhi(**kws):
+    vs = get_vs(**kws)
+    return pyart.util.cross_section_ppi(vs, [rhi.AZIM_IKA_HYDE])
+
+
+def get_g():
+    fnames = pd.Series(glob(os.path.join(filedir, '*PPI3_[A-F].raw')))
+    tstrs = fnames.apply(lambda s: s[-27:-15])
+    return fnames.groupby(tstrs)
+
+
+def make_vp(vrhi, r):
+    rvar, h = rhi.rhi_preprocess(vrhi, r_poi=r)
+    return rhi.agg2vp(h, rvar)
+
 
 if __name__ == '__main__':
     hdd = '/media/jussitii/04fafa8f-c3ca-48ee-ae7f-046cf576b1ee'
-    filedir = path.join(hdd, 'IKA_final', '20140221')
-    outdir = ensure_dir(path.expanduser('~/DATA/vpvol'))
+    filedir = os.path.join(hdd, 'IKA_final', '20140221')
+    outdir = os.path.expanduser('~/DATA/vpvol')
+    os.makedirs(outdir, exist_ok=True)
     #rhifile = path.join(hdd, 'IKA_final/20140221/201402212355_IKA.RHI_HV.raw')
     #rrhi = pyart.io.read(rhifile)
     #testdir = path.expanduser(path.join(hdd, 'test_volscan2'))
@@ -70,18 +108,11 @@ if __name__ == '__main__':
     #ds2.KDP.T.plot(vmax=0.3)
     #c = hyycase(outdir)
     #c.plot()
-    fnames = pd.Series(glob(path.join(filedir, '*PPI3_[A-F].raw')))
-    tstrs = fnames.apply(lambda s: s[-27:-15])
-    g = fnames.groupby(tstrs)
-    vrhis = dict()
-    for tstr, df in g:
-        print(tstr)
-        df.sort_values(inplace=True)
-        vs = rhi.create_volume_scan(df)
-        vrhi = pyart.util.cross_section_ppi(vs, [rhi.AZIM_IKA_HYDE])
-        t, vp = rhi.vrhi2vp(vrhi)
-        vrhis[t] = vp
-    df = pd.concat(vrhis)
-    df.index.rename(['time', 'height'], inplace=True)
-    ds = df.to_xarray()
+    vrhi = get_vrhi()
+    rs = np.arange(50000, 80000, 5000)
+    vps = {}
+    for r in rs:
+        vr = deepcopy(vrhi)
+        vps[r]=make_vp(vr, r)
+
 

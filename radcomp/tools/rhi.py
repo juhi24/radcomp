@@ -175,6 +175,7 @@ def agg2vp(hght, rdr_vars, agg_fun=np.nanmedian):
 def vrhi2vp(radar, h_thresh=60, Clpf=5000, use_hyy_h=False, **kws):
     """Extract vertical profile from volume scan slice."""
     #plot_compare_kdp(radar)
+    calib_all(radar)
     rdr_vars, hght = rhi_preprocess(radar, Clpf=Clpf, **kws)
     df = agg2vp(hght, rdr_vars)
     df.index.name = 'height'
@@ -191,6 +192,7 @@ def vrhi2vp(radar, h_thresh=60, Clpf=5000, use_hyy_h=False, **kws):
 def rhi2vp(radar, n_hbins=None, hbins=None, agg_fun=np.nanmedian, **kws):
     hbins = hbins or np.linspace(200, 15000, n_hbins)
     """Extract vertical profile from RHI."""
+    calib_all(radar)
     rdr_vars, hght = rhi_preprocess(radar, **kws)
     if hght is None:
         return None, None
@@ -203,10 +205,13 @@ def rhi2vp(radar, n_hbins=None, hbins=None, agg_fun=np.nanmedian, **kws):
     return scan_timestamp(radar), df
 
 
-def rhi_preprocess(radar, r_poi=R_IKA_HYDE, r_agg=1e3, **kws):
-    """Process RHI data for aggregation."""
+def calib_all(radar):
     calibration(radar, 'differential_reflectivity', 0.5)
     calibration(radar, 'reflectivity', 3)
+
+
+def rhi_preprocess(radar, r_poi=R_IKA_HYDE, r_agg=1e3, **kws):
+    """Process RHI data for aggregation."""
     try: # extracting variables
         fix_elevation(radar)
         rdr_vars = extract_radar_vars(radar, **kws)
@@ -214,9 +219,9 @@ def rhi_preprocess(radar, r_poi=R_IKA_HYDE, r_agg=1e3, **kws):
         eprint('[extract error] {e}'.format(e=e))
         return None, None
     r = radar.gate_x['data'] # horizontal range
-    rdr_vars = filter_range(rdr_vars, r, r_poi, r_agg)
+    rvars = filter_range(rdr_vars, r, r_poi, r_agg)
     hght = height(radar, r, r_poi)
-    return rdr_vars, hght
+    return rvars, hght
 
 
 def agg_fun_chooser(agg_fun, db_scale=False):
