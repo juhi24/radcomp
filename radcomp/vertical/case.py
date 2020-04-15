@@ -190,7 +190,7 @@ def plot_case(c, params=None, interactive=True, raw=True, n_extra_ax=0,
     """Visualize a Case object."""
     try:
         c.load_model_temperature()
-    except ValueError:
+    except (ValueError, FileNotFoundError):
         pass
     if not c.has_ml:
         above_ml_only = False

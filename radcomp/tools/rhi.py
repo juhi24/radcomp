@@ -97,7 +97,7 @@ def kdp_all(radar):
     return radar
 
 
-def kdp_retrieval(radar, method='maesaka', **kws):
+def kdp_retrieval(radar, method='csu', **kws):
     """wrapper for selecting KDP method"""
     if method == 'maesaka':
         return kdp_maesaka(radar, **kws)
